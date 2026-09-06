@@ -1,9 +1,11 @@
 import { Redis } from 'ioredis';
+import { Queue } from 'bullmq';
 import { createDatabase, createPool } from '@veyroxai/db';
 import { createLogger } from '@veyroxai/observability';
 import { buildApp } from './app.js';
 import { ResolveCustomerSession } from './contexts/ordering/application/resolve-customer-session.js';
 import { CustomerSessionRepository } from './contexts/ordering/infrastructure/customer-session-repository.js';
+import { InboundEventRepository } from './contexts/messaging/infrastructure/inbound-event-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -16,6 +18,10 @@ async function main(): Promise<void> {
   const sessionKey = process.env.SESSION_KEY;
   if (!sessionKey) throw new Error('SESSION_KEY is not set');
   const previousSessionKey = process.env.SESSION_KEY_PREVIOUS;
+  const whatsappAppSecret = process.env.WHATSAPP_APP_SECRET;
+  if (!whatsappAppSecret) throw new Error('WHATSAPP_APP_SECRET is not set');
+  const database = createDatabase(pool);
+  const queue = new Queue('veyrox', { connection: redis });
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -37,8 +43,17 @@ async function main(): Promise<void> {
       }
     },
     customerSession: {
-      resolver: new ResolveCustomerSession(new CustomerSessionRepository(createDatabase(pool))),
+      resolver: new ResolveCustomerSession(new CustomerSessionRepository(database)),
       keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
+    },
+    whatsappWebhook: {
+      appSecret: whatsappAppSecret,
+      events: new InboundEventRepository(database),
+      queue: {
+        enqueue: async ({ providerMessageId }) => {
+          await queue.add('whatsapp.inbound', { providerMessageId }, { jobId: providerMessageId });
+        },
+      },
     },
   });
 
@@ -49,6 +64,7 @@ async function main(): Promise<void> {
     process.on(signal, () => {
       void (async () => {
         await app.close();
+        await queue.close();
         await pool.end();
         redis.disconnect();
         process.exit(0);

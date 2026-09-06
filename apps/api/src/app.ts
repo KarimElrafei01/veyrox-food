@@ -9,11 +9,17 @@ import { problemHandler } from './shared/http/problem-details.js';
 import { healthRoutes } from './routes/health.js';
 import { customerSessionController } from './contexts/ordering/interface/customer-session-controller.js';
 import type { ResolveCustomerSession } from './contexts/ordering/application/resolve-customer-session.js';
+import {
+  whatsappWebhookController,
+  type InboundEventStore,
+  type InboundJobQueue,
+} from './contexts/messaging/interface/whatsapp-webhook-controller.js';
 
 export interface AppDeps {
   pingPostgres: () => Promise<boolean>;
   pingRedis: () => Promise<boolean>;
   customerSession?: { resolver: ResolveCustomerSession; keys: readonly [string, ...string[]] };
+  whatsappWebhook?: { appSecret: string; events: InboundEventStore; queue: InboundJobQueue };
 }
 
 declare module 'fastify' {
@@ -48,6 +54,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   app.decorate('deps', deps);
 
   await app.register(helmet);
+  if (deps.whatsappWebhook) {
+    app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (_request, body, done) => {
+      done(null, body);
+    });
+    await app.register(whatsappWebhookController, deps.whatsappWebhook);
+  }
   await app.register(healthRoutes);
   if (deps.customerSession) await app.register(customerSessionController, deps.customerSession);
 

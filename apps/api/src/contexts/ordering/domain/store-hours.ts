@@ -10,6 +10,21 @@ export interface StoreClosure {
   endsAt: Date;
 }
 
+export function nextStoreOpening(
+  hours: readonly StoreHour[],
+  closures: readonly StoreClosure[],
+  now: Date,
+  timezone: string,
+): Date | null {
+  // A weekly schedule always repeats. Searching a week also keeps a malformed
+  // empty schedule from reporting a fictitious opening time.
+  for (let offset = 1; offset <= 7 * 24 * 60; offset += 1) {
+    const candidate = new Date(now.getTime() + offset * 60_000);
+    if (isStoreOpen(hours, closures, candidate, timezone)) return candidate;
+  }
+  return null;
+}
+
 function minutes(value: string): number {
   const [hour, minute] = value.split(':').map(Number);
   return (hour ?? 0) * 60 + (minute ?? 0);

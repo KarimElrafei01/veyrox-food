@@ -17,9 +17,11 @@
     "@veyroxai/db": "workspace:*",
     "@veyroxai/domain": "workspace:*",
     "@veyroxai/observability": "workspace:*",
+    "bullmq": "6.3.4",
     "fastify": "5.12.3",
     "fastify-type-provider-zod": "7.0.0",
     "ioredis": "6.0.0",
+    "pg": "8.23.0",
     "zod": "4.5.4"
   },
   "devDependencies": {

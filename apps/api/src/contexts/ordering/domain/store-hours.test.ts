@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isStoreOpen } from './store-hours.js';
+import { isStoreOpen, nextStoreOpening } from './store-hours.js';
 
 describe('isStoreOpen', () => {
   const hours = [{ weekday: 0, opens: '20:00', closes: '02:00', crossesMidnight: true }];
@@ -15,5 +15,10 @@ describe('isStoreOpen', () => {
         'Africa/Cairo',
       ),
     ).toBe(false);
+  });
+
+  it('finds the next opening in the tenant timezone', () => {
+    const opening = nextStoreOpening(hours, [], new Date('2026-09-06T14:00:00Z'), 'Africa/Cairo');
+    expect(opening?.toISOString()).toBe('2026-09-06T17:00:00.000Z');
   });
 });

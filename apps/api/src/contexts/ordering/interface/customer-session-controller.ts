@@ -1,6 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { ResolveCustomerSession } from '../application/resolve-customer-session.js';
+import {
+  OrderingSuspended,
+  StoreClosed,
+  WhatsAppOrderingDisabled,
+  type ResolveCustomerSession,
+} from '../application/resolve-customer-session.js';
 import { SessionExpired, verifyCustomerSession } from './session-token.js';
 
 export async function customerSessionController(
@@ -16,7 +21,14 @@ export async function customerSessionController(
         const session = verifyCustomerSession(token, options.keys, Math.floor(Date.now() / 1000));
         const result = await options.resolver.execute(session, new Date());
         return {
-          tenant: { id: result.tenantId, name: result.tenantName },
+          tenant: {
+            id: result.tenantId,
+            name: result.tenantName,
+            defaultLocale: result.tenant.defaultLocale,
+            supportedLocales: ['en', 'ar-EG'],
+            currency: result.tenant.currency,
+            timezone: result.tenant.timezone,
+          },
           session: {
             menuVersion: result.menuVersionId,
             expiresAt: result.expiresAt.toISOString(),
@@ -26,7 +38,14 @@ export async function customerSessionController(
             displayName: result.customer.displayName,
             tier: result.customer.tier,
             pointsBalance: result.customer.pointsBalance,
+            pointsToNextTier: 0,
+            perks: [],
           },
+          store: {
+            isOpen: result.store.isOpen,
+            closesAt: result.store.closesAt?.toISOString() ?? null,
+          },
+          ordering: result.ordering,
           links: {
             menu: `/public/menu/${result.menuVersionId}`,
             availability: '/public/availability',
@@ -34,17 +53,49 @@ export async function customerSessionController(
           traceId: request.id,
         };
       } catch (error) {
-        const code = error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID';
-        return reply
-          .status(401)
-          .type('application/problem+json')
-          .send({
-            type: 'about:blank',
-            title: 'Session unavailable',
-            status: 401,
-            code,
+        if (error instanceof StoreClosed) {
+          return reply
+            .status(409)
+            .type('application/problem+json')
+            .send({
+              type: 'https://veyroxai.com/errors/store-closed',
+              title: 'Store closed',
+              status: 409,
+              code: 'STORE_CLOSED',
+              detail: 'The store is currently closed.',
+              opensAt: error.opensAt?.toISOString() ?? null,
+              traceId: request.id,
+            });
+        }
+        if (error instanceof OrderingSuspended) {
+          return reply.status(403).type('application/problem+json').send({
+            type: 'https://veyroxai.com/errors/ordering-suspended',
+            title: 'Ordering unavailable',
+            status: 403,
+            code: 'ORDERING_SUSPENDED',
+            detail: 'Please order at the counter.',
             traceId: request.id,
           });
+        }
+        if (error instanceof WhatsAppOrderingDisabled) {
+          return reply.status(403).type('application/problem+json').send({
+            type: 'https://veyroxai.com/errors/whatsapp-ordering-disabled',
+            title: 'Ordering unavailable',
+            status: 403,
+            code: 'WHATSAPP_ORDERING_DISABLED',
+            detail: 'WhatsApp ordering is currently unavailable.',
+            reason: error.reason,
+            traceId: request.id,
+          });
+        }
+        const code = error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID';
+        return reply.status(401).type('application/problem+json').send({
+          type: 'about:blank',
+          title: 'Session unavailable',
+          status: 401,
+          code,
+          traceId: request.id,
+        });
       }
     },
   );
