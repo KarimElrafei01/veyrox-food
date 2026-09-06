@@ -9,7 +9,8 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "fixture": "tsx src/dev/fixture.ts"
   },
   "dependencies": {
     "@fastify/helmet": "13.1.1",
