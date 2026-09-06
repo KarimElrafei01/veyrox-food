@@ -1,0 +1,29 @@
+.price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.default {
+  color: var(--vx-on-surface);
+}
+.accent {
+  color: var(--vx-secondary);
+}
+.muted {
+  color: var(--vx-on-surface-variant);
+  font-weight: 500;
+}
+.sm {
+  font-size: var(--vx-text-label-md);
+}
+.md {
+  font-size: var(--vx-text-label-lg);
+}
+.lg {
+  font-size: var(--vx-text-headline-sm);
+}
+.strike {
+  text-decoration: line-through;
+  color: var(--vx-on-surface-variant);
+  font-weight: 400;
+}

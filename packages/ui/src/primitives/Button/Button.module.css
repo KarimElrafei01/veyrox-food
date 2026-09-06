@@ -1,0 +1,73 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vx-space-xs);
+  min-block-size: var(--vx-tap-min);
+  padding-inline: var(--vx-space-md);
+  border-radius: var(--vx-radius-md);
+  font-family: var(--vx-font-body);
+  font-weight: 600;
+  font-size: var(--vx-text-label-lg);
+  letter-spacing: 0.01em;
+  transition:
+    transform var(--vx-motion-fast) var(--vx-ease),
+    background-color var(--vx-motion-fast) var(--vx-ease),
+    opacity var(--vx-motion-fast) var(--vx-ease);
+}
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.button:focus-visible {
+  outline: 2px solid var(--vx-secondary);
+  outline-offset: 2px;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+.md {
+  block-size: var(--vx-tap-min);
+}
+.lg {
+  block-size: 3rem;
+  font-size: var(--vx-text-headline-sm);
+}
+.full {
+  display: flex;
+  inline-size: 100%;
+}
+
+.primary {
+  background: var(--vx-secondary);
+  color: var(--vx-on-secondary);
+  box-shadow: var(--vx-elevation-low);
+}
+.primary:hover:not(:disabled) {
+  background: var(--vx-on-secondary-container);
+}
+
+.espresso {
+  background: var(--vx-primary-container);
+  color: var(--vx-on-primary);
+  box-shadow: var(--vx-elevation-low);
+}
+
+.outline {
+  background: transparent;
+  color: var(--vx-primary-container);
+  border: 1.5px solid var(--vx-primary-container);
+}
+
+.ghost {
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--vx-surface-highest);
+}

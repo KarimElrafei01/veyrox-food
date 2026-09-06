@@ -1,0 +1,119 @@
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vx-space-xs);
+  padding: var(--vx-space-sm) var(--vx-space-md);
+  border-radius: var(--vx-radius-md);
+  font-size: var(--vx-text-body-sm);
+  line-height: var(--vx-leading-normal);
+}
+.alertBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.info {
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface);
+}
+.info svg {
+  color: var(--vx-info);
+}
+.success {
+  background: color-mix(in srgb, var(--vx-success) 12%, transparent);
+  color: var(--vx-on-surface);
+}
+.success svg {
+  color: var(--vx-success);
+}
+.warning {
+  background: color-mix(in srgb, var(--vx-warning) 14%, transparent);
+  color: var(--vx-on-surface);
+}
+.warning svg {
+  color: var(--vx-warning);
+}
+.danger {
+  background: var(--vx-error-container);
+  color: var(--vx-on-error-container);
+}
+.danger svg {
+  color: var(--vx-error);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-2xl) var(--vx-space-md);
+}
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary-container);
+  color: var(--vx-on-secondary-container);
+}
+.emptyTitle {
+  font-size: var(--vx-text-headline-md);
+  color: var(--vx-primary-container);
+}
+.emptyBody {
+  font-size: var(--vx-text-body-md);
+  color: var(--vx-on-surface-variant);
+  max-inline-size: 20rem;
+}
+.emptyAction {
+  margin-block-start: var(--vx-space-xs);
+  inline-size: 100%;
+  max-inline-size: 20rem;
+}
+
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--vx-surface-high) 25%,
+    var(--vx-surface-highest) 37%,
+    var(--vx-surface-high) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.dot {
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary);
+  position: relative;
+}
+.pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}

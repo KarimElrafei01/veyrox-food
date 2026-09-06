@@ -1,0 +1,68 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  font-family: var(--vx-font-body);
+  color: var(--vx-on-surface);
+  background: var(--vx-surface);
+}
+
+body {
+  min-height: 100dvh;
+  font-size: var(--vx-text-body-md);
+  line-height: var(--vx-leading-normal);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+:where([dir='rtl']) {
+  text-align: start;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--vx-font-display);
+  font-weight: 700;
+  line-height: var(--vx-leading-tight);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

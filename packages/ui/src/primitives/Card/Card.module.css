@@ -1,0 +1,26 @@
+.card {
+  border-radius: var(--vx-radius-md);
+}
+.raised {
+  background: var(--vx-surface-lowest);
+  box-shadow: var(--vx-elevation-low);
+  border: 1px solid var(--vx-outline-variant);
+}
+.sunken {
+  background: var(--vx-surface-low);
+}
+.flat {
+  background: var(--vx-surface-container);
+}
+.pad-none {
+  padding: 0;
+}
+.pad-sm {
+  padding: var(--vx-space-sm);
+}
+.pad-md {
+  padding: var(--vx-space-md);
+}
+.pad-lg {
+  padding: var(--vx-space-lg);
+}
