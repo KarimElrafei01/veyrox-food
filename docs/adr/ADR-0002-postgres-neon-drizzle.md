@@ -62,6 +62,10 @@ The Neon CLI (`neon`, npm `neon`) is added, with a `neon.ts` policy file at the 
 the project linked (`neon link --project-id … --branch production`). `neon deploy` (alias
 `neon config apply`) reconciles the linked branch to that policy.
 
+The project: **`cold-truth-59832723`** ("veyrox food"), org `org-late-bird-64965382`, region
+`aws-eu-central-1`, default/production branch `br-plain-block-b1hridj1`. `.neon` (the link marker)
+and `.env.local` (pulled connection strings) are gitignored — re-run `neon link` after a clone.
+
 This does **not** move schema into a vendor surface — the two invariants from the Reversal section
 hold unchanged:
 
@@ -73,5 +77,11 @@ hold unchanged:
   local-dev dependency; `docs/12` §"Everything reproducible locally" is unaffected.
 
 `neon deploy` runs against the live `production` branch, so it is a **human-run step after review**,
-gated on the schema being merged to `main` — an agent never runs it.
+gated on the schema being merged to `main` — an agent never runs it. With `defineConfig({})`,
+`neon config plan` reports no changes, so the first deploy is a no-op that just establishes the link.
+
+**Open item — Postgres version.** The Neon project was created on **PG 18**; ADR-0002, `CLAUDE.md`,
+and `infra/docker-compose.yml` (`postgres:16`) say 16. PG 18 has native `uuidv7()`, which would let
+`packages/db/drizzle/pre/0000_prereqs.sql` drop its shim. Reconcile before the pilot: either recreate
+the Neon branch on 16, or move local dev + the docs to 18. Tracked here, not silently absorbed.
 
