@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "sourceMap": true,
+    "paths": {
+      "@veyroxai/domain": ["./packages/domain/src/index.ts"],
+      "@veyroxai/contracts": ["./packages/contracts/src/index.ts"],
+      "@veyroxai/db": ["./packages/db/src/index.ts"],
+      "@veyroxai/db/schema": ["./packages/db/src/schema/index.ts"],
+      "@veyroxai/observability": ["./packages/observability/src/index.ts"],
+      "@veyroxai/testkit": ["./packages/testkit/src/index.ts"],
+      "@veyroxai/i18n": ["./packages/i18n/src/index.ts"],
+      "@veyroxai/ui": ["./packages/ui/src/index.ts"],
+      "@veyroxai/api-client": ["./packages/api-client/src/index.ts"],
+      "@veyroxai/ops-core": ["./packages/ops-core/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@veyroxai/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/helmet": "13.1.1",
+    "@veyroxai/contracts": "workspace:*",
+    "@veyroxai/db": "workspace:*",
+    "@veyroxai/domain": "workspace:*",
+    "@veyroxai/observability": "workspace:*",
+    "fastify": "5.12.3",
+    "fastify-type-provider-zod": "7.0.0",
+    "ioredis": "6.0.0",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "tsx": "4.23.13",
+    "vitest": "5.0.0"
+  }
+}

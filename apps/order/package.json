@@ -1,0 +1,40 @@
+{
+  "name": "@veyroxai/order",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "size": "size-limit"
+  },
+  "dependencies": {
+    "@veyroxai/api-client": "workspace:*",
+    "@veyroxai/i18n": "workspace:*",
+    "@veyroxai/ui": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@size-limit/preset-app": "13.0.3",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "jsdom": "30.0.1",
+    "size-limit": "13.0.3",
+    "vite": "8.2.2",
+    "vitest": "5.0.0"
+  },
+  "size-limit": [
+    {
+      "name": "apps/order initial JS",
+      "path": "dist/assets/*.js",
+      "limit": "150 kB"
+    }
+  ]
+}

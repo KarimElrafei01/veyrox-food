@@ -1,0 +1,33 @@
+/* Design tokens. The visual system is delivered by a designer before S1
+   (docs/00-master-plan.md §9); these are neutral placeholders so layout and
+   spacing are consistent across the five SPAs from the start. */
+:root {
+  --vx-color-bg: #ffffff;
+  --vx-color-fg: #1a1a1a;
+  --vx-color-accent: #0b6b53;
+  --vx-color-muted: #6b7280;
+  --vx-color-danger: #b3261e;
+
+  --vx-space-1: 0.25rem;
+  --vx-space-2: 0.5rem;
+  --vx-space-3: 1rem;
+  --vx-space-4: 1.5rem;
+  --vx-space-5: 2.5rem;
+
+  --vx-radius: 0.5rem;
+  --vx-font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Arabic', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --vx-color-bg: #121212;
+    --vx-color-fg: #f2f2f2;
+    --vx-color-muted: #9ca3af;
+  }
+}
+
+html {
+  font-family: var(--vx-font-sans);
+  background: var(--vx-color-bg);
+  color: var(--vx-color-fg);
+}

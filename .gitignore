@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# local artifacts
+stitch_whatsapp_caf_ordering_app.zip

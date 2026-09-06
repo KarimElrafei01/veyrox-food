@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+coverage
+.turbo
+pnpm-lock.yaml
+docs
+CLAUDE.md
+AGENTS.md
+veyrox-food-prd.md
+packages/db/drizzle

@@ -1,0 +1,25 @@
+{
+  "name": "@veyroxai/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@veyroxai/db": "workspace:*",
+    "@veyroxai/domain": "workspace:*",
+    "@veyroxai/observability": "workspace:*",
+    "bullmq": "6.3.4",
+    "ioredis": "6.0.0"
+  },
+  "devDependencies": {
+    "tsx": "4.23.13",
+    "vitest": "5.0.0"
+  }
+}
