@@ -8,4 +8,8 @@ export {
   type QuoteOrderRequest,
   type QuoteResponse,
   type PlaceOrderResponse,
+  updateSessionLocaleRequest,
+  updateSessionLocaleResponse,
+  type UpdateSessionLocaleRequest,
+  type UpdateSessionLocaleResponse,
 } from './customer-ordering.js';

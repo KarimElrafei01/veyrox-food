@@ -12,6 +12,7 @@ import { PublishedMenuRepository } from './contexts/ordering/infrastructure/publ
 import { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-queue-repository.js';
 import { PlaceOrder } from './contexts/ordering/application/place-order.js';
 import { OrderPlacementRepository } from './contexts/ordering/infrastructure/order-placement-repository.js';
+import { CustomerLocaleRepository } from './contexts/ordering/infrastructure/customer-locale-repository.js';
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
 import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
 
@@ -62,6 +63,10 @@ async function main(): Promise<void> {
     },
     customerSession: {
       resolver: new ResolveCustomerSession(new CustomerSessionRepository(database)),
+      keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
+    },
+    customerLocale: {
+      repository: new CustomerLocaleRepository(database),
       keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
     },
     whatsappWebhook: {

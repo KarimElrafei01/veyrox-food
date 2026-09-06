@@ -68,3 +68,17 @@ export const placeOrderResponse = z.object({
 
 export type QuoteResponse = z.infer<typeof quoteResponse>;
 export type PlaceOrderResponse = z.infer<typeof placeOrderResponse>;
+
+/** A monotonic client sequence stops an older, delayed toggle replacing a newer choice. */
+export const updateSessionLocaleRequest = z.object({
+  locale: z.enum(['en', 'ar-EG']),
+  sequence: z.number().int().nonnegative(),
+});
+
+export const updateSessionLocaleResponse = z.object({
+  locale: z.enum(['en', 'ar-EG']),
+  sequence: z.number().int().nonnegative(),
+});
+
+export type UpdateSessionLocaleRequest = z.infer<typeof updateSessionLocaleRequest>;
+export type UpdateSessionLocaleResponse = z.infer<typeof updateSessionLocaleResponse>;

@@ -22,6 +22,8 @@ import type { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-
 import type { EtaMetricSink } from './contexts/ordering/application/eta-metrics.js';
 import { placeOrderController } from './contexts/ordering/interface/place-order-controller.js';
 import type { PlaceOrder } from './contexts/ordering/application/place-order.js';
+import { customerLocaleController } from './contexts/ordering/interface/customer-locale-controller.js';
+import type { CustomerLocaleRepository } from './contexts/ordering/infrastructure/customer-locale-repository.js';
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
 import { orderStatusController } from './contexts/ordering/interface/order-status-controller.js';
 import type { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
@@ -52,6 +54,10 @@ export interface AppDeps {
     etaQueue: EtaQueueRepository;
     metrics: OrderPlacementMetricSink;
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  customerLocale?: {
+    repository: CustomerLocaleRepository;
+    keys: readonly [string, ...string[]];
   };
   orderStatus?: { orders: OrderStatusRepository; keys: readonly [string, ...string[]] };
 }
@@ -106,6 +112,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   }
   await app.register(healthRoutes);
   if (deps.customerSession) await app.register(customerSessionController, deps.customerSession);
+  if (deps.customerLocale) await app.register(customerLocaleController, deps.customerLocale);
   if (deps.catalogue) {
     await app.register(publicCatalogueController, {
       catalogue: deps.catalogue.repository,

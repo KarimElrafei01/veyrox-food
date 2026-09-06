@@ -1,4 +1,13 @@
-import { boolean, char, integer, pgTable, text, time, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  char,
+  integer,
+  pgTable,
+  text,
+  time,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { createdAt, pk, tenantCol, ts, updatedAt } from './_shared.js';
 
 // docs/04-data-model.md §3.
@@ -54,6 +63,7 @@ export const customers = pgTable(
     waId: text('wa_id'),
     displayName: text('display_name'),
     locale: text('locale').notNull().default('en'),
+    localeVersion: integer('locale_version').notNull().default(-1),
     pointsCache: integer('points_cache').notNull().default(0),
     tier: text('tier').notNull().default('bronze'),
     firstOrderAt: ts('first_order_at'),
@@ -64,4 +74,21 @@ export const customers = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex('customers_tenant_phone_hash_idx').on(t.tenantId, t.phoneHash)],
+);
+
+/** Durable replay record for the public locale mutation; retained with the customer. */
+export const customerLocaleChanges = pgTable(
+  'customer_locale_changes',
+  {
+    id: pk(),
+    tenantId: tenantCol().references(() => tenants.id),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id),
+    idempotencyKey: text('idempotency_key').notNull(),
+    locale: text('locale').notNull(),
+    sequence: integer('sequence').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('customer_locale_changes_idempotency_idx').on(t.tenantId, t.idempotencyKey)],
 );
