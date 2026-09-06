@@ -4,3 +4,4 @@ export { createPool, createDatabase, type Database } from './client.js';
 export { withTenant } from './tx.js';
 export { allTables, type TableRef } from './tables.js';
 export { runMigrations } from './migrate.js';
+export { and, eq } from 'drizzle-orm';
