@@ -7,10 +7,13 @@ import {
 } from 'fastify-type-provider-zod';
 import { problemHandler } from './shared/http/problem-details.js';
 import { healthRoutes } from './routes/health.js';
+import { customerSessionController } from './contexts/ordering/interface/customer-session-controller.js';
+import type { ResolveCustomerSession } from './contexts/ordering/application/resolve-customer-session.js';
 
 export interface AppDeps {
   pingPostgres: () => Promise<boolean>;
   pingRedis: () => Promise<boolean>;
+  customerSession?: { resolver: ResolveCustomerSession; keys: readonly [string, ...string[]] };
 }
 
 declare module 'fastify' {
@@ -46,6 +49,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
 
   await app.register(helmet);
   await app.register(healthRoutes);
+  if (deps.customerSession) await app.register(customerSessionController, deps.customerSession);
 
   return app;
 }

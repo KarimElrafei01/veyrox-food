@@ -1,7 +1,9 @@
 import { Redis } from 'ioredis';
-import { createPool } from '@veyroxai/db';
+import { createDatabase, createPool } from '@veyroxai/db';
 import { createLogger } from '@veyroxai/observability';
 import { buildApp } from './app.js';
+import { ResolveCustomerSession } from './contexts/ordering/application/resolve-customer-session.js';
+import { CustomerSessionRepository } from './contexts/ordering/infrastructure/customer-session-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -11,6 +13,9 @@ async function main(): Promise<void> {
     lazyConnect: true,
     maxRetriesPerRequest: 1,
   });
+  const sessionKey = process.env.SESSION_KEY;
+  if (!sessionKey) throw new Error('SESSION_KEY is not set');
+  const previousSessionKey = process.env.SESSION_KEY_PREVIOUS;
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -30,6 +35,10 @@ async function main(): Promise<void> {
       } catch {
         return false;
       }
+    },
+    customerSession: {
+      resolver: new ResolveCustomerSession(new CustomerSessionRepository(createDatabase(pool))),
+      keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
     },
   });
 
