@@ -32,16 +32,13 @@ export async function publicCatalogueController(
       const { menuVersion } = z.object({ menuVersion: z.uuid() }).parse(request.params);
       const menu = await options.catalogue.loadPublishedMenu(menuVersion);
       if (!menu)
-        return reply
-          .status(409)
-          .type('application/problem+json')
-          .send({
-            type: 'https://veyroxai.com/errors/menu-version-gone',
-            title: 'Menu unavailable',
-            status: 409,
-            code: 'MENU_VERSION_GONE',
-            traceId: request.id,
-          });
+        return reply.status(409).type('application/problem+json').send({
+          type: 'https://veyroxai.com/errors/menu-version-gone',
+          title: 'Menu unavailable',
+          status: 409,
+          code: 'MENU_VERSION_GONE',
+          traceId: request.id,
+        });
       const rendered = renderPublishedMenu(menu);
       if (request.headers['if-none-match'] === rendered.etag)
         return reply.status(304).header('ETag', rendered.etag).send();
@@ -58,16 +55,13 @@ export async function publicCatalogueController(
       ? request.headers.authorization.slice(7)
       : null;
     if (!token)
-      return reply
-        .status(401)
-        .type('application/problem+json')
-        .send({
-          type: 'https://veyroxai.com/errors/session-invalid',
-          title: 'Session unavailable',
-          status: 401,
-          code: 'SESSION_INVALID',
-          traceId: request.id,
-        });
+      return reply.status(401).type('application/problem+json').send({
+        type: 'https://veyroxai.com/errors/session-invalid',
+        title: 'Session unavailable',
+        status: 401,
+        code: 'SESSION_INVALID',
+        traceId: request.id,
+      });
     try {
       const session = verifyCustomerSession(
         token,
@@ -86,14 +80,12 @@ export async function publicCatalogueController(
         return reply.status(409).send({ code: 'MENU_VERSION_GONE', traceId: request.id });
       if (!cached)
         await options.availabilityCache.set(cacheKey, JSON.stringify(availability), 'EX', 30);
-      return reply
-        .header('Cache-Control', 'public, max-age=5, stale-while-revalidate=30')
-        .send({
-          menuVersion: session.menuVersionId,
-          ...availability,
-          asOf: new Date().toISOString(),
-          traceId: request.id,
-        });
+      return reply.header('Cache-Control', 'public, max-age=5, stale-while-revalidate=30').send({
+        menuVersion: session.menuVersionId,
+        ...availability,
+        asOf: new Date().toISOString(),
+        traceId: request.id,
+      });
     } catch {
       return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
     }

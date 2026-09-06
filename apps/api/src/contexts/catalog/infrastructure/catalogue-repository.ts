@@ -158,82 +158,72 @@ export class CatalogueRepository {
       );
       const publishedCategories = categories.filter((category) => categoryIds.has(category.id));
       if (publishedCategories.length)
-        await tx
-          .insert(tables.menuVersionCategories)
-          .values(
-            publishedCategories.map((category) => ({
-              menuVersionId: version.id,
-              categoryId: category.id,
-              tenantId,
-              nameEn: category.nameEn,
-              nameAr: category.nameAr,
-              sort: category.sort,
-            })),
-          );
+        await tx.insert(tables.menuVersionCategories).values(
+          publishedCategories.map((category) => ({
+            menuVersionId: version.id,
+            categoryId: category.id,
+            tenantId,
+            nameEn: category.nameEn,
+            nameAr: category.nameAr,
+            sort: category.sort,
+          })),
+        );
       if (publishedItems.length)
-        await tx
-          .insert(tables.menuVersionItems)
-          .values(
-            publishedItems.map((item) => ({
-              menuVersionId: version.id,
-              menuItemId: item.id,
-              tenantId,
-              categoryId: item.categoryId,
-              nameEn: item.nameEn,
-              nameAr: item.nameAr,
-              descriptionEn: item.descriptionEn,
-              descriptionAr: item.descriptionAr,
-              basePriceMinor: priceByItem.get(item.id)!.priceMinor,
-              prepSeconds: item.basePrepSeconds,
-              sort: item.sort,
-            })),
-          );
+        await tx.insert(tables.menuVersionItems).values(
+          publishedItems.map((item) => ({
+            menuVersionId: version.id,
+            menuItemId: item.id,
+            tenantId,
+            categoryId: item.categoryId,
+            nameEn: item.nameEn,
+            nameAr: item.nameAr,
+            descriptionEn: item.descriptionEn,
+            descriptionAr: item.descriptionAr,
+            basePriceMinor: priceByItem.get(item.id)!.priceMinor,
+            prepSeconds: item.basePrepSeconds,
+            sort: item.sort,
+          })),
+        );
       const publishedGroups = groups.filter((group) => publishedGroupIds.has(group.id));
       if (publishedGroups.length)
-        await tx
-          .insert(tables.menuVersionModifierGroups)
-          .values(
-            publishedGroups.map((group) => ({
-              menuVersionId: version.id,
-              modifierGroupId: group.id,
-              tenantId,
-              nameEn: group.nameEn,
-              nameAr: group.nameAr,
-              selection: group.selection,
-              minSelect: group.minSelect,
-              maxSelect: group.maxSelect,
-              required: group.required,
-            })),
-          );
+        await tx.insert(tables.menuVersionModifierGroups).values(
+          publishedGroups.map((group) => ({
+            menuVersionId: version.id,
+            modifierGroupId: group.id,
+            tenantId,
+            nameEn: group.nameEn,
+            nameAr: group.nameAr,
+            selection: group.selection,
+            minSelect: group.minSelect,
+            maxSelect: group.maxSelect,
+            required: group.required,
+          })),
+        );
       const publishedOptions = options.filter((option) => publishedGroupIds.has(option.groupId));
       if (publishedOptions.length)
-        await tx
-          .insert(tables.menuVersionModifierOptions)
-          .values(
-            publishedOptions.map((option, sort) => ({
-              menuVersionId: version.id,
-              modifierOptionId: option.id,
-              tenantId,
-              modifierGroupId: option.groupId,
-              nameEn: option.nameEn,
-              nameAr: option.nameAr,
-              priceDeltaMinor: option.priceDeltaMinor,
-              freeForTier: option.freeForTier,
-              sort,
-            })),
-          );
+        await tx.insert(tables.menuVersionModifierOptions).values(
+          publishedOptions.map((option, sort) => ({
+            menuVersionId: version.id,
+            modifierOptionId: option.id,
+            tenantId,
+            modifierGroupId: option.groupId,
+            nameEn: option.nameEn,
+            nameAr: option.nameAr,
+            priceDeltaMinor: option.priceDeltaMinor,
+            freeForTier: option.freeForTier,
+            sort,
+          })),
+        );
       if (publishedAttachments.length)
-        await tx
-          .insert(tables.menuVersionItemModifierGroups)
-          .values(
-            publishedAttachments.map((attachment) => ({
-              menuVersionId: version.id,
-              menuItemId: attachment.menuItemId,
-              modifierGroupId: attachment.groupId,
-              tenantId,
-              sort: attachment.sort,
-            })),
-          );
+        await tx.insert(tables.menuVersionItemModifierGroups).values(
+          publishedAttachments.map((attachment) => ({
+            menuVersionId: version.id,
+            menuItemId: attachment.menuItemId,
+            modifierGroupId: attachment.groupId,
+            tenantId,
+            sort: attachment.sort,
+          })),
+        );
       return version.id;
     });
   }

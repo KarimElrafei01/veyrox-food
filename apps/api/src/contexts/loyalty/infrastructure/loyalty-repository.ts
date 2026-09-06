@@ -27,15 +27,13 @@ export class LoyaltyRepository {
       const previousTier = tierForPoints(customer.pointsCache);
       const nextBalance = customer.pointsCache + points;
       const nextTier = tierForPoints(nextBalance);
-      await tx
-        .insert(tables.loyaltyLedger)
-        .values({
-          tenantId: input.tenantId,
-          customerId: input.customerId,
-          delta: points,
-          reason: 'order_accrual',
-          orderId: input.orderId,
-        });
+      await tx.insert(tables.loyaltyLedger).values({
+        tenantId: input.tenantId,
+        customerId: input.customerId,
+        delta: points,
+        reason: 'order_accrual',
+        orderId: input.orderId,
+      });
       await tx
         .update(tables.customers)
         .set({ pointsCache: nextBalance, tier: nextTier })
