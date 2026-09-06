@@ -154,6 +154,10 @@ pnpm db:generate
 pnpm db:migrate
 ```
 
+`neon deploy` (Neon CLI, `neon.ts` policy → the linked `production` branch, ADR-0002 amendment) is
+**human-run after review** — an agent never runs it. Schema changes still go through Drizzle
+migrations only.
+
 The merge gate requires typecheck, lint, unit/property tests, domain coverage (90% line, 100% branch), real-Postgres integration tests, contracts, cross-tenant leak tests, offline suite, axe, size limit, and OpenAPI regeneration without a diff. Keep the full suite under five minutes.
 
 When changing these areas, add/adjust the corresponding high-value coverage:

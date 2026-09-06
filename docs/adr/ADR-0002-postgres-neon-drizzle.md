@@ -56,6 +56,32 @@ The cross-tenant leak suite (`07-test-and-quality-strategy.md` §4) stays exactl
 
 **Bad**: roughly a week of auth work we were previously buying, and we now own its security posture — which is a real cost, mitigated by the independent security review already scheduled before M5 (NFR-26). We also lose Supabase's dashboard, which was convenient for ad-hoc inspection; the Platform Admin's support tooling (FR-11.13) covers the cases that actually matter, and `psql` covers the rest.
 
-## Reversal
+## Amendment, 2026-09 — Neon CLI and `neon.ts` for project/branch policy
 
-Everything is plain Postgres and standard HTTP. Moving to RDS, Cloud SQL, or a self-managed instance is a `pg_dump` and a connection string. The rules that keep it that way are in `CLAUDE.md`: schema lives in Drizzle migrations and never in a vendor dashboard; no vendor-specific SQL beyond RLS policies.
+The Neon CLI (`neon`, npm `neon`) is added, with a `neon.ts` policy file at the repo root and
+the project linked (`neon link --project-id … --branch production`). `neon deploy` (alias
+`neon config apply`) reconciles the linked branch to that policy.
+
+The project: **`cold-truth-59832723`** ("veyrox food"), org `org-late-bird-64965382`, region
+`aws-eu-central-1`, default/production branch `br-plain-block-b1hridj1`. `.neon` (the link marker)
+and `.env.local` (pulled connection strings) are gitignored — re-run `neon link` after a clone.
+
+This does **not** move schema into a vendor surface — the two invariants from the Reversal section
+hold unchanged:
+
+- **Schema stays in Drizzle migrations.** `pnpm db:migrate` (`packages/db`) is still the only way
+  tables change. `neon.ts` declares *project and branch configuration* — branch TTLs, the Neon Auth
+  service toggle, env — not DDL. It ships as `defineConfig({})` (an empty baseline) and any addition
+  is a code-reviewed diff in git, never a dashboard click.
+- **Local development stays `docker compose up`.** The CLI is for managing the hosted project, not a
+  local-dev dependency; `docs/12` §"Everything reproducible locally" is unaffected.
+
+`neon deploy` runs against the live `production` branch, so it is a **human-run step after review**,
+gated on the schema being merged to `main` — an agent never runs it. With `defineConfig({})`,
+`neon config plan` reports no changes, so the first deploy is a no-op that just establishes the link.
+
+**Open item — Postgres version.** The Neon project was created on **PG 18**; ADR-0002, `CLAUDE.md`,
+and `infra/docker-compose.yml` (`postgres:16`) say 16. PG 18 has native `uuidv7()`, which would let
+`packages/db/drizzle/pre/0000_prereqs.sql` drop its shim. Reconcile before the pilot: either recreate
+the Neon branch on 16, or move local dev + the docs to 18. Tracked here, not silently absorbed.
+

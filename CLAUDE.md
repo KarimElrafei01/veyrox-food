@@ -101,6 +101,8 @@ pnpm test:int       integration against real Postgres
 pnpm test:e2e       Playwright, 7 journeys
 pnpm typecheck / lint / build
 pnpm db:generate / db:migrate / db:seed
+neon deploy         apply neon.ts project/branch policy to the linked Neon branch — HUMAN-RUN,
+                    after review; never an agent. Schema still lives in Drizzle migrations (ADR-0002)
 ```
 
 Whole suite must stay **under 5 minutes**. A slow suite gets skipped, and there is nobody to catch what was skipped.
