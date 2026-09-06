@@ -6,9 +6,9 @@ DROP POLICY IF EXISTS tenant_isolation ON inbound_events;
 CREATE POLICY inbound_event_edge_and_worker_access ON inbound_events
   USING (
     tenant_id IS NULL
-    OR tenant_id = current_setting('app.tenant_id', true)::uuid
+    OR tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
   )
   WITH CHECK (
     tenant_id IS NULL
-    OR tenant_id = current_setting('app.tenant_id', true)::uuid
+    OR tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
   );

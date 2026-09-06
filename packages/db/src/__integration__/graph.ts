@@ -12,6 +12,7 @@ import {
   orderEvents,
   orderItemModifiers,
   orderItems,
+  orderNumberCounters,
   orders,
   rawMaterials,
   recipeLines,
@@ -137,6 +138,9 @@ export async function seedTenantGraph(pool: Pool, slug: string): Promise<string>
     actorType: 'staff',
     source: 'till',
   });
+  await db
+    .insert(orderNumberCounters)
+    .values({ tenantId: t, businessDate: now.toISOString().slice(0, 10), nextSeq: 2 });
 
   return t;
 }
