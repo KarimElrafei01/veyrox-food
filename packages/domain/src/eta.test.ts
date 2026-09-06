@@ -45,4 +45,37 @@ describe('estimateEta', () => {
       queueDepth: 0,
     });
   });
+
+  it('handles empty and elapsed queues while preserving non-gold ordering', () => {
+    expect(estimateEta([], [], null, 2, now)).toEqual({
+      lowerMinutes: 0,
+      upperMinutes: 0,
+      queueDepth: 0,
+    });
+    expect(
+      estimateEta(
+        [{ prepSeconds: -5 }],
+        [
+          {
+            prepSeconds: 60,
+            status: 'preparing',
+            startedAt: new Date('2026-09-06T11:58:00.000Z'),
+            tier: 'gold',
+          },
+        ],
+        'silver',
+        1,
+        now,
+      ).queueDepth,
+    ).toBe(1);
+    expect(
+      estimateEta(
+        [],
+        [{ prepSeconds: 60, status: 'preparing', startedAt: null, tier: null }],
+        null,
+        1,
+        now,
+      ).lowerMinutes,
+    ).toBe(5);
+  });
 });

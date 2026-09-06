@@ -14,4 +14,12 @@ describe('previewPoints', () => {
     expect(pointsToNextTier(501)).toBeNull();
     expect(perksForTier('gold')).toEqual(['free_alt_milk', 'priority_prep']);
   });
+
+  it('covers Bronze, Silver, anonymous, and all points-to-next branches', () => {
+    expect(perksForTier('bronze')).toEqual([]);
+    expect(perksForTier('silver')).toEqual(['free_alt_milk']);
+    expect(pointsToNextTier(151)).toBe(350);
+    expect(previewPoints(toMinor(10_999), 'bronze')).toEqual({ pointsToEarn: 10, multiplier: 1 });
+    expect(previewPoints(toMinor(10_999), null)).toEqual({ pointsToEarn: 0, multiplier: 0 });
+  });
 });
