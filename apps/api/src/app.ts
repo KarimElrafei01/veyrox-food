@@ -14,12 +14,22 @@ import {
   type InboundEventStore,
   type InboundJobQueue,
 } from './contexts/messaging/interface/whatsapp-webhook-controller.js';
+import { publicCatalogueController } from './contexts/catalog/interface/public-catalogue-controller.js';
+import type { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
 
 export interface AppDeps {
   pingPostgres: () => Promise<boolean>;
   pingRedis: () => Promise<boolean>;
   customerSession?: { resolver: ResolveCustomerSession; keys: readonly [string, ...string[]] };
   whatsappWebhook?: { appSecret: string; events: InboundEventStore; queue: InboundJobQueue };
+  catalogue?: {
+    repository: CatalogueRepository;
+    availabilityCache: {
+      get(key: string): Promise<string | null>;
+      set(key: string, value: string, mode: 'EX', seconds: number): Promise<unknown>;
+    };
+    sessionKeys: readonly [string, ...string[]];
+  };
 }
 
 declare module 'fastify' {
@@ -62,6 +72,13 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   }
   await app.register(healthRoutes);
   if (deps.customerSession) await app.register(customerSessionController, deps.customerSession);
+  if (deps.catalogue) {
+    await app.register(publicCatalogueController, {
+      catalogue: deps.catalogue.repository,
+      availabilityCache: deps.catalogue.availabilityCache,
+      sessionKeys: deps.catalogue.sessionKeys,
+    });
+  }
 
   return app;
 }

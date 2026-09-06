@@ -6,6 +6,7 @@ import { buildApp } from './app.js';
 import { ResolveCustomerSession } from './contexts/ordering/application/resolve-customer-session.js';
 import { CustomerSessionRepository } from './contexts/ordering/infrastructure/customer-session-repository.js';
 import { InboundEventRepository } from './contexts/messaging/infrastructure/inbound-event-repository.js';
+import { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -54,6 +55,11 @@ async function main(): Promise<void> {
           await queue.add('whatsapp.inbound', { providerMessageId }, { jobId: providerMessageId });
         },
       },
+    },
+    catalogue: {
+      repository: new CatalogueRepository(database),
+      availabilityCache: redis,
+      sessionKeys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
     },
   });
 
