@@ -9,10 +9,17 @@ import {
 } from '@veyroxai/domain';
 import type { QuoteOrder } from '../application/quote-order.js';
 import { verifyCustomerSession } from './session-token.js';
+import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import { recordEtaRead, type EtaMetricSink } from '../application/eta-metrics.js';
 
 export async function quoteOrderController(
   app: FastifyInstance,
-  options: { quote: QuoteOrder; keys: readonly [string, ...string[]] },
+  options: {
+    quote: QuoteOrder;
+    keys: readonly [string, ...string[]];
+    etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
+  },
 ): Promise<void> {
   app.post(
     '/public/orders/quote',
@@ -36,7 +43,16 @@ export async function quoteOrderController(
           tier: session.tier,
           items: body.items,
         });
-        const eta = estimateEta(priced.etaItems, [], session.tier, 1, new Date());
+        const queue = await options.etaQueue.load(session.tenantId);
+        recordEtaRead(options.etaMetrics, queue.source, queue.state.tickets.length);
+        const eta = estimateEta(
+          priced.etaItems,
+          queue.state.tickets,
+          session.tier,
+          queue.state.activeStations,
+          new Date(),
+          queue.source === 'degraded' ? 1.5 : 1.25,
+        );
         return {
           lines: priced.lines,
           subtotalMinor: priced.subtotalMinor,

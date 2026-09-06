@@ -18,6 +18,8 @@ import { publicCatalogueController } from './contexts/catalog/interface/public-c
 import type { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
 import { quoteOrderController } from './contexts/ordering/interface/quote-order-controller.js';
 import type { QuoteOrder } from './contexts/ordering/application/quote-order.js';
+import type { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-queue-repository.js';
+import type { EtaMetricSink } from './contexts/ordering/application/eta-metrics.js';
 
 export interface AppDeps {
   pingPostgres: () => Promise<boolean>;
@@ -32,7 +34,12 @@ export interface AppDeps {
     };
     sessionKeys: readonly [string, ...string[]];
   };
-  quoteOrder?: { quote: QuoteOrder; keys: readonly [string, ...string[]] };
+  quoteOrder?: {
+    quote: QuoteOrder;
+    keys: readonly [string, ...string[]];
+    etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
+  };
 }
 
 declare module 'fastify' {

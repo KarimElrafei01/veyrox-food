@@ -26,9 +26,9 @@ checked only after the implementation and its required automated coverage pass.
 
 ## F1.4 — ETA
 
-- [ ] Implement queue projection, Redis read path, and Postgres fallback.
-- [ ] Add ETA metrics and degraded-range behaviour.
-- [ ] Add queue projection and fallback integration coverage.
+- [x] Implement queue projection, Redis read path, and Postgres fallback.
+- [x] Add ETA metrics and degraded-range behaviour.
+- [x] Add queue projection and fallback integration coverage.
 
 ## F1.5 — Loyalty
 

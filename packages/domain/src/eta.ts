@@ -3,6 +3,7 @@ export interface EtaCartItem {
 }
 
 export interface QueueTicket {
+  orderId?: string;
   prepSeconds: number;
   status: 'received' | 'preparing';
   startedAt: Date | null;
@@ -49,6 +50,7 @@ export function estimateEta(
   customerTier: QueueTicket['tier'],
   activeStations: number,
   now: Date,
+  upperMultiplier = 1.25,
 ): EtaRange {
   const relevantTickets =
     customerTier === 'gold' ? tickets.filter((ticket) => ticket.tier === 'gold') : tickets;
@@ -58,7 +60,7 @@ export function estimateEta(
   const etaSeconds = cartPrepSeconds(items) + queueSeconds;
   return {
     lowerMinutes: roundUpToFiveMinutes(etaSeconds * 0.9),
-    upperMinutes: roundUpToFiveMinutes(etaSeconds * 1.25),
+    upperMinutes: roundUpToFiveMinutes(etaSeconds * upperMultiplier),
     queueDepth: relevantTickets.length,
   };
 }

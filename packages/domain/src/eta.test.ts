@@ -37,4 +37,12 @@ describe('estimateEta', () => {
     const eta = estimateEta([{ prepSeconds: 900 }, { prepSeconds: 900 }], [], null, 1, now);
     expect(eta).toEqual({ lowerMinutes: 15, upperMinutes: 20, queueDepth: 0 });
   });
+
+  it('widens only the upper promise boundary during degraded queue reads', () => {
+    expect(estimateEta([{ prepSeconds: 650 }], [], null, 1, now, 1.5)).toEqual({
+      lowerMinutes: 10,
+      upperMinutes: 20,
+      queueDepth: 0,
+    });
+  });
 });

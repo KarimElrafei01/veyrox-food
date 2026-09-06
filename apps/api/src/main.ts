@@ -9,6 +9,7 @@ import { InboundEventRepository } from './contexts/messaging/infrastructure/inbo
 import { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
 import { QuoteOrder } from './contexts/ordering/application/quote-order.js';
 import { PublishedMenuRepository } from './contexts/ordering/infrastructure/published-menu-repository.js';
+import { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-queue-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -66,6 +67,11 @@ async function main(): Promise<void> {
     quoteOrder: {
       quote: new QuoteOrder(new PublishedMenuRepository(database, redis)),
       keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
+      etaQueue: new EtaQueueRepository(database, redis),
+      etaMetrics: {
+        increment: (name) => log.info('eta metric increment', { name }),
+        gauge: (name, value) => log.info('eta metric gauge', { name, value }),
+      },
     },
   });
 
