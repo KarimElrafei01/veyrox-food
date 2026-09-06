@@ -1,0 +1,81 @@
+import { describe, expect, it } from 'vitest';
+import { estimateEta } from './eta.js';
+
+const now = new Date('2026-09-06T12:00:00.000Z');
+
+describe('estimateEta', () => {
+  it('uses an asymmetric range, clamps stations, and decays preparing tickets', () => {
+    const eta = estimateEta(
+      [{ prepSeconds: 150 }],
+      [
+        {
+          prepSeconds: 150,
+          status: 'preparing',
+          startedAt: new Date('2026-09-06T11:59:00.000Z'),
+          tier: 'bronze',
+        },
+      ],
+      'bronze',
+      0,
+      now,
+    );
+    expect(eta).toEqual({ lowerMinutes: 5, upperMinutes: 5, queueDepth: 1 });
+  });
+
+  it('does not make Gold wait behind lower-tier tickets', () => {
+    const eta = estimateEta(
+      [{ prepSeconds: 60 }],
+      [{ prepSeconds: 900, status: 'received', startedAt: null, tier: 'bronze' }],
+      'gold',
+      1,
+      now,
+    );
+    expect(eta).toEqual({ lowerMinutes: 5, upperMinutes: 5, queueDepth: 0 });
+  });
+
+  it('caps large-cart preparation at fifteen minutes', () => {
+    const eta = estimateEta([{ prepSeconds: 900 }, { prepSeconds: 900 }], [], null, 1, now);
+    expect(eta).toEqual({ lowerMinutes: 15, upperMinutes: 20, queueDepth: 0 });
+  });
+
+  it('widens only the upper promise boundary during degraded queue reads', () => {
+    expect(estimateEta([{ prepSeconds: 650 }], [], null, 1, now, 1.5)).toEqual({
+      lowerMinutes: 10,
+      upperMinutes: 20,
+      queueDepth: 0,
+    });
+  });
+
+  it('handles empty and elapsed queues while preserving non-gold ordering', () => {
+    expect(estimateEta([], [], null, 2, now)).toEqual({
+      lowerMinutes: 0,
+      upperMinutes: 0,
+      queueDepth: 0,
+    });
+    expect(
+      estimateEta(
+        [{ prepSeconds: -5 }],
+        [
+          {
+            prepSeconds: 60,
+            status: 'preparing',
+            startedAt: new Date('2026-09-06T11:58:00.000Z'),
+            tier: 'gold',
+          },
+        ],
+        'silver',
+        1,
+        now,
+      ).queueDepth,
+    ).toBe(1);
+    expect(
+      estimateEta(
+        [],
+        [{ prepSeconds: 60, status: 'preparing', startedAt: null, tier: null }],
+        null,
+        1,
+        now,
+      ).lowerMinutes,
+    ).toBe(5);
+  });
+});

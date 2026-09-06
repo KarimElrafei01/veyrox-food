@@ -1,4 +1,13 @@
-import { boolean, char, integer, pgTable, text, time, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  char,
+  integer,
+  pgTable,
+  text,
+  time,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { createdAt, pk, tenantCol, ts, updatedAt } from './_shared.js';
 
 // docs/04-data-model.md §3.
@@ -42,3 +51,44 @@ export const storeClosures = pgTable('store_closures', {
   reason: text('reason'),
   createdAt: createdAt(),
 });
+
+/** Phone lookup uses the keyed hash so routine query telemetry never carries PII. */
+export const customers = pgTable(
+  'customers',
+  {
+    id: pk(),
+    tenantId: tenantCol().references(() => tenants.id),
+    phoneE164: text('phone_e164'),
+    phoneHash: text('phone_hash').notNull(),
+    waId: text('wa_id'),
+    displayName: text('display_name'),
+    locale: text('locale').notNull().default('en'),
+    localeVersion: integer('locale_version').notNull().default(-1),
+    pointsCache: integer('points_cache').notNull().default(0),
+    tier: text('tier').notNull().default('bronze'),
+    firstOrderAt: ts('first_order_at'),
+    lastOrderAt: ts('last_order_at'),
+    marketingOptIn: boolean('marketing_opt_in').notNull().default(false),
+    deletedAt: ts('deleted_at'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex('customers_tenant_phone_hash_idx').on(t.tenantId, t.phoneHash)],
+);
+
+/** Durable replay record for the public locale mutation; retained with the customer. */
+export const customerLocaleChanges = pgTable(
+  'customer_locale_changes',
+  {
+    id: pk(),
+    tenantId: tenantCol().references(() => tenants.id),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id),
+    idempotencyKey: text('idempotency_key').notNull(),
+    locale: text('locale').notNull(),
+    sequence: integer('sequence').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('customer_locale_changes_idempotency_idx').on(t.tenantId, t.idempotencyKey)],
+);

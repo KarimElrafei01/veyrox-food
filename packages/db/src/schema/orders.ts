@@ -1,4 +1,16 @@
-import { bigint, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import {
+  bigint,
+  date,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { createdAt, pk, tenantCol, ts } from './_shared.js';
 import { tenants } from './tenants.js';
 import { menuItems } from './catalog.js';
@@ -24,10 +36,14 @@ export const orders = pgTable(
   {
     id: pk(),
     tenantId: tenantCol().references(() => tenants.id),
-    orderNumber: text('order_number').notNull(), // per-tenant per-day sequence
+    orderNumber: text('order_number').notNull(), // per-tenant per-day sequence, e.g. A-047
+    // The Cairo calendar day the order belongs to. Stored, not derived, because the
+    // shouted `order_number` resets daily and its uniqueness is only per business day.
+    businessDate: date('business_date').notNull(),
     channel: text('channel').notNull(), // whatsapp | cashier
     customerId: uuid('customer_id'), // NULL for anonymous till orders
     tableLabel: text('table_label'), // free text, only if the café asks (FR-1.7)
+    customerNote: text('customer_note'),
     status: text('status').notNull(),
     subtotalMinor: bigint('subtotal_minor', { mode: 'number' }).notNull(),
     discountMinor: bigint('discount_minor', { mode: 'number' }).notNull().default(0),
@@ -42,14 +58,24 @@ export const orders = pgTable(
     createdByStaffId: uuid('created_by_staff_id'), // attribution (GAP-06)
     voidedByStaffId: uuid('voided_by_staff_id'),
     voidReason: text('void_reason'),
+    // Set by kitchen reject (F2). Customer-facing reason only: too_busy | item_unavailable | closing.
+    rejectionReason: text('rejection_reason'),
+    rejectedAt: ts('rejected_at'),
     idempotencyKey: text('idempotency_key').notNull(),
+    // The exact response body returned when this order was first placed. A replay
+    // must be byte-identical (F1.6 §5) — re-deriving it could differ once the queue
+    // moves. NULL for orders created outside the public placement path (e.g. till).
+    placementResponse: jsonb('placement_response'),
     createdAt: createdAt(),
   },
   (t) => [
     uniqueIndex('orders_tenant_idempotency_idx').on(t.tenantId, t.idempotencyKey),
-    uniqueIndex('orders_tenant_number_idx').on(t.tenantId, t.orderNumber),
+    uniqueIndex('orders_tenant_number_idx').on(t.tenantId, t.businessDate, t.orderNumber),
     index('orders_tenant_created_idx').on(t.tenantId, t.createdAt),
     index('orders_tenant_status_idx').on(t.tenantId, t.status),
+    index('orders_open_customer_idx')
+      .on(t.tenantId, t.customerId, t.status)
+      .where(sql`status in ('placed', 'received', 'preparing', 'ready')`),
   ],
 );
 
@@ -76,6 +102,22 @@ export const orderItems = pgTable(
     nameSnapshotAr: text('name_snapshot_ar'),
   },
   (t) => [index('order_items_tenant_item_order_idx').on(t.tenantId, t.menuItemId, t.orderId)],
+);
+
+/**
+ * One row per (tenant, Cairo day). Placement bumps `next_seq` with an upsert that
+ * `RETURNING`s the number it took, so concurrent placements serialise on this row
+ * rather than racing the `orders` unique index. Resets implicitly each day because
+ * a new day has no row yet. Not append-only — the counter is state, not history.
+ */
+export const orderNumberCounters = pgTable(
+  'order_number_counters',
+  {
+    tenantId: tenantCol().references(() => tenants.id),
+    businessDate: date('business_date').notNull(),
+    nextSeq: integer('next_seq').notNull().default(1),
+  },
+  (t) => [primaryKey({ columns: [t.tenantId, t.businessDate] })],
 );
 
 export const orderItemModifiers = pgTable('order_item_modifiers', {

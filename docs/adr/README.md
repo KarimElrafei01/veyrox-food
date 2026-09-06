@@ -23,4 +23,5 @@ The reasoning is the point. Code shows *what* was decided; only these show *why*
 | [0013](ADR-0013-ai-deterministic-core.md) | Deterministic statistics for numbers; the LLM only phrases | Accepted |
 | [0014](ADR-0014-platform-admin-separate-deployable.md) | Platform Admin as a separate deployable with its own auth realm | Accepted |
 | [0015](ADR-0015-configuration-model.md) | Three-layer configuration model, settings registry, versioned CRUD | Accepted |
+| [0017](ADR-0017-immutable-menu-publications.md) | Immutable menu publications for customer sessions | Accepted |
 | [0016](ADR-0016-whatsapp-provider-strategy.md) | WhatsApp via Fiwano (Tech Provider), per-café WABAs, behind a MessagingChannel adapter | Accepted · final 2026-09-06 |
