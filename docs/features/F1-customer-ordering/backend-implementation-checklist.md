@@ -56,7 +56,7 @@ checked only after the implementation and its required automated coverage pass.
 - [x] Append the customer `placed` event atomically with the order and ticket lines.
 - [x] Publish `OrderPlaced` only after commit; do not take payment, deduct material, or accrue loyalty.
 - [x] Add API/unit coverage for rejection, replay, snapshots, and no-ledger placement behaviour. _(use-case + controller unit/API coverage; real-Postgres concurrency/replay/no-ledger suite owed — see Coverage backfill)_
-- [ ] Run database schema/type/unit/API checks and commit the completed subfeature. _(type/unit/API + lint green; schema migration written but not executed — no local Postgres in this environment)_
+- [x] Run database schema/type/unit/API checks and commit the completed subfeature. _(migrations 0007/0008 applied to a real Postgres 16; type/unit/API/lint green. This also required fixing a pre-existing 0030 RLS policy collision and the deny-by-default predicate — see the `fix(db)` commit.)_
 
 ## F1.7 — Order status
 
@@ -67,6 +67,7 @@ checked only after the implementation and its required automated coverage pass.
 ## Coverage backfill (blocks release)
 
 - [ ] Stand up the `apps/api` `test:int` harness against real Postgres (docker compose).
+- [ ] Complete `packages/db/src/__integration__/graph.ts` — it seeds ~half the schema, so the cross-tenant leak suite fails for `customers`, `menu_versions*`, `loyalty_ledger`, and the messaging tables. Pre-dates F1.6.
 - [ ] F1.1 — WhatsApp webhook replay/dedup integration test and session-resolution integration test.
 - [ ] F1.2 — publication atomicity, retention, availability invalidation, byte-identity, and payload-budget suites.
 - [ ] F1.3 — property test for quote pricing and an API integration test proving quote/placement parity (with F1.6).
