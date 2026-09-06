@@ -1,14 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { quoteOrderRequest } from '@veyroxai/contracts';
-import {
-  estimateEta,
-  MenuVersionGone,
-  ModifierGroupRequired,
-  ModifierSelectionInvalid,
-  previewPoints,
-} from '@veyroxai/domain';
+import { MenuVersionGone, ModifierGroupRequired, ModifierSelectionInvalid } from '@veyroxai/domain';
 import type { QuoteOrder } from '../application/quote-order.js';
 import { verifyCustomerSession } from './session-token.js';
+import { assembleQuoteBody } from './quote-body.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import { recordEtaRead, type EtaMetricSink } from '../application/eta-metrics.js';
 
@@ -45,23 +40,8 @@ export async function quoteOrderController(
         });
         const queue = await options.etaQueue.load(session.tenantId);
         recordEtaRead(options.etaMetrics, queue.source, queue.state.tickets.length);
-        const eta = estimateEta(
-          priced.etaItems,
-          queue.state.tickets,
-          session.tier,
-          queue.state.activeStations,
-          new Date(),
-          queue.source === 'degraded' ? 1.5 : 1.25,
-        );
         return {
-          lines: priced.lines,
-          subtotalMinor: priced.subtotalMinor,
-          discountMinor: priced.discountMinor,
-          totalMinor: priced.totalMinor,
-          unavailable: priced.unavailable,
-          eta,
-          loyalty: { ...previewPoints(priced.totalMinor, session.tier), tier: session.tier },
-          payAt: 'counter',
+          ...assembleQuoteBody(priced, queue, session.tier, new Date()),
           traceId: request.id,
         };
       } catch (error) {

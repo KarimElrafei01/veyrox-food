@@ -14,6 +14,16 @@ export const catalogs = {
     'common.loading': 'Loading…',
     'order.title': 'Order',
     'kds.title': 'Kitchen',
+    // Customer-facing order status (F1.7 §3). `received` and `preparing` collapse
+    // to one label on purpose — the split is a KDS column, not the customer's concern.
+    'order.status.placed': 'Sent to the kitchen',
+    'order.status.received': 'Being prepared',
+    'order.status.preparing': 'Being prepared',
+    'order.status.ready': 'Ready for collection',
+    'order.status.collected': 'Collected',
+    'order.status.rejected': 'Could not be prepared',
+    'order.status.voided': 'Cancelled',
+    'order.status.abandoned': 'Not collected',
   },
   'ar-EG': {
     'app.name': 'فيروكس فود',
@@ -21,6 +31,14 @@ export const catalogs = {
     'common.loading': 'جارٍ التحميل…',
     'order.title': 'الطلب',
     'kds.title': 'المطبخ',
+    'order.status.placed': 'تم الإرسال للمطبخ',
+    'order.status.received': 'جاري التحضير',
+    'order.status.preparing': 'جاري التحضير',
+    'order.status.ready': 'جاهز للاستلام',
+    'order.status.collected': 'تم الاستلام',
+    'order.status.rejected': 'تعذّر التحضير',
+    'order.status.voided': 'أُلغي',
+    'order.status.abandoned': 'لم يُستلم',
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 

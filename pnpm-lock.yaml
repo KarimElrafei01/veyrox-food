@@ -163,12 +163,15 @@ importers:
       '@veyroxai/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@veyroxai/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@veyroxai/observability':
         specifier: workspace:*
         version: link:../../packages/observability
       bullmq:
         specifier: 6.3.4
-        version: 6.3.4
+        version: 6.3.4(ioredis@6.0.0)(pg@8.23.0)
       fastify:
         specifier: 5.12.3
         version: 5.12.3

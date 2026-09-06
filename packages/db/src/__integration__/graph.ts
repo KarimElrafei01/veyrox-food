@@ -87,6 +87,7 @@ export async function seedTenantGraph(pool: Pool, slug: string): Promise<string>
     .values({
       tenantId: t,
       orderNumber: '001',
+      businessDate: now.toISOString().slice(0, 10),
       channel: 'cashier',
       status: 'draft',
       subtotalMinor: 6500,

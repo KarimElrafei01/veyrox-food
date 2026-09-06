@@ -10,6 +10,10 @@ import { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue
 import { QuoteOrder } from './contexts/ordering/application/quote-order.js';
 import { PublishedMenuRepository } from './contexts/ordering/infrastructure/published-menu-repository.js';
 import { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-queue-repository.js';
+import { PlaceOrder } from './contexts/ordering/application/place-order.js';
+import { OrderPlacementRepository } from './contexts/ordering/infrastructure/order-placement-repository.js';
+import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
+import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -26,6 +30,16 @@ async function main(): Promise<void> {
   if (!whatsappAppSecret) throw new Error('WHATSAPP_APP_SECRET is not set');
   const database = createDatabase(pool);
   const queue = new Queue('veyrox', { connection: redis });
+  const sessionKeys: [string, ...string[]] = previousSessionKey
+    ? [sessionKey, previousSessionKey]
+    : [sessionKey];
+  const publishedMenus = new PublishedMenuRepository(database, redis);
+  const quoteOrder = new QuoteOrder(publishedMenus);
+  const etaQueue = new EtaQueueRepository(database, redis);
+  const placementMetrics: OrderPlacementMetricSink = {
+    increment: (name, labels) => log.info('order placement metric', { name, ...labels }),
+    observe: (name, seconds) => log.info('order placement metric', { name, seconds }),
+  };
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -65,13 +79,27 @@ async function main(): Promise<void> {
       sessionKeys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
     },
     quoteOrder: {
-      quote: new QuoteOrder(new PublishedMenuRepository(database, redis)),
-      keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
-      etaQueue: new EtaQueueRepository(database, redis),
+      quote: quoteOrder,
+      keys: sessionKeys,
+      etaQueue,
       etaMetrics: {
         increment: (name) => log.info('eta metric increment', { name }),
         gauge: (name, value) => log.info('eta metric gauge', { name, value }),
       },
+    },
+    placeOrder: {
+      place: new PlaceOrder(quoteOrder, new OrderPlacementRepository(database)),
+      resolver: new ResolveCustomerSession(new CustomerSessionRepository(database)),
+      keys: sessionKeys,
+      etaQueue,
+      metrics: placementMetrics,
+      emit: async (event) => {
+        log.info('OrderPlaced', event);
+      },
+    },
+    orderStatus: {
+      orders: new OrderStatusRepository(database),
+      keys: sessionKeys,
     },
   });
 
