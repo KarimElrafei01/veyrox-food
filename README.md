@@ -51,13 +51,17 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT ON TABLES TO veyr
 
 then set `DATABASE_URL` (the `veyroxai_app` role) and `DATABASE_ADMIN_URL` (the
 project owner — it has `BYPASSRLS`, which migrations and the test harness need) to
-the **direct** (non-pooled) connection strings. Redis is not on Neon; set
-`REDIS_URL` to a hosted instance to run `quote` / `place` / `availability` / the
-webhook — `db:*` and the `session` / `menu` / `status` endpoints do not need it.
+the **direct** (non-pooled) connection strings. Redis is not on Neon: either point
+`REDIS_URL` at a hosted instance, or set `REDIS_URL=memory` for an in-process shim
+(every HTTP endpoint works; the webhook does not reach a worker).
 
-Either way, recreate the database with `pnpm db:migrate && pnpm db:seed`. For a
-by-hand test kit (tokens, curl commands for every F1 endpoint):
-`pnpm --filter @veyroxai/api fixture`.
+Either way, recreate the database with `pnpm db:migrate && pnpm db:seed`, then:
+
+```bash
+pnpm --filter @veyroxai/api fixture   # modifiers, an 86'd item, a published menu,
+                                      # four customers, orders — prints a curl kit
+pnpm --filter @veyroxai/api tokens    # reprint fresh 24h session tokens later
+```
 
 ## Scripts
 
