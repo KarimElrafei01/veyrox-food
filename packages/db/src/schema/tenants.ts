@@ -42,3 +42,26 @@ export const storeClosures = pgTable('store_closures', {
   reason: text('reason'),
   createdAt: createdAt(),
 });
+
+/** Phone lookup uses the keyed hash so routine query telemetry never carries PII. */
+export const customers = pgTable(
+  'customers',
+  {
+    id: pk(),
+    tenantId: tenantCol().references(() => tenants.id),
+    phoneE164: text('phone_e164'),
+    phoneHash: text('phone_hash').notNull(),
+    waId: text('wa_id'),
+    displayName: text('display_name'),
+    locale: text('locale').notNull().default('en'),
+    pointsCache: integer('points_cache').notNull().default(0),
+    tier: text('tier').notNull().default('bronze'),
+    firstOrderAt: ts('first_order_at'),
+    lastOrderAt: ts('last_order_at'),
+    marketingOptIn: boolean('marketing_opt_in').notNull().default(false),
+    deletedAt: ts('deleted_at'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex('customers_tenant_phone_hash_idx').on(t.tenantId, t.phoneHash)],
+);
