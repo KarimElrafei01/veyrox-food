@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@veyroxai/ui/tokens.css';
+import '../styles/global.css';
+import { Providers } from './providers.js';
 import { App } from './App.js';
 
 const root = document.getElementById('root');
@@ -10,6 +11,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <Providers>
+      <App />
+    </Providers>
   </StrictMode>,
 );

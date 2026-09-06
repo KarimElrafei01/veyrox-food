@@ -125,3 +125,20 @@ Every `code` F1 can return. Stable machine strings; clients switch on these, nev
 - **Mark anything paid.** No payment exists in v1 (ADR-0010).
 - **Trust `menuVersion` from the client** without confirming the session token pinned it.
 - **Write outside a single transaction** in F1.6. Order header, lines, modifiers, and event go together or not at all.
+
+---
+
+## 7. Webview app (`apps/order`)
+
+The frontend lives in `apps/order`, feature-first with the four layers from ADR-0018
+(`ui/` · `hooks/` · `usecases/` · `repo/`). One feature folder per subfeature: `session/` (entry +
+the closed / suspended / open-order-block / expired states), `menu/`, `item/`, `cart/`, `checkout/`,
+`order-status/`, plus `loyalty/` (presentational — its data rides on session, quote, and status).
+
+Design system in `packages/ui` (Brew & Baladi tokens, CSS Modules, RTL via logical properties).
+Copy in `packages/i18n` (`en` default, `ar-EG`; Western Arabic numerals for money and counts). The
+`repo/` layer calls the `/public/*` endpoints in each subfeature's §2 through `packages/api-client`'s
+HTTP client, parsing every response against a `packages/contracts` schema.
+
+`apps/order` never polls (ADR-0005): the status screen fetches once on placement and once on window
+focus; WhatsApp messages are the real post-placement channel (F1.7 §1).

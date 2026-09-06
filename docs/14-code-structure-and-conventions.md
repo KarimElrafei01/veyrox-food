@@ -102,17 +102,31 @@ This matters as much as where it is. **Rich domain modelling is for invariants, 
 Every SPA has the same shape:
 
 ```
-apps/kds/src/
+apps/order/src/
 ├── features/
-│   ├── board/               Columns, ticket rendering, drag/tap advance
-│   ├── accept-gate/         New column, accept/reject
-│   └── availability/        86-ing from the board
-├── shared/                  App-local helpers only
-├── app/                     Routing, providers, entry
-└── main.tsx
+│   ├── menu/
+│   │   ├── ui/              Screens + presentational components
+│   │   ├── hooks/           useMenu — React glue
+│   │   ├── usecases/        loadMenu — pure orchestration
+│   │   └── repo/            menuRepo — the backend calls
+│   └── checkout/            …same four layers
+├── shared/                  App-local helpers only (http client, session context, cart store)
+├── app/                     Router, providers, entry
+└── app/main.tsx
 ```
 
-**Feature-first, not layer-first.** Everything a feature needs — component, hook, local state, its slice of API calls — lives in its folder. No global `components/`, `hooks/`, `utils/` dumping grounds; those become where code goes to be forgotten.
+**Feature-first, not layer-first.** Everything a feature needs lives in its folder. No global `components/`, `hooks/`, `utils/` dumping grounds — those become where code goes to be forgotten.
+
+**Four layers inside a feature** (ADR-0018), each testable on its own:
+
+| Layer | Does | Never |
+|---|---|---|
+| `ui/` | Presentational screens + components. Props in, callbacks out. | fetch, business rules, importing repo/usecase |
+| `hooks/` | React glue: call a usecase, hold `loading`/`error`/`data`. `useX`. | JSX, direct `fetch` |
+| `usecases/` | Pure orchestration: repo(s) + input → result. Merge, validate, decide. | React, DOM, `fetch` |
+| `repo/` | One backend call each: build request, parse the Zod response (`packages/contracts`), return typed data or throw `ApiError`. | React, UI, orchestration |
+
+A trivial read may collapse its `usecase` to a one-liner — the split earns its place only where there is orchestration to isolate.
 
 Anything used by two features moves to the app's `shared/`. Anything used by two apps moves to a package. In that order, and only when the second use actually appears.
 

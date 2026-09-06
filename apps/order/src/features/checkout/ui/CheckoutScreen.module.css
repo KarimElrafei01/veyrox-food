@@ -1,0 +1,127 @@
+.ctaText {
+  flex: 1;
+  text-align: start;
+}
+.confirmNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-block-start: var(--vx-space-xs);
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-on-surface-variant);
+  text-align: center;
+}
+.etaRow {
+  display: flex;
+  gap: var(--vx-space-sm);
+  align-items: center;
+}
+.etaIcon {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--vx-radius);
+  background: var(--vx-secondary);
+  color: var(--vx-on-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.etaTitle {
+  font-weight: 600;
+  font-size: var(--vx-text-label-lg);
+  color: var(--vx-on-surface);
+}
+.etaSub {
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface-variant);
+}
+.orderHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: var(--vx-text-label-lg);
+  color: var(--vx-primary-container);
+  margin-block-end: var(--vx-space-sm);
+}
+.editLink {
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-secondary);
+  font-weight: 600;
+}
+.lineRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--vx-space-sm);
+}
+.lineText {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.lineName {
+  font-weight: 500;
+  color: var(--vx-on-surface);
+}
+.lineMods {
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface-variant);
+}
+.totalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-start: var(--vx-space-sm);
+  padding-block-start: var(--vx-space-sm);
+  border-block-start: 1px solid var(--vx-outline-variant);
+  font-weight: 700;
+  color: var(--vx-primary-container);
+}
+.pay {
+  display: flex;
+  gap: var(--vx-space-sm);
+  align-items: flex-start;
+}
+.payIcon {
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary);
+  color: var(--vx-on-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.payTitle {
+  font-weight: 700;
+  color: var(--vx-on-secondary-fixed-variant);
+}
+.paySub {
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface-variant);
+  line-height: var(--vx-leading-normal);
+}
+.points {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface);
+}
+.points svg {
+  color: var(--vx-secondary);
+}
+.error {
+  color: var(--vx-error);
+  font-weight: 600;
+  font-size: var(--vx-text-body-sm);
+}
+.sheetBody {
+  font-size: var(--vx-text-body-md);
+  color: var(--vx-on-surface);
+  line-height: var(--vx-leading-normal);
+}

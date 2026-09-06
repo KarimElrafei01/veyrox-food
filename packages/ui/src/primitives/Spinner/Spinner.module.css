@@ -1,0 +1,13 @@
+.spinner {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-block-start-color: transparent;
+  border-radius: var(--vx-radius-pill);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

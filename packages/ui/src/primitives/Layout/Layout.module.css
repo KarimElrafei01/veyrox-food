@@ -1,0 +1,49 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+.inline {
+  display: flex;
+  min-inline-size: 0;
+}
+
+.screen {
+  display: flex;
+  justify-content: center;
+  min-block-size: 100dvh;
+  background: var(--vx-surface);
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  max-inline-size: var(--vx-container-max);
+  min-block-size: 100dvh;
+  position: relative;
+}
+.header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  padding-block-start: env(safe-area-inset-top, 0);
+  background: color-mix(in srgb, var(--vx-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 8px rgba(28, 28, 24, 0.04);
+}
+.body {
+  flex: 1;
+  padding-inline: var(--vx-gutter);
+  padding-block: var(--vx-space-md) var(--vx-space-2xl);
+}
+.footer {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 20;
+}
+.stickyBar {
+  padding: var(--vx-gutter);
+  padding-block-end: calc(var(--vx-gutter) + env(safe-area-inset-bottom, 0));
+  background: color-mix(in srgb, var(--vx-surface) 95%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--vx-elevation-high);
+}

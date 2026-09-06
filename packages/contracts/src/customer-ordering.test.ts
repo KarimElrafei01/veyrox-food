@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { placeOrderRequest } from './customer-ordering.js';
+import { placeOrderRequest, quoteOrderRequest } from './customer-ordering.js';
 
-describe('customer ordering contracts', () => {
-  it('does not accept client-supplied prices', () => {
-    const result = placeOrderRequest.safeParse({
-      items: [
-        {
-          menuItemId: '0192d425-9790-7dd9-8aa9-8cbd4c3844db',
-          qty: 1,
-          modifierOptionIds: [],
-          unitPriceMinor: 1,
-        },
-      ],
+const ITEM = '11000000-0000-4000-8000-000000000020';
+
+describe('customer ordering — request contracts', () => {
+  it('does not accept client-supplied prices (there is nowhere to put one)', () => {
+    const parsed = placeOrderRequest.parse({
+      items: [{ menuItemId: ITEM, qty: 1, modifierOptionIds: [], unitPriceMinor: 1 }],
+      expectedTotalMinor: 9000,
     });
-    expect(result.success).toBe(true);
-    if (result.success) expect(result.data.items[0]).not.toHaveProperty('unitPriceMinor');
+    expect('unitPriceMinor' in parsed.items[0]!).toBe(false);
   });
+
+  it('carries an optional clientLineId for quote correlation (F1.3 §2)', () => {
+    const parsed = quoteOrderRequest.parse({
+      items: [{ clientLineId: 'l-1', menuItemId: ITEM, qty: 2, modifierOptionIds: [] }],
+    });
+    expect(parsed.items[0]?.clientLineId).toBe('l-1');
 });

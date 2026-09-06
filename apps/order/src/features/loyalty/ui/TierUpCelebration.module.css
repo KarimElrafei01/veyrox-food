@@ -1,0 +1,42 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--vx-gutter);
+  background: rgba(7, 1, 0, 0.5);
+}
+.card {
+  inline-size: 100%;
+  max-inline-size: 22rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-xl) var(--vx-space-lg);
+  background: var(--vx-surface);
+  border-radius: var(--vx-radius-xl);
+  box-shadow: var(--vx-elevation-mid);
+}
+.badge {
+  inline-size: 4.5rem;
+  block-size: 4.5rem;
+  border-radius: var(--vx-radius-pill);
+  background: linear-gradient(135deg, var(--vx-loyalty-from), var(--vx-loyalty-to));
+  border: 1px solid var(--vx-loyalty-border);
+  color: var(--vx-loyalty-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title {
+  font-size: var(--vx-text-headline-md);
+  color: var(--vx-primary-container);
+}
+.body {
+  font-size: var(--vx-text-body-md);
+  color: var(--vx-on-surface-variant);
+}
