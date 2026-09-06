@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "fixture": "tsx --env-file-if-exists=../../.env src/dev/fixture.ts"
+    "fixture": "tsx --env-file-if-exists=../../.env src/dev/fixture.ts",
+    "tokens": "tsx --env-file-if-exists=../../.env src/dev/session-tokens.ts"
   },
   "dependencies": {
     "@fastify/helmet": "13.1.1",

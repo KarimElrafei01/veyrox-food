@@ -1,6 +1,12 @@
 import { Redis } from 'ioredis';
 import { Queue } from 'bullmq';
 import { createDatabase, createPool } from '@veyroxai/db';
+import {
+  createMemoryRedis,
+  createNoopQueue,
+  type DevCache,
+  type DevQueue,
+} from './dev/memory-redis.js';
 import { createLogger } from '@veyroxai/observability';
 import { buildApp } from './app.js';
 import { ResolveCustomerSession } from './contexts/ordering/application/resolve-customer-session.js';
@@ -20,17 +26,27 @@ const log = createLogger({ service: 'api' });
 
 async function main(): Promise<void> {
   const pool = createPool();
-  const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
-    lazyConnect: true,
-    maxRetriesPerRequest: 1,
-  });
+  // `REDIS_URL=memory` swaps in an in-process cache + no-op queue for local dev on
+  // a machine without Redis (dev/memory-redis.ts). Never in production.
+  const memoryRedis = (process.env.REDIS_URL ?? '').toLowerCase() === 'memory';
+  if (memoryRedis && process.env.NODE_ENV === 'production') {
+    throw new Error('REDIS_URL=memory is a dev-only shim; set a real Redis URL.');
+  }
+  const redis: Redis | DevCache = memoryRedis
+    ? createMemoryRedis()
+    : new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+        lazyConnect: true,
+        maxRetriesPerRequest: 1,
+      });
   const sessionKey = process.env.SESSION_KEY;
   if (!sessionKey) throw new Error('SESSION_KEY is not set');
   const previousSessionKey = process.env.SESSION_KEY_PREVIOUS;
   const whatsappAppSecret = process.env.WHATSAPP_APP_SECRET;
   if (!whatsappAppSecret) throw new Error('WHATSAPP_APP_SECRET is not set');
   const database = createDatabase(pool);
-  const queue = new Queue('veyrox', { connection: redis });
+  const queue: Queue | DevQueue = memoryRedis
+    ? createNoopQueue()
+    : new Queue('veyrox', { connection: redis as Redis });
   const sessionKeys: [string, ...string[]] = previousSessionKey
     ? [sessionKey, previousSessionKey]
     : [sessionKey];

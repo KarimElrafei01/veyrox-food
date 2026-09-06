@@ -77,6 +77,9 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: process.env.LOG_LEVEL ?? 'info' },
     genReqId: () => crypto.randomUUID(),
+    // `GET /public/session/:token` carries a signed session token in the path;
+    // find-my-way's default cap is 100 characters (F1.1).
+    routerOptions: { maxParamLength: 800 },
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
