@@ -1,0 +1,5 @@
+@import '@veyroxai/ui/tokens.css';
+
+#root {
+  min-block-size: 100dvh;
+}
