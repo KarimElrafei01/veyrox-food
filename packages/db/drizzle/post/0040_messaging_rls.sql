@@ -2,7 +2,10 @@
 -- phone-number mapping after the edge dedupe, so NULL tenant rows are the one
 -- deliberate exception to ordinary tenant-scoped access.
 ALTER TABLE inbound_events ENABLE ROW LEVEL SECURITY;
+-- 0030's loop puts the plain tenant_isolation policy on every table; replace it
+-- here. Both DROPs are IF EXISTS so re-running this file is a no-op.
 DROP POLICY IF EXISTS tenant_isolation ON inbound_events;
+DROP POLICY IF EXISTS inbound_event_edge_and_worker_access ON inbound_events;
 CREATE POLICY inbound_event_edge_and_worker_access ON inbound_events
   USING (
     tenant_id IS NULL
