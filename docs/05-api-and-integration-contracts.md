@@ -33,6 +33,7 @@ The API is the single write path (`01-system-design.md` P1). Everything below is
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/public/session/:token` | Resolve session → tenant, locale, customer tier, **pinned menu version** |
+| `POST` | `/public/session/locale` | Persist session customer's `en`/`ar-EG` locale; `Idempotency-Key` and monotonic body `sequence` required |
 | `GET` | `/public/menu?v=:menuVersion` | Categories, items, modifier groups, availability, prices. Cacheable by version |
 | `POST` | `/public/orders/quote` | Server-side price + ETA for a draft cart. **No writes.** |
 | `POST` | `/public/orders` | Create order in `placed`. **No payment, no material deduction.** Returns order number and ETA |

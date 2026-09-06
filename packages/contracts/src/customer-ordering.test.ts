@@ -17,5 +17,4 @@ describe('customer ordering — request contracts', () => {
       items: [{ clientLineId: 'l-1', menuItemId: ITEM, qty: 2, modifierOptionIds: [] }],
     });
     expect(parsed.items[0]?.clientLineId).toBe('l-1');
-  });
 });

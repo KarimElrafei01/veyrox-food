@@ -4,6 +4,7 @@ import {
   integer,
   numeric,
   pgTable,
+  primaryKey,
   text,
   uniqueIndex,
   uuid,
@@ -124,6 +125,115 @@ export const menuItemModifierGroups = pgTable(
     sort: integer('sort').notNull().default(0),
   },
   (t) => [uniqueIndex('menu_item_modifier_group_idx').on(t.menuItemId, t.groupId)],
+);
+
+// A published menu is immutable so a session-pinned cart cannot change beneath a
+// customer when the live catalogue is edited (ADR-0017).
+export const menuVersions = pgTable('menu_versions', {
+  id: pk(),
+  tenantId: tenantCol().references(() => tenants.id),
+  publishedAt: ts('published_at').notNull(),
+  retainedUntil: ts('retained_until').notNull(),
+  createdAt: createdAt(),
+});
+
+export const menuVersionCategories = pgTable(
+  'menu_version_categories',
+  {
+    menuVersionId: uuid('menu_version_id')
+      .notNull()
+      .references(() => menuVersions.id),
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => menuCategories.id),
+    tenantId: tenantCol().references(() => tenants.id),
+    nameEn: text('name_en').notNull(),
+    nameAr: text('name_ar'),
+    sort: integer('sort').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.menuVersionId, t.categoryId] })],
+);
+
+export const menuVersionItems = pgTable(
+  'menu_version_items',
+  {
+    menuVersionId: uuid('menu_version_id')
+      .notNull()
+      .references(() => menuVersions.id),
+    menuItemId: uuid('menu_item_id')
+      .notNull()
+      .references(() => menuItems.id),
+    tenantId: tenantCol().references(() => tenants.id),
+    categoryId: uuid('category_id').references(() => menuCategories.id),
+    nameEn: text('name_en').notNull(),
+    nameAr: text('name_ar'),
+    descriptionEn: text('description_en'),
+    descriptionAr: text('description_ar'),
+    basePriceMinor: bigint('base_price_minor', { mode: 'number' }).notNull(),
+    prepSeconds: integer('prep_seconds').notNull(),
+    sort: integer('sort').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.menuVersionId, t.menuItemId] })],
+);
+
+export const menuVersionModifierGroups = pgTable(
+  'menu_version_modifier_groups',
+  {
+    menuVersionId: uuid('menu_version_id')
+      .notNull()
+      .references(() => menuVersions.id),
+    modifierGroupId: uuid('modifier_group_id')
+      .notNull()
+      .references(() => modifierGroups.id),
+    tenantId: tenantCol().references(() => tenants.id),
+    nameEn: text('name_en').notNull(),
+    nameAr: text('name_ar'),
+    selection: text('selection').notNull(),
+    minSelect: integer('min_select').notNull(),
+    maxSelect: integer('max_select'),
+    required: boolean('required').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.menuVersionId, t.modifierGroupId] })],
+);
+
+export const menuVersionModifierOptions = pgTable(
+  'menu_version_modifier_options',
+  {
+    menuVersionId: uuid('menu_version_id')
+      .notNull()
+      .references(() => menuVersions.id),
+    modifierOptionId: uuid('modifier_option_id')
+      .notNull()
+      .references(() => modifierOptions.id),
+    tenantId: tenantCol().references(() => tenants.id),
+    modifierGroupId: uuid('modifier_group_id')
+      .notNull()
+      .references(() => modifierGroups.id),
+    nameEn: text('name_en').notNull(),
+    nameAr: text('name_ar'),
+    priceDeltaMinor: bigint('price_delta_minor', { mode: 'number' }).notNull(),
+    freeForTier: text('free_for_tier'),
+    sort: integer('sort').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.menuVersionId, t.modifierOptionId] })],
+);
+
+export const menuVersionItemModifierGroups = pgTable(
+  'menu_version_item_modifier_groups',
+  {
+    menuVersionId: uuid('menu_version_id')
+      .notNull()
+      .references(() => menuVersions.id),
+    menuItemId: uuid('menu_item_id')
+      .notNull()
+      .references(() => menuItems.id),
+    modifierGroupId: uuid('modifier_group_id')
+      .notNull()
+      .references(() => modifierGroups.id),
+    tenantId: tenantCol().references(() => tenants.id),
+    sort: integer('sort').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.menuVersionId, t.menuItemId, t.modifierGroupId] })],
 );
 
 // VERSIONED HEADER. Recipes are never edited in place (docs/04 §5).

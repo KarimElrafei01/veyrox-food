@@ -175,6 +175,48 @@ modifier_options (
 
 menu_item_modifier_groups ( menu_item_id, group_id, sort )
 
+-- IMMUTABLE PUBLICATION. ADR-0017; one UUID is pinned into every customer session.
+menu_versions (
+  id uuid PK, tenant_id,
+  published_at timestamptz NOT NULL,
+  retained_until timestamptz NOT NULL,
+  created_at timestamptz
+)
+
+menu_version_categories (
+  menu_version_id, category_id,
+  name_en text NOT NULL, name_ar text, sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, category_id)
+)
+
+menu_version_items (
+  menu_version_id, menu_item_id, category_id,
+  name_en text NOT NULL, name_ar text,
+  description_en text, description_ar text,
+  base_price_minor bigint NOT NULL, prep_seconds int NOT NULL, sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, menu_item_id)
+)
+
+menu_version_modifier_groups (
+  menu_version_id, modifier_group_id,
+  name_en text NOT NULL, name_ar text,
+  selection text NOT NULL, min_select int NOT NULL, max_select int, required bool NOT NULL,
+  PRIMARY KEY (menu_version_id, modifier_group_id)
+)
+
+menu_version_modifier_options (
+  menu_version_id, modifier_option_id, modifier_group_id,
+  name_en text NOT NULL, name_ar text,
+  price_delta_minor bigint NOT NULL, free_for_tier text,
+  sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, modifier_option_id)
+)
+
+menu_version_item_modifier_groups (
+  menu_version_id, menu_item_id, modifier_group_id, sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, menu_item_id, modifier_group_id)
+)
+
 recipes (                                          -- VERSIONED HEADER
   id, tenant_id, menu_item_id,
   version int NOT NULL,
@@ -201,10 +243,12 @@ recipe_lines (
 ```sql
 orders (
   id uuid PK, tenant_id,
-  order_number text NOT NULL,                  -- human-readable, per-tenant per-day sequence
+  order_number text NOT NULL,                  -- human-readable, per-tenant per-day sequence, e.g. A-047
+  business_date date NOT NULL,                 -- the Cairo day the number belongs to (F1.6)
   channel text NOT NULL,                       -- whatsapp | cashier          (PRD §6.3)
   customer_id uuid NULL,                       -- NULL for anonymous till orders
   table_label text NULL,                       -- free text, only if the café asks for it (FR-1.7)
+  customer_note text NULL,                     -- ≤140 chars, shown on the ticket, never parsed (F1.6)
   status text NOT NULL,                        -- see state machine, 01-system-design §4.3
   subtotal_minor bigint NOT NULL,
   discount_minor bigint NOT NULL DEFAULT 0,
@@ -217,10 +261,19 @@ orders (
   created_by_staff_id uuid NULL,               -- attribution (GAP-06)
   voided_by_staff_id  uuid NULL,
   void_reason text NULL,
+  rejection_reason text NULL,                  -- customer-facing: too_busy | item_unavailable | closing (F1.7)
+  rejected_at timestamptz,
   idempotency_key text NOT NULL,
+  placement_response jsonb NULL,               -- frozen 201 body; a replay returns it byte-identically (F1.6 §5)
   created_at timestamptz,
   UNIQUE (tenant_id, idempotency_key),
-  UNIQUE (tenant_id, order_number)
+  UNIQUE (tenant_id, business_date, order_number) -- the shouted number only resets, and is only unique, per day
+)
+
+order_number_counters (                        -- one row per (tenant, Cairo day); placement bumps it with an upsert
+  tenant_id, business_date date,
+  next_seq int NOT NULL DEFAULT 1,
+  PRIMARY KEY (tenant_id, business_date)
 )
 
 order_items (
