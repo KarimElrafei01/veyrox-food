@@ -3,11 +3,11 @@
 This checklist tracks the backend work required by F1.1 through F1.7. A box is
 checked only after the implementation and its required automated coverage pass.
 
-> **Coverage debt (2026-09-07).** F1.1–F1.7 implementation items are checked and
-> covered by unit/API tests, but the required real-Postgres integration, property,
-> and replay suites do not exist yet and the API package has no `test:int` harness.
-> Migration `0007` is written but unexecuted (no local Postgres here). See
-> "Coverage backfill" — these items are not release-ready until that section is clear.
+> **Coverage debt (2026-09-07).** F1.1–F1.7 implementation is done and covered by
+> unit/API tests. Migrations 0006–0008 apply cleanly to a real Postgres 16 and
+> `packages/db` `test:int` is green. Still owed: per-feature real-Postgres suites
+> (F1.1–F1.7), an `apps/api` `test:int` harness, and honestly-remarked F1.4/F1.5
+> integration items. See "Coverage backfill" — not release-ready until it is clear.
 
 ## F1.1 — Session and entry
 
@@ -34,7 +34,7 @@ checked only after the implementation and its required automated coverage pass.
 
 - [x] Implement queue projection, Redis read path, and Postgres fallback.
 - [x] Add ETA metrics and degraded-range behaviour.
-- [x] Add queue projection and fallback integration coverage.
+- [ ] Add queue projection and fallback integration coverage. _(unit only — `eta-queue-repository.test.ts` builds the repo with a `null` DB, so the Postgres `rebuild()` fallback is never run against a database. Harness now unblocked — see Coverage backfill.)_
 
 ## F1.5 — Loyalty
 
@@ -44,7 +44,7 @@ checked only after the implementation and its required automated coverage pass.
 - [x] Add the tenant-scoped append-only `loyalty_ledger` and its history index.
 - [x] Accrue on staff-attributed collection only, transactionally updating `customers.points_cache` and tier.
 - [x] Enqueue one idempotent tier celebration per customer, tier, and Cairo date.
-- [x] Prove INV-4 (`points_cache == SUM(loyalty_ledger.delta)`) and every tier boundary with unit/property and integration coverage.
+- [ ] Prove INV-4 (`points_cache == SUM(loyalty_ledger.delta)`) and every tier boundary with unit/property and integration coverage. _(tier boundaries + the pure `loyaltyCacheMatchesLedger` check are covered; no test accrues through the real transaction and asserts INV-4 in Postgres, and `append-only.test.ts` does not cover `loyalty_ledger`. Harness now unblocked — see Coverage backfill.)_
 
 ## F1.6 — Order placement
 
@@ -66,12 +66,14 @@ checked only after the implementation and its required automated coverage pass.
 
 ## Coverage backfill (blocks release)
 
-- [ ] Stand up the `apps/api` `test:int` harness against real Postgres (docker compose).
-- [ ] Complete `packages/db/src/__integration__/graph.ts` — it seeds ~half the schema, so the cross-tenant leak suite fails for `customers`, `menu_versions*`, `loyalty_ledger`, and the messaging tables. Pre-dates F1.6.
+- [ ] Stand up the `apps/api` `test:int` harness against real Postgres (docker compose or a Neon branch).
+- [x] Complete `packages/db/src/__integration__/graph.ts` — now seeds all 31 tables; `pnpm --filter @veyroxai/db test:int` is green (cross-tenant leak + append-only) against real Postgres 16.
 - [ ] F1.1 — WhatsApp webhook replay/dedup integration test and session-resolution integration test.
 - [ ] F1.2 — publication atomicity, retention, availability invalidation, byte-identity, and payload-budget suites.
 - [ ] F1.3 — property test for quote pricing and an API integration test proving quote/placement parity (with F1.6).
-- [ ] F1.6 — real-Postgres coverage: all gates independently, concurrent identical requests produce exactly one order, byte-identical replay, **no `material_ledger` rows after placement**, recipe edited between placement and Accept deducts the placement-stamped version. Run `packages/db` migration `0007` against a live database.
+- [ ] F1.4 — integration test for the ETA queue Postgres `rebuild()` fallback (currently only the Redis path and the pure reducer are covered).
+- [ ] F1.5 — integration test that accrues through the real transaction and asserts INV-4 (`points_cache == SUM(loyalty_ledger.delta)`) in Postgres; add `loyalty_ledger` to `append-only.test.ts`.
+- [ ] F1.6 — real-Postgres coverage: all gates independently, concurrent identical requests produce exactly one order, byte-identical replay, **no `material_ledger` rows after placement**, recipe edited between placement and Accept deducts the placement-stamped version.
 - [ ] F1.7 — real-Postgres coverage: each status label in both locales, ownership returns `404` for another customer, `promised_eta_upper_at` written once at Accept and unchanged by later transitions.
 
 ## Release verification
