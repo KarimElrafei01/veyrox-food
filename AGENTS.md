@@ -134,7 +134,7 @@ Full detail: `docs/14-code-structure-and-conventions.md`.
 - Put schema changes in Drizzle migrations committed to git; never use a vendor dashboard as schema state.
 - Migrations are forward-only expand/contract. The previous image must run against the new schema. Never make rollback depend on reversing a migration.
 - Preserve append-only triggers/grants, RLS, uniqueness constraints, and database checks as structural safeguards; do not rely only on application code.
-- Prefer simple, managed, reproducible components. Local development must work with `pnpm dev` plus `docker compose up` (Postgres and Redis); no cloud-only or GUI-configured behavior.
+- Prefer simple, managed, reproducible components. Local development must work with `pnpm dev` plus `pnpm compose:up` (Docker Postgres + Redis) — the blessed path; a throwaway Neon branch plus a hosted Redis is a supported alternative when Docker is unavailable (ADR-0002 amendment). No cloud-only or GUI-configured behavior, and the same Drizzle migrations run everywhere.
 - Phase-0 hosting knowingly misses HA/RPO targets only before M3. Do not represent it as production-ready before the M3 restoration gate.
 
 ## Testing and validation

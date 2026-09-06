@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "start": "tsx src/main.ts",
+    "dev": "tsx --env-file-if-exists=../../.env watch src/main.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/main.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "fixture": "tsx src/dev/fixture.ts"
+    "fixture": "tsx --env-file-if-exists=../../.env src/dev/fixture.ts"
   },
   "dependencies": {
     "@fastify/helmet": "13.1.1",

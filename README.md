@@ -18,30 +18,57 @@ the message → KDS ticket walking skeleton (M0).
 
 - Node 22 (`.nvmrc`)
 - pnpm 12 — `npm i -g pnpm@12` (or `corepack enable` if you can write to the Node dir)
-- Docker (for local Postgres + Redis)
+- **Postgres + Redis** — either Docker (`pnpm compose:up`) or a hosted pair. See
+  "Local database" below; ADR-0002.
 
 ## Quickstart
 
 ```bash
 pnpm install
-cp .env.example .env
-pnpm compose:up          # Postgres 16 + Redis 7
-pnpm db:generate         # regenerate Drizzle schema SQL (first run / after schema edits)
+cp .env.example .env     # then fill in DATABASE_URL / DATABASE_ADMIN_URL / REDIS_URL
 pnpm db:migrate          # apply pre/ + generated + post/ migrations
 pnpm db:seed             # pilot menu (placeholder costs)
 pnpm dev                 # api :3001 · order :3002 · kds :3003 · worker
 ```
 
+`db:migrate`, `db:seed`, and the API load `.env` from the repo root automatically
+(`--env-file-if-exists`); `pnpm test:int` still needs the two `DATABASE_*` vars
+exported.
+
+## Local database
+
+The blessed path is **Docker** — `pnpm compose:up` brings up Postgres 16 + Redis 7
+with roles and init wired (`infra/`). On a machine without Docker, point `.env` at
+a **throwaway Neon branch** instead (ADR-0002, amendment 2026-09-07):
+
+```bash
+# one-off, as the Neon project owner:
+CREATE ROLE veyroxai_app LOGIN PASSWORD '<pick one>' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+GRANT CONNECT ON DATABASE <db> TO veyroxai_app;
+GRANT USAGE ON SCHEMA public TO veyroxai_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT ON TABLES TO veyroxai_app;
+```
+
+then set `DATABASE_URL` (the `veyroxai_app` role) and `DATABASE_ADMIN_URL` (the
+project owner — it has `BYPASSRLS`, which migrations and the test harness need) to
+the **direct** (non-pooled) connection strings. Redis is not on Neon; set
+`REDIS_URL` to a hosted instance to run `quote` / `place` / `availability` / the
+webhook — `db:*` and the `session` / `menu` / `status` endpoints do not need it.
+
+Either way, recreate the database with `pnpm db:migrate && pnpm db:seed`. For a
+by-hand test kit (tokens, curl commands for every F1 endpoint):
+`pnpm --filter @veyroxai/api fixture`.
+
 ## Scripts
 
-| Command                                       | What                                                              |
-| --------------------------------------------- | ----------------------------------------------------------------- |
-| `pnpm dev`                                    | api, worker, order, kds in watch mode                             |
-| `pnpm typecheck` / `pnpm lint` / `pnpm build` | across every workspace                                            |
-| `pnpm test`                                   | unit + property tests (fast, no services)                         |
-| `pnpm test:int`                               | integration against the Docker Postgres (needs `pnpm compose:up`) |
-| `pnpm db:generate` / `db:migrate` / `db:seed` | schema tooling                                                    |
-| `pnpm format`                                 | Prettier write                                                    |
+| Command                                       | What                                                                                                                    |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                    | api, worker, order, kds in watch mode                                                                                   |
+| `pnpm typecheck` / `pnpm lint` / `pnpm build` | across every workspace                                                                                                  |
+| `pnpm test`                                   | unit + property tests (fast, no services)                                                                               |
+| `pnpm test:int`                               | integration against a real Postgres — `pnpm compose:up` or a Neon branch (export `DATABASE_URL` + `DATABASE_ADMIN_URL`) |
+| `pnpm db:generate` / `db:migrate` / `db:seed` | schema tooling                                                                                                          |
+| `pnpm format`                                 | Prettier write                                                                                                          |
 
 Whole suite budget: **under 5 minutes** (NFR-59).
 

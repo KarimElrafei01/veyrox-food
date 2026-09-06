@@ -13,8 +13,8 @@
     "test": "vitest run --project unit",
     "test:int": "vitest run --project integration",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/migrate.ts",
-    "db:seed": "tsx src/seed.ts"
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=../../.env src/seed.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

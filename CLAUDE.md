@@ -92,8 +92,9 @@ TypeScript strict · Node 22 · pnpm + Turborepo · Fastify + Zod · **Postgres 
 *(Scaffold does not exist yet — Sprint 0 is the next task. These are the intended contracts.)*
 
 ```
-pnpm dev            all apps + workers
-docker compose up   local Postgres + Redis  (no vendor CLI)
+pnpm dev            all apps + workers  (loads .env from repo root)
+pnpm compose:up     local Postgres + Redis via Docker  (blessed path)
+                    — or point .env at a Neon branch + hosted Redis (ADR-0002 amendment)
 pnpm test           unit + property (fast-check)
 pnpm test:int       integration against real Postgres
 pnpm test:e2e       Playwright, 7 journeys
