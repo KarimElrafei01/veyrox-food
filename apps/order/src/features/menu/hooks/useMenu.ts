@@ -9,18 +9,23 @@ type State =
   | { status: 'error'; menu: null };
 
 /**
- * Loads the immutable menu once, then re-fetches **availability only** on window
- * focus (F1.2 §1 — never the whole menu again, never on a timer).
+ * Loads the immutable menu once from `session.links.menu`, then re-fetches
+ * **availability only** on window focus (F1.2 §1 — never the whole menu again,
+ * never on a timer).
  */
-export function useMenu(menuVersion: string): State & { refreshAvailability: () => void } {
+export function useMenu(links: {
+  menu: string;
+  availability: string;
+}): State & { refreshAvailability: () => void } {
   const [state, setState] = useState<State>({ status: 'loading', menu: null });
   const rawMenu = useRef<MenuResponse | null>(null);
+  const { menu: menuLink, availability: availabilityLink } = links;
 
   useEffect(() => {
     let cancelled = false;
     rawMenu.current = null;
     setState({ status: 'loading', menu: null });
-    Promise.all([fetchMenu(menuVersion), fetchAvailability().catch(() => null)])
+    Promise.all([fetchMenu(menuLink), fetchAvailability(availabilityLink).catch(() => null)])
       .then(([menu, availability]) => {
         if (cancelled) {
           return;
@@ -36,19 +41,19 @@ export function useMenu(menuVersion: string): State & { refreshAvailability: () 
     return () => {
       cancelled = true;
     };
-  }, [menuVersion]);
+  }, [menuLink, availabilityLink]);
 
   const refreshAvailability = useCallback(() => {
     const menu = rawMenu.current;
     if (!menu) {
       return;
     }
-    fetchAvailability()
+    fetchAvailability(availabilityLink)
       .then((availability) => setState({ status: 'ready', menu: mergeMenu(menu, availability) }))
       .catch(() => {
         /* keep the last good board; stale availability is acceptable briefly */
       });
-  }, []);
+  }, [availabilityLink]);
 
   useEffect(() => {
     window.addEventListener('focus', refreshAvailability);

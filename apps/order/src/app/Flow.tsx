@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useT } from '@veyroxai/ui';
-import type { MenuModifierGroup } from '@veyroxai/contracts';
-import { useReadySession } from '../shared/session-context.js';
+import type { MenuModifierGroup, QuotedLine } from '@veyroxai/contracts';
+import { useSession } from '../shared/session-context.js';
 import { useCart, type CartLine } from '../shared/cart-store.js';
 import { useRoute } from './router.js';
 import { useMenu } from '../features/menu/hooks/useMenu.js';
 import { MenuScreen } from '../features/menu/ui/MenuScreen.js';
 import { ItemDetailScreen } from '../features/item/ui/ItemDetailScreen.js';
 import { useQuote } from '../features/cart/hooks/useQuote.js';
-import { linesToRemove } from '../features/cart/usecases/quoteCart.js';
+import { quotedLineFor, reconcileQuote } from '../features/cart/usecases/quoteCart.js';
 import { CartScreen } from '../features/cart/ui/CartScreen.js';
 import { usePlaceOrder } from '../features/checkout/hooks/usePlaceOrder.js';
 import { CheckoutScreen } from '../features/checkout/ui/CheckoutScreen.js';
@@ -20,35 +20,62 @@ import { buildCartLine } from '../features/item/usecases/configureItem.js';
 export function Flow(): React.JSX.Element {
   const route = useRoute();
   const { locale } = useT();
-  const session = useReadySession();
+  const { session: maybeSession, token, resolve } = useSession();
+  const session = maybeSession!; // Flow only renders when the session is ready
   const cart = useCart();
-  const menu = useMenu(session.session.menuVersion);
+  const menu = useMenu(session.links);
   const quote = useQuote();
   const place = usePlaceOrder();
 
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [reconciled, setReconciled] = useState(false);
+  const [reconfigureLineIds, setReconfigureLineIds] = useState<string[]>([]);
 
-  // Correct the cart when a quote reports something went unavailable (FR-2.7).
+  // Correct the cart from a quote's unavailable[] (FR-2.7): drop a line only when
+  // the drink is gone; keep it (flagged) when only a modifier went out.
   useEffect(() => {
     if (!quote.quote) {
       return;
     }
-    const dead = linesToRemove(cart.lines, quote.quote);
-    if (dead.length > 0) {
-      dead.forEach((id) => cart.removeLine(id));
+    const { removeLineIds, reconfigureLineIds: toFix } = reconcileQuote(cart.lines, quote.quote);
+    if (removeLineIds.length > 0) {
+      removeLineIds.forEach((id) => cart.removeLine(id));
       setReconciled(true);
     }
+    setReconfigureLineIds(toFix);
   }, [quote.quote, cart]);
+
+  // MENU_VERSION_GONE (at quote or placement) means the client is on a version the
+  // server no longer serves — re-resolve the session to pin a fresh one (F1.2 §5).
+  useEffect(() => {
+    if ((quote.errorCode === 'MENU_VERSION_GONE' || place.outcome?.kind === 'menu_gone') && token) {
+      void resolve(token);
+    }
+  }, [quote.errorCode, place.outcome, token, resolve]);
 
   // Placement outcomes that change the route.
   useEffect(() => {
     if (place.outcome?.kind === 'placed') {
       route.navigate(`/o/${place.outcome.order.orderId}`, { replace: true });
+    } else if (place.outcome?.kind === 'needs_review') {
+      route.navigate('/cart', { replace: true });
     }
   }, [place.outcome, route]);
 
   const groupsFor: Map<string, MenuModifierGroup> = menu.menu?.groupsById ?? new Map();
+
+  const quotedByLine = useMemo(() => {
+    const map = new Map<string, QuotedLine>();
+    if (quote.quote) {
+      for (const line of cart.lines) {
+        const q = quotedLineFor(quote.quote, line, cart.lines);
+        if (q) {
+          map.set(line.lineId, q);
+        }
+      }
+    }
+    return map;
+  }, [quote.quote, cart.lines]);
 
   const findItem = (itemId: string) =>
     menu.menu?.categories.flatMap((c) => c.items).find((i) => i.id === itemId) ?? null;
@@ -90,12 +117,11 @@ export function Flow(): React.JSX.Element {
   }
 
   if (place.outcome?.kind === 'open_order') {
+    const existing = place.outcome;
     return (
       <OpenOrderBlockScreen
-        orderNumber={place.outcome.orderNumber}
-        onView={() =>
-          route.navigate(`/o/${place.outcome!.kind === 'open_order' ? place.outcome.orderId : ''}`)
-        }
+        orderNumber={existing.orderNumber}
+        onView={() => route.navigate(`/o/${existing.orderId}`)}
       />
     );
   }
@@ -125,8 +151,10 @@ export function Flow(): React.JSX.Element {
           editing
             ? {
                 byGroup: groups.reduce<Record<string, string[]>>((acc, g) => {
-                  acc[g.id] = editing.modifierOptionIds.filter((id) =>
-                    g.options.some((o) => o.id === id),
+                  // Drop any option that is no longer available so the customer
+                  // reconfigures onto a valid choice.
+                  acc[g.id] = editing.modifierOptionIds.filter(
+                    (id) => g.options.some((o) => o.id === id) && menu.menu!.optionAvailable(id),
                   );
                   return acc;
                 }, {}),
@@ -143,10 +171,11 @@ export function Flow(): React.JSX.Element {
           if (editingLineId) {
             cart.replaceLine(editingLineId, line);
             setEditingLineId(null);
+            setReconfigureLineIds((ids) => ids.filter((id) => id !== editingLineId));
           } else {
             cart.addLine(line);
           }
-          route.navigate('/menu');
+          route.navigate(reconfigureLineIds.length > 1 ? '/cart' : '/menu');
         }}
       />
     );
@@ -157,9 +186,11 @@ export function Flow(): React.JSX.Element {
       <CartScreen
         locale={locale}
         quote={quote.quote}
+        quotedByLine={quotedByLine}
         loading={quote.loading}
         errorCode={quote.errorCode}
         reconciled={reconciled}
+        reconfigureLineIds={reconfigureLineIds}
         onEditLine={(line: CartLine) => {
           setEditingLineId(line.lineId);
           route.navigate(`/item/${line.menuItemId}`);
@@ -171,7 +202,7 @@ export function Flow(): React.JSX.Element {
   }
 
   if (route.name === 'checkout') {
-    if (!quote.quote) {
+    if (!quote.quote || reconfigureLineIds.length > 0) {
       route.navigate('/cart', { replace: true });
       return <LoadingScreen />;
     }
@@ -179,12 +210,14 @@ export function Flow(): React.JSX.Element {
       <CheckoutScreen
         locale={locale}
         quote={quote.quote}
+        quotedByLine={quotedByLine}
+        askTableNumber={session.ordering.askTableNumber}
         placing={place.placing}
         outcome={place.outcome}
         onBack={() => route.navigate('/cart')}
         onEditCart={() => route.navigate('/cart')}
-        onPlace={(note, expectedTotalMinor) => {
-          void place.submit({ customerNote: note, expectedTotalMinor });
+        onPlace={(note, expectedTotalMinor, tableLabel) => {
+          void place.submit({ customerNote: note, expectedTotalMinor, tableLabel });
         }}
         onDismissPriceChange={place.clearOutcome}
       />

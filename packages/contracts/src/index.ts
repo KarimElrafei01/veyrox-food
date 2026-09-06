@@ -21,6 +21,8 @@ export {
   // session
   sessionResolveResponse,
   type SessionResolveResponse,
+  updateLocaleRequest,
+  type UpdateLocaleRequest,
   // menu
   menuOption,
   menuModifierGroup,

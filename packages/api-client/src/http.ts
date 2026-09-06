@@ -13,10 +13,13 @@ export interface HttpClientOptions {
 
 export interface HttpClient {
   get<T>(path: string, schema: ZodType<T>, init?: RequestInit): Promise<T>;
+  /** A schema is optional; without one the raw parsed body is returned (e.g. a
+   *  fire-and-forget call that ignores the response). */
   post<T>(
     path: string,
     opts: { body?: unknown; schema: ZodType<T>; idempotencyKey?: string },
   ): Promise<T>;
+  post(path: string, opts: { body?: unknown; idempotencyKey?: string }): Promise<unknown>;
 }
 
 /**
@@ -55,7 +58,14 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       const body = await send(path, { ...init, method: 'GET', headers: headers() });
       return schema.parse(body);
     },
-    async post(path, { body, schema, idempotencyKey }) {
+    async post(
+      path: string,
+      {
+        body,
+        schema,
+        idempotencyKey,
+      }: { body?: unknown; schema?: ZodType; idempotencyKey?: string },
+    ) {
       const raw = await send(path, {
         method: 'POST',
         headers: headers({
@@ -64,7 +74,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
         }),
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      return schema.parse(raw);
+      return schema ? schema.parse(raw) : raw;
     },
   };
 }

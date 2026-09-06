@@ -10,6 +10,7 @@ import {
   SessionExpiredScreen,
   StoreClosedScreen,
 } from '../features/session/ui/SessionScreens.js';
+import { LocaleSync } from '../shared/LocaleSync.js';
 import { useRoute } from './router.js';
 import { Flow } from './Flow.js';
 
@@ -70,6 +71,7 @@ export function App(): React.JSX.Element {
   if (status === 'ready' && session) {
     return (
       <CartProvider menuVersion={session.session.menuVersion}>
+        <LocaleSync sessionLocale={session.session.locale} />
         <Flow />
       </CartProvider>
     );

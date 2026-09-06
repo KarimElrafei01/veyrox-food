@@ -20,7 +20,7 @@ import {
   type Locale,
   type MessageKey,
 } from '@veyroxai/i18n';
-import type { QuoteResponse } from '@veyroxai/contracts';
+import type { QuotedLine, QuoteResponse } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import { useReadySession } from '../../../shared/session-context.js';
 import { useCart } from '../../../shared/cart-store.js';
@@ -30,17 +30,21 @@ import styles from './CheckoutScreen.module.css';
 interface CheckoutScreenProps {
   locale: Locale;
   quote: QuoteResponse;
+  quotedByLine: Map<string, QuotedLine>;
+  askTableNumber: boolean;
   placing: boolean;
   outcome: PlaceOutcome | null;
   onBack: () => void;
   onEditCart: () => void;
-  onPlace: (note: string | null, expectedTotalMinor: number) => void;
+  onPlace: (note: string | null, expectedTotalMinor: number, tableLabel: string | null) => void;
   onDismissPriceChange: () => void;
 }
 
 export function CheckoutScreen({
   locale,
   quote,
+  quotedByLine,
+  askTableNumber,
   placing,
   outcome,
   onBack,
@@ -52,6 +56,10 @@ export function CheckoutScreen({
   const session = useReadySession();
   const cart = useCart();
   const [note, setNote] = useState('');
+  const [tableLabel, setTableLabel] = useState('');
+  const table = askTableNumber && tableLabel.trim() ? tableLabel.trim() : null;
+  const place = (expectedTotalMinor: number) =>
+    onPlace(note.trim() || null, expectedTotalMinor, table);
 
   const priceChanged = outcome?.kind === 'price_changed' ? outcome : null;
   const activeQuote = priceChanged?.quote ?? quote;
@@ -75,7 +83,7 @@ export function CheckoutScreen({
             spread
             loading={placing}
             iconStart="near-me"
-            onClick={() => onPlace(note.trim() || null, activeQuote.totalMinor)}
+            onClick={() => place(activeQuote.totalMinor)}
           >
             <span className={styles.ctaText}>
               {placing ? t('checkout.placing') : t('checkout.placeOrder')}
@@ -122,9 +130,7 @@ export function CheckoutScreen({
           <Stack gap="xs">
             {cart.lines.map((line) => {
               const name = locale === 'ar-EG' && line.nameAr ? line.nameAr : line.nameEn;
-              const lineTotal = activeQuote.lines.find(
-                (q) => q.menuItemId === line.menuItemId,
-              )?.lineTotalMinor;
+              const lineTotal = quotedByLine.get(line.lineId)?.lineTotalMinor;
               return (
                 <div key={line.lineId} className={styles.lineRow}>
                   <div className={styles.lineText}>
@@ -157,6 +163,21 @@ export function CheckoutScreen({
             </div>
           </div>
         </Card>
+
+        {askTableNumber ? (
+          <Field label={t('checkout.tableNumber')} hint={t('common.optional')}>
+            {(id) => (
+              <TextInput
+                id={id}
+                maxLength={16}
+                inputMode="numeric"
+                placeholder={t('checkout.tableNumberPlaceholder')}
+                value={tableLabel}
+                onChange={(e) => setTableLabel(e.target.value)}
+              />
+            )}
+          </Field>
+        ) : null}
 
         <Field label={t('checkout.note')} hint={t('common.optional')}>
           {(id) => (
@@ -197,7 +218,7 @@ export function CheckoutScreen({
               variant="primary"
               size="lg"
               fullWidth
-              onClick={() => onPlace(note.trim() || null, priceChanged.quote.totalMinor)}
+              onClick={() => place(priceChanged.quote.totalMinor)}
             >
               {translate(locale, 'checkout.priceChangedConfirm', {
                 total: fmt(priceChanged.quote.totalMinor, locale),
@@ -234,6 +255,10 @@ function mapErrorKey(outcome: PlaceOutcome): MessageKey {
       return 'error.MIN_ORDER_VALUE';
     case 'session_expired':
       return 'error.SESSION_EXPIRED';
+    case 'menu_gone':
+      return 'error.MENU_VERSION_GONE';
+    case 'needs_review':
+      return 'error.ITEM_UNAVAILABLE';
     case 'network':
       return 'error.network';
     default:

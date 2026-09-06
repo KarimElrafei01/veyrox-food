@@ -16,11 +16,15 @@ const ID = {
   pudding: '14000000-0000-4000-8000-000000000023',
   gSize: '90000000-0000-4000-8000-000000000030',
   gMilk: '91000000-0000-4000-8000-000000000031',
+  gExtras: '92000000-0000-4000-8000-000000000032',
   oRegular: 'a0000000-0000-4000-8000-000000000040',
   oLarge: 'a1000000-0000-4000-8000-000000000041',
   mWhole: 'b0000000-0000-4000-8000-000000000050',
   mOat: 'b1000000-0000-4000-8000-000000000051',
   mAlmond: 'b2000000-0000-4000-8000-000000000052',
+  xShot: 'c0000000-0000-4000-8000-000000000060',
+  xCinnamon: 'c1000000-0000-4000-8000-000000000061',
+  xVanilla: 'c2000000-0000-4000-8000-000000000062',
 };
 
 export const sessionFixture: SessionResolveResponse = {
@@ -116,6 +120,40 @@ export const menuFixture: ResolvedMenu = {
         ],
       },
     ],
+    [
+      ID.gExtras,
+      {
+        id: ID.gExtras,
+        name: { en: 'Extras', 'ar-EG': 'إضافات' },
+        selection: 'multi',
+        required: false,
+        minSelect: 0,
+        maxSelect: 2,
+        options: [
+          {
+            id: ID.xShot,
+            name: { en: 'Extra shot', 'ar-EG': 'شوت إضافي' },
+            priceDeltaMinor: 1000,
+            freeForTier: null,
+            sort: 1,
+          },
+          {
+            id: ID.xCinnamon,
+            name: { en: 'Cinnamon', 'ar-EG': 'قرفة' },
+            priceDeltaMinor: 0,
+            freeForTier: null,
+            sort: 2,
+          },
+          {
+            id: ID.xVanilla,
+            name: { en: 'Vanilla', 'ar-EG': 'فانيليا' },
+            priceDeltaMinor: 500,
+            freeForTier: null,
+            sort: 3,
+          },
+        ],
+      },
+    ],
   ]),
   categories: [
     {
@@ -134,7 +172,7 @@ export const menuFixture: ResolvedMenu = {
           basePriceMinor: 7000,
           prepSeconds: 150,
           imageUrl: null,
-          modifierGroupIds: [ID.gSize, ID.gMilk],
+          modifierGroupIds: [ID.gSize, ID.gMilk, ID.gExtras],
           available: true,
           unavailableReason: null,
         },

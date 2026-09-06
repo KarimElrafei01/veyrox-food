@@ -14,7 +14,7 @@ import {
 } from '@veyroxai/ui';
 import type { Locale } from '@veyroxai/i18n';
 import { translate, type MessageKey } from '@veyroxai/i18n';
-import type { QuoteResponse } from '@veyroxai/contracts';
+import type { QuotedLine, QuoteResponse } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import { useReadySession } from '../../../shared/session-context.js';
 import { useCart, type CartLine } from '../../../shared/cart-store.js';
@@ -23,9 +23,12 @@ import styles from './CartScreen.module.css';
 interface CartScreenProps {
   locale: Locale;
   quote: QuoteResponse | null;
+  quotedByLine: Map<string, QuotedLine>;
   loading: boolean;
   errorCode: string | null;
   reconciled: boolean;
+  /** Lines kept but needing a modifier re-pick (an option went 86 — FR-2.7). */
+  reconfigureLineIds: string[];
   onEditLine: (line: CartLine) => void;
   onCheckout: () => void;
   onBack: () => void;
@@ -34,9 +37,11 @@ interface CartScreenProps {
 export function CartScreen({
   locale,
   quote,
+  quotedByLine,
   loading,
   errorCode,
   reconciled,
+  reconfigureLineIds,
   onEditLine,
   onCheckout,
   onBack,
@@ -44,6 +49,7 @@ export function CartScreen({
   const { t } = useT();
   const session = useReadySession();
   const cart = useCart();
+  const needsReconfigure = new Set(reconfigureLineIds);
 
   if (cart.count === 0) {
     return (
@@ -56,7 +62,11 @@ export function CartScreen({
   }
 
   const total = quote?.totalMinor ?? null;
-  const canCheckout = session.store.isOpen && quote != null && quote.unavailable.length === 0;
+  const canCheckout =
+    session.store.isOpen &&
+    quote != null &&
+    quote.unavailable.length === 0 &&
+    needsReconfigure.size === 0;
 
   return (
     <Screen
@@ -86,6 +96,11 @@ export function CartScreen({
             {t('cart.unavailableBody')}
           </Alert>
         ) : null}
+        {needsReconfigure.size > 0 ? (
+          <Alert tone="warning" title={t('cart.reconfigureTitle')}>
+            {t('cart.reconfigureBody')}
+          </Alert>
+        ) : null}
         {errorCode && !loading ? (
           <Alert tone="danger">{t(`error.${errorCode}` as MessageKey)}</Alert>
         ) : null}
@@ -95,9 +110,8 @@ export function CartScreen({
             key={line.lineId}
             line={line}
             locale={locale}
-            lineTotalMinor={
-              quote?.lines.find((q) => q.menuItemId === line.menuItemId)?.lineTotalMinor ?? null
-            }
+            needsReconfigure={needsReconfigure.has(line.lineId)}
+            lineTotalMinor={quotedByLine.get(line.lineId)?.lineTotalMinor ?? null}
             onRemove={() => cart.removeLine(line.lineId)}
             onStep={(qty) => cart.setQty(line.lineId, qty)}
             onEdit={() => onEditLine(line)}
@@ -122,6 +136,7 @@ function CartLineRow({
   line,
   locale,
   lineTotalMinor,
+  needsReconfigure,
   onRemove,
   onStep,
   onEdit,
@@ -129,6 +144,7 @@ function CartLineRow({
   line: CartLine;
   locale: Locale;
   lineTotalMinor: number | null;
+  needsReconfigure: boolean;
   onRemove: () => void;
   onStep: (qty: number) => void;
   onEdit: () => void;
@@ -158,6 +174,12 @@ function CartLineRow({
             />
           </div>
           {line.modifierSummary ? <p className={styles.mods}>{line.modifierSummary}</p> : null}
+          {needsReconfigure ? (
+            <button type="button" className={styles.reconfigure} onClick={onEdit}>
+              <Icon name="info" size={14} />
+              {t('cart.reconfigureLine')}
+            </button>
+          ) : null}
           <div className={styles.rowBottom}>
             {lineTotalMinor != null ? <Price minor={lineTotalMinor} tone="accent" /> : null}
             <div className={styles.stepper}>

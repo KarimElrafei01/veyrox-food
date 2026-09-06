@@ -36,9 +36,9 @@ export { Price } from './primitives/Price/Price.js';
 export { Spinner } from './primitives/Spinner/Spinner.js';
 export { Stepper } from './primitives/Stepper/Stepper.js';
 export {
-  RadioCardGroup,
-  type RadioCardOption,
-} from './primitives/RadioCardGroup/RadioCardGroup.js';
+  SelectionCardGroup,
+  type SelectionCardOption,
+} from './primitives/SelectionCardGroup/SelectionCardGroup.js';
 export { Field, TextInput } from './primitives/Field/Field.js';
 export { Stack, Inline, Screen, StickyBar } from './primitives/Layout/Layout.js';
 export { AppHeader } from './primitives/AppHeader/AppHeader.js';

@@ -7,17 +7,22 @@ import {
 } from '@veyroxai/contracts';
 import { getApiClient } from '../../../shared/api.js';
 
-/** GET /public/menu/:menuVersion (F1.2 §2) — immutable, CDN-cached by version. */
+/**
+ * GET the menu — immutable, CDN-cached by version. The path is
+ * `session.links.menu`, returned by the server rather than constructed here, so
+ * the client can never request a version it was not granted (F1.1 §3).
+ */
 export function fetchMenu(
-  menuVersion: string,
+  menuLink: string,
   client: HttpClient = getApiClient(),
 ): Promise<MenuResponse> {
-  return client.get(`/public/menu/${encodeURIComponent(menuVersion)}`, menuResponse);
+  return client.get(menuLink, menuResponse);
 }
 
-/** GET /public/availability (F1.2 §2) — the short 86 list, re-fetched on focus. */
+/** GET the availability list — `session.links.availability`, re-fetched on focus. */
 export function fetchAvailability(
+  availabilityLink: string,
   client: HttpClient = getApiClient(),
 ): Promise<AvailabilityResponse> {
-  return client.get('/public/availability', availabilityResponse);
+  return client.get(availabilityLink, availabilityResponse);
 }

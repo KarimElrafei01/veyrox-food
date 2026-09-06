@@ -36,12 +36,12 @@ interface Deps {
  * left — that is computed here, once, so every screen agrees.
  */
 export async function loadMenu(
-  menuVersion: string,
+  links: { menu: string; availability: string },
   deps: Deps = { fetchMenu, fetchAvailability },
 ): Promise<ResolvedMenu> {
   const [menu, availability] = await Promise.all([
-    deps.fetchMenu(menuVersion),
-    deps.fetchAvailability().catch<AvailabilityResponse | null>(() => null),
+    deps.fetchMenu(links.menu),
+    deps.fetchAvailability(links.availability).catch<AvailabilityResponse | null>(() => null),
   ]);
   return mergeMenu(menu, availability);
 }

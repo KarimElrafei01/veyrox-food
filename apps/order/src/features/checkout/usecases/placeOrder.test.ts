@@ -34,13 +34,14 @@ const placed: PlaceOrderResponse = {
 };
 
 describe('placeOrder usecase', () => {
-  it('generates one idempotency key and returns the placed order', async () => {
+  it('passes the caller idempotency key through and returns the placed order', async () => {
     const call = vi.fn((_req: unknown, _key: string) => Promise.resolve(placed));
-    const out = await placeOrder(lines, {}, { placeOrder: call, newKey: () => 'key-1' });
+    const out = await placeOrder(lines, {}, 'key-1', { placeOrder: call });
     expect(out).toEqual({ kind: 'placed', order: placed });
     expect(call.mock.calls[0]?.[1]).toBe('key-1');
-    // request carries no price field
+    // request carries clientLineId + ids/qty, never a price
     expect(JSON.stringify(call.mock.calls[0]?.[0])).not.toMatch(/unitPrice|priceMinor/);
+    expect(JSON.stringify(call.mock.calls[0]?.[0])).toMatch(/clientLineId/);
   });
 
   it('maps PRICE_CHANGED to a fresh quote', async () => {
@@ -63,7 +64,7 @@ describe('placeOrder usecase', () => {
     const call = vi.fn(async () => {
       throw new ApiError(409, problem, null);
     });
-    const out = await placeOrder(lines, {}, { placeOrder: call, newKey: () => 'k' });
+    const out = await placeOrder(lines, {}, 'k', { placeOrder: call });
     expect(out.kind).toBe('price_changed');
     if (out.kind === 'price_changed') {
       expect(out.quote.totalMinor).toBe(15000);
@@ -83,7 +84,7 @@ describe('placeOrder usecase', () => {
         null,
       );
     });
-    const out = await placeOrder(lines, {}, { placeOrder: call, newKey: () => 'k' });
+    const out = await placeOrder(lines, {}, 'k', { placeOrder: call });
     expect(out).toMatchObject({ kind: 'open_order', orderNumber: 'A-041', orderId: 'o9' });
   });
 
@@ -91,7 +92,7 @@ describe('placeOrder usecase', () => {
     const call = vi.fn(async () => {
       throw new NetworkError(new Error('offline'));
     });
-    const out = await placeOrder(lines, {}, { placeOrder: call, newKey: () => 'k' });
+    const out = await placeOrder(lines, {}, 'k', { placeOrder: call });
     expect(out.kind).toBe('network');
   });
 });

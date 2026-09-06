@@ -52,6 +52,18 @@
   font-size: var(--vx-text-body-sm);
   color: var(--vx-on-surface-variant);
 }
+.reconfigure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--vx-radius-sm);
+  background: color-mix(in srgb, var(--vx-warning) 16%, transparent);
+  color: var(--vx-warning);
+  font-size: var(--vx-text-label-sm);
+  font-weight: 600;
+}
 .rowBottom {
   display: flex;
   align-items: center;

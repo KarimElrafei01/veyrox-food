@@ -39,7 +39,11 @@ type ScreenKey = (typeof SCREENS)[number];
 
 const noop = () => {};
 
-function SeedCart({ children }: { children: React.ReactNode }): React.JSX.Element {
+function SeedCart({
+  children,
+}: {
+  children: (quotedByLine: Map<string, (typeof quoteFixture.lines)[number]>) => React.ReactNode;
+}): React.JSX.Element {
   const cart = useCart();
   const seeded = useRef(false);
   useEffect(() => {
@@ -71,7 +75,10 @@ function SeedCart({ children }: { children: React.ReactNode }): React.JSX.Elemen
     // seed once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return <>{children}</>;
+  const quotedByLine = new Map(
+    cart.lines.map((line, i) => [line.lineId, quoteFixture.lines[i] ?? quoteFixture.lines[0]!]),
+  );
+  return <>{children(quotedByLine)}</>;
 }
 
 function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
@@ -117,40 +124,48 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
     case 'cart':
       return (
         <SeedCart>
-          <CartScreen
-            locale={locale}
-            quote={quoteFixture}
-            loading={false}
-            errorCode={null}
-            reconciled={false}
-            onEditLine={noop}
-            onCheckout={noop}
-            onBack={noop}
-          />
+          {(quotedByLine) => (
+            <CartScreen
+              locale={locale}
+              quote={quoteFixture}
+              quotedByLine={quotedByLine}
+              loading={false}
+              errorCode={null}
+              reconciled={false}
+              reconfigureLineIds={[]}
+              onEditLine={noop}
+              onCheckout={noop}
+              onBack={noop}
+            />
+          )}
         </SeedCart>
       );
     case 'checkout':
     case 'checkout-price-changed':
       return (
         <SeedCart>
-          <CheckoutScreen
-            locale={locale}
-            quote={quoteFixture}
-            placing={false}
-            outcome={
-              screen === 'checkout-price-changed'
-                ? {
-                    kind: 'price_changed',
-                    detail: 'A price changed.',
-                    quote: { ...quoteFixture, totalMinor: 15500, subtotalMinor: 15500 },
-                  }
-                : null
-            }
-            onBack={noop}
-            onEditCart={noop}
-            onPlace={noop}
-            onDismissPriceChange={noop}
-          />
+          {(quotedByLine) => (
+            <CheckoutScreen
+              locale={locale}
+              quote={quoteFixture}
+              quotedByLine={quotedByLine}
+              askTableNumber
+              placing={false}
+              outcome={
+                screen === 'checkout-price-changed'
+                  ? {
+                      kind: 'price_changed',
+                      detail: 'A price changed.',
+                      quote: { ...quoteFixture, totalMinor: 15500, subtotalMinor: 15500 },
+                    }
+                  : null
+              }
+              onBack={noop}
+              onEditCart={noop}
+              onPlace={noop}
+              onDismissPriceChange={noop}
+            />
+          )}
         </SeedCart>
       );
     case 'status-placed':

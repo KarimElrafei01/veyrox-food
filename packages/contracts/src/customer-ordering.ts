@@ -56,6 +56,13 @@ export type OrderErrorCode = z.infer<typeof orderErrorCode>;
 // — requests (IDs + quantities only) —
 
 const cartLine = z.object({
+  /**
+   * Opaque client-generated id for this cart line. The server echoes it on the
+   * matching `quotedLine` and any `unavailableLine`, so the client can correlate
+   * quote results to lines even when two lines share a `menuItemId` (different
+   * modifiers) or when an unavailable line is omitted from `lines[]` (F1.3 §2).
+   */
+  clientLineId: z.string().max(64).optional(),
   menuItemId: z.uuid(),
   qty: z.number().int().min(1).max(20),
   modifierOptionIds: z.array(z.uuid()).max(20),
@@ -111,6 +118,15 @@ export const sessionResolveResponse = z.object({
   traceId: z.string(),
 });
 export type SessionResolveResponse = z.infer<typeof sessionResolveResponse>;
+
+/**
+ * `POST /public/session/locale` — persist the customer's language choice to
+ * `customers.locale` (FR-2.4). Fire-and-forget from the webview; the resolved
+ * locale is also carried on every request as `Accept-Language`.
+ * NOTE: backend endpoint not yet implemented.
+ */
+export const updateLocaleRequest = z.object({ locale: z.enum(['en', 'ar-EG']) });
+export type UpdateLocaleRequest = z.infer<typeof updateLocaleRequest>;
 
 // — GET /public/menu/:menuVersion (F1.2 §2) —
 
@@ -180,6 +196,8 @@ export const quotedModifier = z.object({
 });
 
 export const quotedLine = z.object({
+  /** Echoes the request line's `clientLineId` (F1.3 §2). */
+  clientLineId: z.string().optional(),
   menuItemId: z.uuid(),
   qty: z.number().int().positive(),
   unitPriceMinor: z.number().int().nonnegative(),
@@ -189,6 +207,8 @@ export const quotedLine = z.object({
 });
 
 export const unavailableLine = z.object({
+  /** Echoes the request line's `clientLineId` so the client corrects the right line. */
+  clientLineId: z.string().optional(),
   menuItemId: z.uuid(),
   modifierOptionId: z.uuid().optional(),
   reason: z.enum(['item_unavailable', 'modifier_unavailable']),

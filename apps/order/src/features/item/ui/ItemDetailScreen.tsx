@@ -1,4 +1,12 @@
-import { Button, IconButton, Price, RadioCardGroup, Screen, StickyBar, useT } from '@veyroxai/ui';
+import {
+  Button,
+  IconButton,
+  Price,
+  Screen,
+  SelectionCardGroup,
+  StickyBar,
+  useT,
+} from '@veyroxai/ui';
 import type { Locale } from '@veyroxai/i18n';
 import type { LoyaltyTier, MenuModifierGroup } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
@@ -117,18 +125,27 @@ export function ItemDetailScreen({
         {groups.map((group) => {
           const err = cfg.validation.find((v) => v.groupId === group.id)?.error;
           return (
-            <RadioCardGroup
+            <SelectionCardGroup
               key={group.id}
               name={group.id}
+              mode={group.selection}
               legend={localized(group.name, locale)}
               hint={
                 group.selection === 'single'
                   ? t('item.selectOne')
                   : t('item.selectUpTo', { max: group.maxSelect })
               }
-              error={err ? t('item.chooseRequired') : undefined}
-              value={cfg.selection.byGroup[group.id]?.[0] ?? null}
-              onChange={(id) => cfg.choose(group, id)}
+              error={
+                err === 'required'
+                  ? t('item.chooseRequired')
+                  : err === 'min'
+                    ? t('item.selectAtLeast', { min: group.minSelect })
+                    : err === 'max'
+                      ? t('item.selectUpTo', { max: group.maxSelect })
+                      : undefined
+              }
+              value={cfg.selection.byGroup[group.id] ?? []}
+              onToggle={(id) => cfg.choose(group, id)}
               options={group.options.map((o) => {
                 const waived = isWaived(o.freeForTier, tier);
                 return {

@@ -1,4 +1,4 @@
-import type { HttpClient } from '@veyroxai/api-client';
+import type { HttpClient, ZodType } from '@veyroxai/api-client';
 
 type Handler = (path: string, body?: unknown) => unknown;
 
@@ -12,19 +12,20 @@ export function fakeClient(routes: {
   post?: Record<string, Handler>;
 }): HttpClient {
   return {
-    async get(path, schema) {
+    async get<T>(path: string, schema: ZodType<T>) {
       const handler = routes.get?.[path];
       if (!handler) {
         throw new Error(`fakeClient: no GET handler for ${path}`);
       }
       return schema.parse(handler(path));
     },
-    async post(path, { body, schema }) {
+    async post(path: string, opts: { body?: unknown; schema?: ZodType }) {
       const handler = routes.post?.[path];
       if (!handler) {
         throw new Error(`fakeClient: no POST handler for ${path}`);
       }
-      return schema.parse(handler(path, body));
+      const raw = handler(path, opts.body);
+      return opts.schema ? opts.schema.parse(raw) : raw;
     },
-  };
+  } as HttpClient;
 }

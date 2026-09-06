@@ -1,4 +1,3 @@
-import { v7 as uuidv7 } from 'uuid';
 import { ApiError, NetworkError } from '@veyroxai/api-client';
 import {
   openOrderLimitProblem,
@@ -15,6 +14,8 @@ export type PlaceOutcome =
   | { kind: 'price_changed'; quote: QuoteResponse; detail: string }
   | { kind: 'open_order'; orderNumber: string; orderId: string }
   | { kind: 'item_unavailable' }
+  | { kind: 'menu_gone' }
+  | { kind: 'needs_review' }
   | { kind: 'store_closed' }
   | { kind: 'suspended' }
   | { kind: 'min_order' }
@@ -22,23 +23,31 @@ export type PlaceOutcome =
   | { kind: 'network' }
   | { kind: 'error'; code: string };
 
+/** True when the same idempotency key should be reused on the next attempt — i.e.
+ *  the request may or may not have reached the server and a replay is safe. */
+export function isRetryable(outcome: PlaceOutcome): boolean {
+  return outcome.kind === 'network';
+}
+
 interface Deps {
   placeOrder: typeof placeOrderCall;
-  newKey: () => string;
 }
 
 /**
- * Place the order. Generates the idempotency key once so a retry after a timeout
- * replays rather than double-orders (F1.6 §5). Maps every documented failure code
- * to a UI intent so the screen has one switch.
+ * Place the order with a caller-supplied idempotency key. The key is generated
+ * once per placement attempt and **retained across retries** by `usePlaceOrder`,
+ * so a retry after a timeout replays the original request rather than creating a
+ * second unpaid order (F1.6 §5). Maps every documented failure code to a UI intent.
  */
 export async function placeOrder(
   lines: CartLine[],
   opts: { expectedTotalMinor?: number; tableLabel?: string | null; customerNote?: string | null },
-  deps: Deps = { placeOrder: placeOrderCall, newKey: uuidv7 },
+  idempotencyKey: string,
+  deps: Deps = { placeOrder: placeOrderCall },
 ): Promise<PlaceOutcome> {
   const request: PlaceOrderRequest = {
     items: lines.map((l) => ({
+      clientLineId: l.lineId,
       menuItemId: l.menuItemId,
       qty: l.qty,
       modifierOptionIds: l.modifierOptionIds,
@@ -49,7 +58,7 @@ export async function placeOrder(
   };
 
   try {
-    const order = await deps.placeOrder(request, deps.newKey());
+    const order = await deps.placeOrder(request, idempotencyKey);
     return { kind: 'placed', order };
   } catch (err) {
     return classify(err);
@@ -82,6 +91,11 @@ function classify(err: unknown): PlaceOutcome {
     }
     case 'ITEM_UNAVAILABLE':
       return { kind: 'item_unavailable' };
+    case 'MENU_VERSION_GONE':
+      return { kind: 'menu_gone' };
+    case 'MODIFIER_GROUP_REQUIRED':
+    case 'MODIFIER_SELECTION_INVALID':
+      return { kind: 'needs_review' };
     case 'STORE_CLOSED':
       return { kind: 'store_closed' };
     case 'ORDERING_SUSPENDED':

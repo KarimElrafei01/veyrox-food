@@ -5,7 +5,7 @@ import { Button } from './Button/Button.js';
 import { Chip } from './Chip/Chip.js';
 import { Stepper } from './Stepper/Stepper.js';
 import { Price } from './Price/Price.js';
-import { RadioCardGroup } from './RadioCardGroup/RadioCardGroup.js';
+import { SelectionCardGroup } from './SelectionCardGroup/SelectionCardGroup.js';
 
 describe('Button', () => {
   it('renders children and fires onClick', () => {
@@ -75,16 +75,17 @@ describe('Price (locale-aware, RTL)', () => {
   });
 });
 
-describe('RadioCardGroup', () => {
-  it('selects an option and shows a required error', () => {
-    const onChange = vi.fn();
+describe('SelectionCardGroup', () => {
+  it('single mode uses radios, toggles, and shows a required error', () => {
+    const onToggle = vi.fn();
     render(
-      <RadioCardGroup
+      <SelectionCardGroup
         name="size"
+        mode="single"
         legend="Size"
         error="Please choose an option"
-        value={null}
-        onChange={onChange}
+        value={[]}
+        onToggle={onToggle}
         options={[
           { value: 'r', label: 'Regular' },
           { value: 'l', label: 'Large' },
@@ -92,7 +93,33 @@ describe('RadioCardGroup', () => {
       />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Please choose an option');
-    fireEvent.click(screen.getByLabelText('Large'));
-    expect(onChange).toHaveBeenCalledWith('l');
+    const large = screen.getByLabelText('Large');
+    expect(large).toHaveAttribute('type', 'radio');
+    fireEvent.click(large);
+    expect(onToggle).toHaveBeenCalledWith('l');
+  });
+
+  it('multi mode uses checkboxes and reflects multiple selections', () => {
+    const onToggle = vi.fn();
+    render(
+      <SelectionCardGroup
+        name="extras"
+        mode="multi"
+        legend="Extras"
+        value={['a', 'c']}
+        onToggle={onToggle}
+        options={[
+          { value: 'a', label: 'Cinnamon' },
+          { value: 'b', label: 'Nutmeg' },
+          { value: 'c', label: 'Extra shot' },
+        ]}
+      />,
+    );
+    expect(screen.getByLabelText('Cinnamon')).toBeChecked();
+    expect(screen.getByLabelText('Nutmeg')).not.toBeChecked();
+    expect(screen.getByLabelText('Extra shot')).toBeChecked();
+    expect(screen.getByLabelText('Nutmeg')).toHaveAttribute('type', 'checkbox');
+    fireEvent.click(screen.getByLabelText('Nutmeg'));
+    expect(onToggle).toHaveBeenCalledWith('b');
   });
 });

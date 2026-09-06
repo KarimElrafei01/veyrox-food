@@ -22,7 +22,7 @@
     "uuid": "14.0.2"
   },
   "devDependencies": {
-    "@size-limit/preset-app": "13.0.3",
+    "@size-limit/file": "13.0.3",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/react": "19.2.18",
@@ -35,8 +35,8 @@
   },
   "size-limit": [
     {
-      "name": "apps/order initial JS",
-      "path": "dist/assets/*.js",
+      "name": "apps/order initial JS (the /dev gallery is a separate lazy chunk)",
+      "path": "dist/assets/index-*.js",
       "limit": "150 kB"
     }
   ]
