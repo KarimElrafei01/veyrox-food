@@ -175,6 +175,48 @@ modifier_options (
 
 menu_item_modifier_groups ( menu_item_id, group_id, sort )
 
+-- IMMUTABLE PUBLICATION. ADR-0017; one UUID is pinned into every customer session.
+menu_versions (
+  id uuid PK, tenant_id,
+  published_at timestamptz NOT NULL,
+  retained_until timestamptz NOT NULL,
+  created_at timestamptz
+)
+
+menu_version_categories (
+  menu_version_id, category_id,
+  name_en text NOT NULL, name_ar text, sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, category_id)
+)
+
+menu_version_items (
+  menu_version_id, menu_item_id, category_id,
+  name_en text NOT NULL, name_ar text,
+  description_en text, description_ar text,
+  base_price_minor bigint NOT NULL, prep_seconds int NOT NULL, sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, menu_item_id)
+)
+
+menu_version_modifier_groups (
+  menu_version_id, modifier_group_id,
+  name_en text NOT NULL, name_ar text,
+  selection text NOT NULL, min_select int NOT NULL, max_select int, required bool NOT NULL,
+  PRIMARY KEY (menu_version_id, modifier_group_id)
+)
+
+menu_version_modifier_options (
+  menu_version_id, modifier_option_id, modifier_group_id,
+  name_en text NOT NULL, name_ar text,
+  price_delta_minor bigint NOT NULL, free_for_tier text,
+  sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, modifier_option_id)
+)
+
+menu_version_item_modifier_groups (
+  menu_version_id, menu_item_id, modifier_group_id, sort int NOT NULL,
+  PRIMARY KEY (menu_version_id, menu_item_id, modifier_group_id)
+)
+
 recipes (                                          -- VERSIONED HEADER
   id, tenant_id, menu_item_id,
   version int NOT NULL,
