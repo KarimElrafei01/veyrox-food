@@ -11,6 +11,7 @@ const session = {
   customerId: 'customer',
   waId: 'opaque-wa-id',
   menuVersionId: 'menu',
+  tier: 'silver' as const,
   locale: 'en' as const,
   issuedAt: 1_000,
   expiresAt: 1_900,

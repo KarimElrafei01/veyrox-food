@@ -28,6 +28,7 @@ export interface MenuItem {
   basePriceMinor: Minor;
   modifierGroupIds: readonly string[];
   isAvailable: boolean;
+  prepSeconds?: number;
 }
 
 export interface PricingMenu {

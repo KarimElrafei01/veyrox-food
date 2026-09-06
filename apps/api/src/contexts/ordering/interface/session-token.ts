@@ -5,6 +5,7 @@ export interface CustomerSession {
   customerId: string;
   waId: string;
   menuVersionId: string;
+  tier: 'bronze' | 'silver' | 'gold';
   locale: 'en' | 'ar-EG';
   issuedAt: number;
   expiresAt: number;
@@ -29,6 +30,7 @@ interface TokenPayload {
   c: string;
   w: string;
   m: string;
+  r: 'bronze' | 'silver' | 'gold';
   l: 'en' | 'ar-EG';
   iat: number;
   exp: number;
@@ -50,6 +52,7 @@ export function mintCustomerSession(session: CustomerSession, key: string): stri
       c: session.customerId,
       w: session.waId,
       m: session.menuVersionId,
+      r: session.tier,
       l: session.locale,
       iat: session.issuedAt,
       exp: session.expiresAt,
@@ -80,6 +83,7 @@ export function verifyCustomerSession(
     typeof decoded.c !== 'string' ||
     typeof decoded.w !== 'string' ||
     typeof decoded.m !== 'string' ||
+    (decoded.r !== 'bronze' && decoded.r !== 'silver' && decoded.r !== 'gold') ||
     (decoded.l !== 'en' && decoded.l !== 'ar-EG') ||
     !Number.isInteger(decoded.iat) ||
     !Number.isInteger(decoded.exp)
@@ -97,6 +101,7 @@ export function verifyCustomerSession(
     customerId: decoded.c,
     waId: decoded.w,
     menuVersionId: decoded.m,
+    tier: decoded.r,
     locale: decoded.l,
     issuedAt: decoded.iat,
     expiresAt: decoded.exp,

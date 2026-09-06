@@ -27,3 +27,4 @@ export {
   priceCart,
 } from './pricing.js';
 export { type EtaCartItem, type EtaRange, type QueueTicket, estimateEta } from './eta.js';
+export { previewPoints } from './loyalty.js';

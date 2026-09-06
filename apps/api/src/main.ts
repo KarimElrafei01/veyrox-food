@@ -7,6 +7,8 @@ import { ResolveCustomerSession } from './contexts/ordering/application/resolve-
 import { CustomerSessionRepository } from './contexts/ordering/infrastructure/customer-session-repository.js';
 import { InboundEventRepository } from './contexts/messaging/infrastructure/inbound-event-repository.js';
 import { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
+import { QuoteOrder } from './contexts/ordering/application/quote-order.js';
+import { PublishedMenuRepository } from './contexts/ordering/infrastructure/published-menu-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -60,6 +62,10 @@ async function main(): Promise<void> {
       repository: new CatalogueRepository(database),
       availabilityCache: redis,
       sessionKeys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
+    },
+    quoteOrder: {
+      quote: new QuoteOrder(new PublishedMenuRepository(database, redis)),
+      keys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
     },
   });
 

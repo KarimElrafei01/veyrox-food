@@ -16,6 +16,8 @@ import {
 } from './contexts/messaging/interface/whatsapp-webhook-controller.js';
 import { publicCatalogueController } from './contexts/catalog/interface/public-catalogue-controller.js';
 import type { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
+import { quoteOrderController } from './contexts/ordering/interface/quote-order-controller.js';
+import type { QuoteOrder } from './contexts/ordering/application/quote-order.js';
 
 export interface AppDeps {
   pingPostgres: () => Promise<boolean>;
@@ -30,6 +32,7 @@ export interface AppDeps {
     };
     sessionKeys: readonly [string, ...string[]];
   };
+  quoteOrder?: { quote: QuoteOrder; keys: readonly [string, ...string[]] };
 }
 
 declare module 'fastify' {
@@ -79,6 +82,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       sessionKeys: deps.catalogue.sessionKeys,
     });
   }
+  if (deps.quoteOrder) await app.register(quoteOrderController, deps.quoteOrder);
 
   return app;
 }
