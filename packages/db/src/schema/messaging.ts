@@ -57,3 +57,18 @@ export const outboundMessages = pgTable(
   },
   (t) => [index('outbound_messages_tenant_customer_idx').on(t.tenantId, t.customerId, t.createdAt)],
 );
+
+export const tierCelebrations = pgTable(
+  'tier_celebrations',
+  {
+    id: pk(),
+    tenantId: tenantCol().references(() => tenants.id),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id),
+    tier: text('tier').notNull(),
+    cairoDate: text('cairo_date').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('tier_celebrations_once_idx').on(t.customerId, t.tier, t.cairoDate)],
+);

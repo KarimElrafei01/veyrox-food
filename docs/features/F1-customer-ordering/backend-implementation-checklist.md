@@ -32,9 +32,13 @@ checked only after the implementation and its required automated coverage pass.
 
 ## F1.5 — Loyalty
 
-- [ ] Implement loyalty tier policy, points preview, and session output.
-- [ ] Implement collection-side append-only accrual, cached balance, and tier celebrations.
-- [ ] Add ledger invariant and tier-boundary coverage.
+- [x] Define tier thresholds, inherited perks, multipliers, and floor-after-multiply points policy.
+- [x] Return tier, balance, points-to-next-tier, and perks from session resolution.
+- [x] Return quote points preview without writing a loyalty fact.
+- [x] Add the tenant-scoped append-only `loyalty_ledger` and its history index.
+- [x] Accrue on staff-attributed collection only, transactionally updating `customers.points_cache` and tier.
+- [x] Enqueue one idempotent tier celebration per customer, tier, and Cairo date.
+- [x] Prove INV-4 (`points_cache == SUM(loyalty_ledger.delta)`) and every tier boundary with unit/property and integration coverage.
 
 ## F1.6 — Order placement
 

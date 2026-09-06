@@ -1,10 +1,11 @@
 import { sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { index, numeric, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, numeric, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { pk, tenantCol, ts } from './_shared.js';
 import { tenants } from './tenants.js';
 import { rawMaterials } from './catalog.js';
 import { orders } from './orders.js';
+import { customers } from './tenants.js';
 
 /**
  * The material ledger — the heart of G4 (docs/04-data-model.md §7).
@@ -55,5 +56,24 @@ export const materialLedger = pgTable(
       .where(sql`reverses_ledger_id IS NOT NULL`),
     index('material_ledger_tenant_order_idx').on(t.tenantId, t.orderId),
     index('material_ledger_tenant_material_created_idx').on(t.tenantId, t.materialId, t.createdAt),
+  ],
+);
+
+/** APPEND-ONLY: balances are cached for reads but every point movement remains auditable. */
+export const loyaltyLedger = pgTable(
+  'loyalty_ledger',
+  {
+    id: pk(),
+    tenantId: tenantCol().references(() => tenants.id),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id),
+    delta: integer('delta').notNull(),
+    reason: text('reason').notNull(),
+    orderId: uuid('order_id').references(() => orders.id),
+    createdAt: ts('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('loyalty_ledger_tenant_customer_created_idx').on(t.tenantId, t.customerId, t.createdAt),
   ],
 );

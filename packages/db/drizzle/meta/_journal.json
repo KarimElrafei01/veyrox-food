@@ -29,6 +29,20 @@
       "when": 1788716911833,
       "tag": "0003_kind_deadpool",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788725379353,
+      "tag": "0004_small_white_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788725594493,
+      "tag": "0005_absent_grey_gargoyle",
+      "breakpoints": true
     }
   ]
 }

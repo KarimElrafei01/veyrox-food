@@ -2,6 +2,7 @@ import { SessionInvalid } from '../interface/session-token.js';
 import type { CustomerSession } from '../interface/session-token.js';
 import type { CustomerSessionRepository } from '../infrastructure/customer-session-repository.js';
 import { isStoreOpen, nextStoreOpening } from '../domain/store-hours.js';
+import { perksForTier, pointsToNextTier, type LoyaltyTier } from '@veyroxai/domain';
 
 export class StoreClosed extends Error {
   constructor(readonly opensAt: Date | null) {
@@ -37,7 +38,13 @@ export class ResolveCustomerSession {
     menuVersionId: string;
     expiresAt: Date;
     locale: string;
-    customer: { displayName: string | null; tier: string; pointsBalance: number };
+    customer: {
+      displayName: string | null;
+      tier: LoyaltyTier;
+      pointsBalance: number;
+      pointsToNextTier: number | null;
+      perks: readonly string[];
+    };
     store: { isOpen: true; closesAt: Date | null };
     ordering: {
       enabled: true;
@@ -74,8 +81,10 @@ export class ResolveCustomerSession {
       locale: session.locale,
       customer: {
         displayName: loaded.customer.displayName,
-        tier: loaded.customer.tier,
+        tier: loaded.customer.tier as LoyaltyTier,
         pointsBalance: loaded.customer.pointsCache,
+        pointsToNextTier: pointsToNextTier(loaded.customer.pointsCache),
+        perks: perksForTier(loaded.customer.tier as LoyaltyTier),
       },
       store: { isOpen: true, closesAt: null },
       ordering: { enabled: true, askTableNumber: false, minOrderValueMinor: 0, payAt: 'counter' },

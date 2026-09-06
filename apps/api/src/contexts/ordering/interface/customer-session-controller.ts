@@ -38,8 +38,8 @@ export async function customerSessionController(
             displayName: result.customer.displayName,
             tier: result.customer.tier,
             pointsBalance: result.customer.pointsBalance,
-            pointsToNextTier: 0,
-            perks: [],
+            pointsToNextTier: result.customer.pointsToNextTier,
+            perks: result.customer.perks,
           },
           store: {
             isOpen: result.store.isOpen,
