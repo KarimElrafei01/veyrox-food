@@ -1,4 +1,4 @@
-import { Button, Price, RadioCardGroup, Screen, StickyBar, useT } from '@veyroxai/ui';
+import { Button, IconButton, Price, RadioCardGroup, Screen, StickyBar, useT } from '@veyroxai/ui';
 import type { Locale } from '@veyroxai/i18n';
 import type { LoyaltyTier, MenuModifierGroup } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
@@ -62,25 +62,30 @@ export function ItemDetailScreen({
         <StickyBar>
           <div className={styles.bar}>
             <div className={styles.qty}>
-              <Button
-                variant="ghost"
-                size="md"
-                iconStart="remove"
-                aria-label={t('common.close')}
+              <IconButton
+                icon="remove"
+                label={t('common.close')}
+                tone="surface"
                 disabled={cfg.qty <= 1}
                 onClick={() => cfg.setQty(Math.max(1, cfg.qty - 1))}
               />
               <span className={styles.qtyValue}>{cfg.qty}</span>
-              <Button
-                variant="ghost"
-                size="md"
-                iconStart="add"
-                aria-label={t('menu.add')}
+              <IconButton
+                icon="add"
+                label={t('menu.add')}
+                tone="surface"
                 disabled={cfg.qty >= 20}
                 onClick={() => cfg.setQty(Math.min(20, cfg.qty + 1))}
               />
             </div>
-            <Button variant="primary" size="lg" fullWidth iconStart="shopping-bag" onClick={submit}>
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              spread
+              iconStart="shopping-bag"
+              onClick={submit}
+            >
               <span className={styles.cta}>
                 {editingLineId ? t('item.updateCart') : t('item.addToCart')}
               </span>

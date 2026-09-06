@@ -12,6 +12,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   iconStart?: IconName;
   iconEnd?: IconName;
+  /** Push children apart (label at the start, a trailing price/chevron at the end). */
+  spread?: boolean;
 }
 
 export function Button({
@@ -21,6 +23,7 @@ export function Button({
   loading = false,
   iconStart,
   iconEnd,
+  spread = false,
   disabled,
   children,
   className,
@@ -35,6 +38,7 @@ export function Button({
         styles[variant],
         styles[size],
         fullWidth ? styles.full : '',
+        spread ? styles.spread : '',
         className ?? '',
       ]
         .filter(Boolean)
@@ -44,7 +48,7 @@ export function Button({
       {...rest}
     >
       {loading ? <Spinner size={18} /> : iconStart ? <Icon name={iconStart} size={20} /> : null}
-      {children != null && <span className={styles.label}>{children}</span>}
+      {children != null && (spread ? children : <span className={styles.label}>{children}</span>)}
       {!loading && iconEnd ? <Icon name={iconEnd} size={20} /> : null}
     </button>
   );

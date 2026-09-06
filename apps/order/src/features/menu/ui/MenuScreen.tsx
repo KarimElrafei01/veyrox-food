@@ -69,7 +69,7 @@ export function MenuScreen({
       footer={
         cart.count > 0 ? (
           <StickyBar>
-            <Button variant="espresso" fullWidth size="lg" onClick={onViewCart}>
+            <Button variant="espresso" fullWidth spread size="lg" onClick={onViewCart}>
               <span className={styles.cartCta}>
                 <span className={styles.cartCount}>{cart.count}</span>
                 {t('menu.viewCart')}

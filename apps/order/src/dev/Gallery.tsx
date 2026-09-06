@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LocaleProvider, ThemeProvider, useT } from '@veyroxai/ui';
 import { SessionProvider } from '../shared/session-context.js';
 import { CartProvider, useCart } from '../shared/cart-store.js';
@@ -41,7 +41,13 @@ const noop = () => {};
 
 function SeedCart({ children }: { children: React.ReactNode }): React.JSX.Element {
   const cart = useCart();
-  if (cart.lines.length === 0) {
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current) {
+      return;
+    }
+    seeded.current = true;
+    cart.clear();
     cart.addLine({
       menuItemId: menuFixture.categories[0]!.items[0]!.id,
       qty: 1,
@@ -62,7 +68,9 @@ function SeedCart({ children }: { children: React.ReactNode }): React.JSX.Elemen
       imageUrl: null,
       unitBasePriceMinor: 6500,
     });
-  }
+    // seed once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return <>{children}</>;
 }
 

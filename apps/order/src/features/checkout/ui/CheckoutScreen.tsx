@@ -72,6 +72,7 @@ export function CheckoutScreen({
             variant="primary"
             size="lg"
             fullWidth
+            spread
             loading={placing}
             iconStart="near-me"
             onClick={() => onPlace(note.trim() || null, activeQuote.totalMinor)}

@@ -104,38 +104,45 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --vx-surface: #16130f;
-    --vx-surface-dim: #16130f;
-    --vx-surface-bright: #3c3833;
-    --vx-surface-lowest: #100d0a;
-    --vx-surface-low: #1f1b16;
-    --vx-surface-container: #231f19;
-    --vx-surface-high: #2e2924;
-    --vx-surface-highest: #39332e;
-    --vx-on-surface: #ece3da;
-    --vx-on-surface-variant: #d3c3be;
-    --vx-inverse-surface: #ece3da;
-    --vx-inverse-on-surface: #31312d;
-    --vx-outline: #9c8d88;
-    --vx-outline-variant: #4f4440;
-    --vx-primary: #f3ede7;
-    --vx-on-primary: #2b1810;
-    --vx-primary-container: #2b1810;
-    --vx-on-primary-container: #e2bfb2;
-    --vx-secondary: #ffb59c;
-    --vx-on-secondary: #5a1c00;
-    --vx-secondary-container: #822801;
-    --vx-on-secondary-container: #ffdbcf;
-    --vx-error: #ffb4ab;
-    --vx-on-error: #690005;
-    --vx-error-container: #93000a;
-    --vx-on-error-container: #ffdad6;
-    --vx-loyalty-from: #2b2f31;
-    --vx-loyalty-to: #1c1f21;
-    --vx-loyalty-border: #4a5255;
-    --vx-loyalty-ink: #e2bfb2;
-    color-scheme: dark;
-  }
+/*
+ * Brew & Baladi is a sun-warmed, cream identity — the Stitch source ships no dark
+ * design (brew_baladi/DESIGN.md). The palette therefore commits to light for the
+ * default and "system" states; a dark variant applies only on an explicit opt-in
+ * (`data-theme="dark"`), where every text-role token is remapped to a light value
+ * so nothing goes dark-on-dark.
+ */
+:root[data-theme='dark'] {
+  --vx-surface: #16130f;
+  --vx-surface-dim: #16130f;
+  --vx-surface-bright: #3c3833;
+  --vx-surface-lowest: #211d18;
+  --vx-surface-low: #1f1b16;
+  --vx-surface-container: #231f19;
+  --vx-surface-high: #2e2924;
+  --vx-surface-highest: #39332e;
+  --vx-on-surface: #ece3da;
+  --vx-on-surface-variant: #cdbdb7;
+  --vx-inverse-surface: #ece3da;
+  --vx-inverse-on-surface: #31312d;
+  --vx-outline: #9c8d88;
+  --vx-outline-variant: #4f4440;
+  --vx-primary: #f3ede7;
+  --vx-on-primary: #2b1810;
+  --vx-primary-container: #f0e2da; /* text role in dark — must read light */
+  --vx-on-primary-container: #2b1810;
+  --vx-secondary: #ffb59c;
+  --vx-on-secondary: #5a1c00;
+  --vx-secondary-container: #822801;
+  --vx-on-secondary-container: #ffdbcf;
+  --vx-secondary-fixed: #5a2b18;
+  --vx-on-secondary-fixed-variant: #ffdbcf;
+  --vx-error: #ffb4ab;
+  --vx-on-error: #690005;
+  --vx-error-container: #93000a;
+  --vx-on-error-container: #ffdad6;
+  --vx-loyalty-from: #2b2f31;
+  --vx-loyalty-to: #1c1f21;
+  --vx-loyalty-border: #4a5255;
+  --vx-loyalty-ink: #e2bfb2;
+  color-scheme: dark;
 }

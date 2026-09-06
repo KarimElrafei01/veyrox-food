@@ -67,6 +67,7 @@ export function CartScreen({
             variant="espresso"
             size="lg"
             fullWidth
+            spread
             disabled={!canCheckout}
             onClick={onCheckout}
           >
