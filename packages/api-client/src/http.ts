@@ -1,0 +1,72 @@
+import type { ZodType } from 'zod';
+import { ApiError, NetworkError, unwrap } from './errors.js';
+
+export interface HttpClientOptions {
+  baseUrl: string;
+  /** Bearer token for the request (customer session token in F1). */
+  getToken?: () => string | null;
+  /** BCP-47 tag for `Accept-Language`. */
+  getLocale?: () => string;
+  /** Injectable for tests. */
+  fetchImpl?: typeof fetch;
+}
+
+export interface HttpClient {
+  get<T>(path: string, schema: ZodType<T>, init?: RequestInit): Promise<T>;
+  post<T>(
+    path: string,
+    opts: { body?: unknown; schema: ZodType<T>; idempotencyKey?: string },
+  ): Promise<T>;
+}
+
+/**
+ * The one place the webview talks to `apps/api`. Attaches auth, language, and the
+ * idempotency key; runs `unwrap` (→ `ApiError` on a problem response) then parses
+ * the body with the caller's contract schema. A repo layer wraps one call each.
+ */
+export function createHttpClient(options: HttpClientOptions): HttpClient {
+  const { baseUrl, getToken, getLocale, fetchImpl = fetch } = options;
+
+  function headers(extra?: Record<string, string>): HeadersInit {
+    const h: Record<string, string> = { accept: 'application/json', ...extra };
+    const token = getToken?.();
+    if (token) {
+      h.authorization = `Bearer ${token}`;
+    }
+    const locale = getLocale?.();
+    if (locale) {
+      h['accept-language'] = locale;
+    }
+    return h;
+  }
+
+  async function send(path: string, init: RequestInit): Promise<unknown> {
+    let res: Response;
+    try {
+      res = await fetchImpl(new URL(path, baseUrl).toString(), init);
+    } catch (cause) {
+      throw new NetworkError(cause);
+    }
+    return unwrap(res);
+  }
+
+  return {
+    async get(path, schema, init) {
+      const body = await send(path, { ...init, method: 'GET', headers: headers() });
+      return schema.parse(body);
+    },
+    async post(path, { body, schema, idempotencyKey }) {
+      const raw = await send(path, {
+        method: 'POST',
+        headers: headers({
+          'content-type': 'application/json',
+          ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
+        }),
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      return schema.parse(raw);
+    },
+  };
+}
+
+export { ApiError, NetworkError };
