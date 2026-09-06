@@ -45,13 +45,40 @@ describe('cross-tenant isolation', () => {
     }
   }
 
-  const tableNames = allTables().map((t) => t.name);
+  // Published menu headers are public by design (ADR-0017, post/0070): served at
+  // an unauthenticated URL, so reads are open — but writes stay tenant-scoped and
+  // the child tables (items, modifiers) keep plain isolation.
+  const PUBLIC_READ = new Set(['menu_versions']);
+  const scopedTables = allTables()
+    .map((t) => t.name)
+    .filter((name) => !PUBLIC_READ.has(name));
 
-  it.each(tableNames)('%s is scoped to the active tenant', async (table) => {
+  it.each(scopedTables)('%s is scoped to the active tenant', async (table) => {
     expect(await countUnder(tenantA, table)).toBe(1);
     expect(await countUnder(tenantB, table)).toBe(1);
     // Deny by default: no tenant set → no rows.
     expect(await countUnder(null, table)).toBe(0);
+  });
+
+  it('menu_versions headers read without a tenant claim but do not write', async () => {
+    // Both tenants' published versions are visible with no claim set.
+    expect(await countUnder(null, 'menu_versions')).toBe(2);
+    expect(await countUnder(tenantA, 'menu_versions')).toBe(2);
+
+    // Tenant B still cannot touch tenant A's version.
+    const client = await appPool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`SELECT set_config('app.tenant_id', $1, true)`, [tenantB]);
+      const updated = await client.query(
+        `UPDATE menu_versions SET retained_until = now() WHERE tenant_id = $1`,
+        [tenantA],
+      );
+      await client.query('ROLLBACK');
+      expect(updated.rowCount).toBe(0);
+    } finally {
+      client.release();
+    }
   });
 
   it('the two tenants are distinct', () => {
