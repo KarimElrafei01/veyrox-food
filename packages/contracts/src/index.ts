@@ -1,5 +1,15 @@
 export { problemDetails, type ProblemDetails, idempotencyKeyHeader } from './problem-details.js';
-
+export {
+  placeOrderRequest,
+  quoteOrderRequest,
+  type PlaceOrderRequest,
+  type QuoteOrderRequest,
+} from './customer-ordering.js';
+export {
+  type CartLineRequest,
+  updateLocaleRequest,
+  type UpdateLocaleRequest,
+} from './customer-ordering.js';
 export {
   // shared
   localeMap,
@@ -12,17 +22,9 @@ export {
   loyaltyQuote,
   orderErrorCode,
   type OrderErrorCode,
-  // requests
-  quoteOrderRequest,
-  placeOrderRequest,
-  type CartLineRequest,
-  type QuoteOrderRequest,
-  type PlaceOrderRequest,
   // session
   sessionResolveResponse,
   type SessionResolveResponse,
-  updateLocaleRequest,
-  type UpdateLocaleRequest,
   // menu
   menuOption,
   menuModifierGroup,
@@ -53,4 +55,4 @@ export {
   // status
   orderStatusResponse,
   type OrderStatusResponse,
-} from './customer-ordering.js';
+} from './customer-ordering-responses.js';
