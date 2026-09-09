@@ -4,7 +4,9 @@
 
 Veyrox Food is a WhatsApp-native operating system for independent Egyptian cafés: customer ordering, KDS, counter Till, owner operations, analytics, retention, and fleet administration.
 
-This repository is currently **documentation only**. The next implementation work is Sprint 0 in `docs/06-sprint-plan.md`; do not assume an application scaffold or existing runtime conventions that are not yet present.
+The repo is mid-restructure (ADR-0019): the workspace is moving to `code/` beside `docs/`,
+with `code/backend` + `code/frontends/*` + `code/packages/*`. Sprint-0 F1 work (customer
+ordering) is partly built. Read `docs/06-sprint-plan.md` for the current milestone (M0).
 
 `docs/` is the specification of record. If code and docs disagree, treat it as a bug and reconcile both in the same change. Use this reading order for work:
 
@@ -23,34 +25,38 @@ This repository is currently **documentation only**. The next implementation wor
 - Update affected docs in the same pass as behavior changes: requirements, schema/contracts, tests, sprint plan, runbooks, and/or risk controls as applicable.
 - State schedule impact for any scope change: milestone delta and what is displaced. Use the explicit cut list in `docs/00-master-plan.md`; never silently absorb scope.
 - Keep `main` deployable. Use Conventional Commits with scopes, e.g. `feat(till):`, `fix(ledger):`, `docs(adr):`.
-- **Branch discipline.** Never commit to `main`, never `git push`. Work on a short-lived branch off `main`, commit there, and stop — a human runs the merge and the push. When agents work in parallel, each uses its own `git worktree` so one checkout is never shared.
+- **Branch discipline.** Never commit to `main`, never `git push`. Work on a short-lived branch off `main`, commit there, and stop — a human runs the merge and the push. Parallel agents work in the **one checkout** and coordinate on branches — no `git worktree`, no second working directory (ADR-0019).
 - Do not weaken a non-negotiable to make a feature easier. Propose an alternative.
-- **Frontend feature layering** (`apps/*` SPAs): separate `ui/` (presentational — no fetch, no rules), `hooks/` (React glue over usecases), `usecases/` (pure orchestration over repos), `repo/` (one backend call each — build request, parse the Zod response, return typed data or throw `ApiError`). ADR-0018.
+- **Frontend feature layering** (`code/frontends/*` SPAs): every feature folder carries six layers — `ui/` (screens), `components/` (feature-local presentational pieces), `hooks/` (React glue over usecases), `usecases/` (pure orchestration over repos), `repo/` (wire DTO ↔ feature model, retry/fallback), `datasource/` (one transport call each — build request, call `api-client`, parse the contract schema, return DTO or throw `ApiError`). Same shape every feature, no exemptions; lint forbids cross-feature imports. ADR-0018.
 
 ## Intended repository and stack
 
+Git root is the parent, holding `docs/` and `code/`. `code/` is the pnpm + Turborepo
+workspace (ADR-0019); every member sits two levels under `code/`.
+
 ```text
-apps/api       Fastify API; DDD bounded contexts; the only database write/read path
-apps/worker    BullMQ workers; same image as API, different entry point
-apps/order     public Vite/React customer webview; strict performance budget
-apps/kds       Barista kitchen display; offline-first PWA
-apps/till      Cashier counter; offline-first PWA
-apps/console   Store Console for owner analytics, configuration, and CRUD
-apps/admin     Platform Admin; separate deployable and auth realm
-packages/domain          shared kernel: money, pricing, ETA, loyalty, feature resolver
-packages/contracts       Zod schemas, TypeScript types, generated OpenAPI
-packages/db              Drizzle schema and forward-only migrations
-packages/ops-core        shared by kds + till: offline outbox, service worker,
-                         device enrollment, staff PIN, SSE client
-packages/ui              tokens and RTL-aware primitives
-packages/i18n            en default + ar-EG catalogues and RTL helpers
-packages/auth            custom auth for customer, staff, owner, and admin realms
-packages/api-client      typed client generated from contracts
-packages/observability   OTel, logging, emit-time redaction
-packages/testkit         fixtures, factories, webhook replay corpus
+code/backend/api        Fastify API; DDD bounded contexts; the only database write/read path
+code/backend/worker     BullMQ workers; same image as API, different entry point
+code/frontends/order    public Vite/React customer webview; strict performance budget
+code/frontends/kds      Barista kitchen display; offline-first PWA
+code/frontends/till     Cashier counter; offline-first PWA
+code/frontends/console  Store Console for owner analytics, configuration, and CRUD
+code/frontends/admin    Platform Admin; separate deployable and auth realm
+code/packages/domain          shared kernel: money, pricing, ETA, loyalty, feature resolver
+code/packages/contracts       Zod schemas, TypeScript types, generated OpenAPI
+code/packages/db              Drizzle schema and forward-only migrations
+code/packages/ops-core        shared by kds + till: offline outbox, service worker,
+                              device enrollment, staff PIN, SSE client
+code/packages/ui              tokens and RTL-aware primitives
+code/packages/i18n            en default + ar-EG catalogues and RTL helpers
+code/packages/api-client      typed HTTP client (auth, base URL, problem-detail decoding)
+code/packages/observability   OTel, logging, emit-time redaction
+code/packages/testkit         fixtures, factories, webhook replay corpus
 ```
 
-KDS and Till are separate apps by decision, but every device-shaped concern lives once in `packages/ops-core`. Do not duplicate the outbox, service worker, device enrollment, PIN flow, or SSE client between them.
+Custom auth for all four realms lives in the `identity` context of `code/backend/api`, not a
+package (ADR-0002). KDS and Till are separate apps by decision, but every device-shaped
+concern lives once in `code/packages/ops-core`. Do not duplicate the outbox, service worker, device enrollment, PIN flow, or SSE client between them.
 
 Use TypeScript strict, Node 22, pnpm workspaces, Turborepo, Fastify, Zod, Postgres 16 on Neon, Drizzle, Redis/BullMQ, Vite/React SPAs, Cloudflare Pages/R2, SSE, OTel, Grafana Cloud, and Sentry. WhatsApp goes through **Fiwano** (verified Meta Tech Provider, per-café WABA) behind a `MessagingChannel` adapter with a `CloudApiChannel` sibling, so the provider stays swappable — see ADR-0016. Do not add BaaS, n8n, polling, a payment provider, Kubernetes, a message broker, or direct client database access without an ADR that supersedes the relevant decision.
 
@@ -60,22 +66,44 @@ Full detail: `docs/14-code-structure-and-conventions.md`.
 
 ### Backend — DDD applied where it earns its place
 
-`apps/api/src/contexts/<context>/` with four layers: `domain/` (pure), `application/` (use cases), `infrastructure/` (Drizzle, adapters), `interface/` (thin HTTP). Contexts: ordering, catalog, inventory, loyalty, payments, messaging, identity, platform, analytics.
+`code/backend/api/src/contexts/<context>/` — every context carries the same four layer
+folders: `domain/` (pure), `application/` (use cases), `infrastructure/` (Drizzle, adapters),
+`interface/` (thin HTTP), each with an `index.ts` public surface. Contexts: ordering,
+catalog, inventory, loyalty, payments, messaging, identity, platform, analytics.
 
-- Contexts communicate through domain events. A context may import another's published events and public types, never its repositories, aggregates, or internals.
-- The domain layer is pure: no Drizzle, no Fastify, no clock, no randomness. Clock and IDs are injected.
-- Aggregates own invariants and transaction boundaries. The application layer only orchestrates: load, call domain, persist, publish. Route handlers contain no business logic.
-- **Rich domain only where invariants live** — ordering, inventory, loyalty. `catalog`, `platform`, and `identity` are plain services over repositories; `analytics` is read models and SQL with no domain layer. **A menu item does not get an aggregate root because a pattern book says so.** If you cannot name the invariant an aggregate protects, do not build one.
+- Contexts communicate through domain events. A file in `contexts/A/**` may import
+  `contexts/B/domain/index` — published events and public types — and nothing else in `B`.
+  Lint-enforced (`import/no-restricted-paths`).
+- The domain layer is pure: no Drizzle, no Fastify, no clock, no randomness. Clock and IDs
+  are injected.
+- Aggregates own invariants and transaction boundaries. The application layer only
+  orchestrates: load, call domain, persist, publish. Route handlers contain no business logic.
+- **Uniform folders, not uniform ceremony** (ADR-0019). The skeleton is the same everywhere;
+  what fills it is not. `ordering`/`inventory`/`loyalty` hold full aggregates and invariants.
+  `catalog`/`platform`/`identity` are plain services over repositories — their `domain/` is
+  types and events. `analytics` is read models and SQL. **A menu item does not get an
+  aggregate root because the folder exists.** If you cannot name the invariant an aggregate
+  protects, do not build one.
 
 ### Frontends — feature-first
 
-`apps/<app>/src/features/<feature>/` holds everything that feature needs. No global `components/`, `hooks/`, or `utils/` folders. Promote to app-level `shared/` on the second use inside an app, to a package on the second app.
+`code/frontends/<app>/src/features/<feature>/` holds everything that feature needs, in six
+folders: `ui/`, `components/`, `hooks/`, `usecases/`, `repo/`, `datasource/` (ADR-0018). Same
+shape every feature — a feature with nothing to translate has a one-line pass-through `repo/`.
+No global `components/`, `hooks/`, or `utils/` folders; no cross-feature imports (lint zone).
+Promote to app-level `shared/` on the second use inside an app, to a package on the second app.
 
 ### Simplicity rules
 
-- Write the simplest thing that satisfies the requirement.
-- **No abstraction without a second caller.** No interface with one implementation, no factory producing one type, no generic with one instantiation. Rule of three.
-- No repository interfaces created solely for mocking; integration tests run against real Postgres.
+- Write the simplest thing that satisfies the requirement. The uniform layer skeletons (four
+  per context, six per feature) are the one deliberate exception — the folders are always
+  there; everything inside them follows these rules.
+- **No abstraction without a second caller.** No interface with one implementation, no factory
+  producing one type, no generic with one instantiation. Rule of three. An empty or
+  pass-through layer file is a placeholder, not an abstraction — it stays trivial until a
+  second caller or a real invariant arrives.
+- No repository interfaces created solely for mocking; integration tests run against real
+  Postgres. `infrastructure/` holds concrete Drizzle repositories.
 - Guard clauses over nesting, maximum depth 3. Plain functions over classes; classes only for aggregates. No barrel files. No `any` without an inline justification.
 - Parse at boundaries with Zod, then trust the type. Use branded types (`Minor`, `PhoneE164`, `TenantId`) and discriminated unions over optional-field soup.
 - Domain errors are typed and named for the rule broken (`ItemUnavailable`, `InvalidTransition`); the interface layer maps them to problem details with stable codes.
@@ -107,7 +135,7 @@ Full detail: `docs/14-code-structure-and-conventions.md`.
 
 ### Tenancy, privacy, and authorization
 
-- No client connects to Postgres. All reads, writes, and live updates go through `apps/api`; RLS is defense in depth with transaction-scoped tenant context.
+- No client connects to Postgres. All reads, writes, and live updates go through `code/backend/api`; RLS is defense in depth with transaction-scoped tenant context.
 - Every tenant-owned table, query, and hot-path index is tenant-scoped. Preserve RLS and cross-tenant leak tests.
 - Phone numbers are PII: store/use E.164 and keyed `phone_hash` appropriately; never log phone numbers, tokens, or message bodies. Redaction happens at emission in `packages/observability`.
 - Do not store message bodies. Store template metadata, parameters as appropriate, and content hashes.

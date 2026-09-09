@@ -25,4 +25,6 @@ The reasoning is the point. Code shows *what* was decided; only these show *why*
 | [0015](ADR-0015-configuration-model.md) | Three-layer configuration model, settings registry, versioned CRUD | Accepted |
 | [0017](ADR-0017-immutable-menu-publications.md) | Immutable menu publications for customer sessions | Accepted |
 | [0016](ADR-0016-whatsapp-provider-strategy.md) | WhatsApp via Fiwano (Tech Provider), per-café WABAs, behind a MessagingChannel adapter | Accepted · final 2026-09-06 |
-| [0018](ADR-0018-customer-webview-architecture.md) | Customer webview: Brew & Baladi design system in packages/ui (CSS tokens, no Tailwind), four-layer feature folders, response contracts in packages/contracts | Accepted |
+| [0018](ADR-0018-frontend-feature-layering.md) | Frontend: Brew & Baladi design system in packages/ui (CSS tokens, no Tailwind), six-folder feature layout, response contracts in packages/contracts | Accepted · supersedes the 2026-09-06 four-layer record, 2026-09-09 |
+| [0019](ADR-0019-workspace-layout-and-context-uniformity.md) | Git root holds docs/ + code/; one backend with lint-enforced context walls; every context carries four layer folders; no git worktrees | Accepted · amends 0001 and the 0009 worktree note, 2026-09-09 |
+| [0020](ADR-0020-order-placement-snapshot-provenance.md) | Placement freezes charged price, recipe/price versions and cost onto order_items; daily order_number sequence; frozen placement response | Accepted 2026-09-06 · registered 2026-09-09 (was a second 0018) |

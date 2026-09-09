@@ -128,17 +128,19 @@ Every `code` F1 can return. Stable machine strings; clients switch on these, nev
 
 ---
 
-## 7. Webview app (`apps/order`)
+## 7. Webview app (`code/frontends/order`)
 
-The frontend lives in `apps/order`, feature-first with the four layers from ADR-0018
-(`ui/` · `hooks/` · `usecases/` · `repo/`). One feature folder per subfeature: `session/` (entry +
-the closed / suspended / open-order-block / expired states), `menu/`, `item/`, `cart/`, `checkout/`,
-`order-status/`, plus `loyalty/` (presentational — its data rides on session, quote, and status).
+The frontend lives in `code/frontends/order`, feature-first with the six folders from ADR-0018
+(`ui/` · `components/` · `hooks/` · `usecases/` · `repo/` · `datasource/`). One feature folder per
+subfeature: `session/` (entry + the closed / suspended / open-order-block / expired states), `menu/`,
+`item/`, `cart/`, `checkout/`, `order-status/`, plus `loyalty/` (presentational — its data rides on
+session, quote, and status).
 
 Design system in `packages/ui` (Brew & Baladi tokens, CSS Modules, RTL via logical properties).
 Copy in `packages/i18n` (`en` default, `ar-EG`; Western Arabic numerals for money and counts). The
-`repo/` layer calls the `/public/*` endpoints in each subfeature's §2 through `packages/api-client`'s
-HTTP client, parsing every response against a `packages/contracts` schema.
+`datasource/` layer calls the `/public/*` endpoints in each subfeature's §2 through
+`packages/api-client`'s HTTP client, parsing every response against a `packages/contracts` schema;
+`repo/` maps those DTOs to what each feature holds.
 
-`apps/order` never polls (ADR-0005): the status screen fetches once on placement and once on window
+`order` never polls (ADR-0005): the status screen fetches once on placement and once on window
 focus; WhatsApp messages are the real post-placement channel (F1.7 §1).

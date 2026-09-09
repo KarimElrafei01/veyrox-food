@@ -14,6 +14,8 @@ module.exports = {
       'always',
       [
         'repo',
+        'backend',
+        'frontends',
         'api',
         'worker',
         'order',

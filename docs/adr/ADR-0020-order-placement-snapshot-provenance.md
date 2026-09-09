@@ -1,6 +1,8 @@
-# ADR-0018 — Placement freezes catalogue provenance
+# ADR-0020 — Placement freezes catalogue provenance
 
-**Status**: Accepted · **Date**: 2026-09-06
+**Status**: Accepted · **Date**: 2026-09-06 · **Registered**: 2026-09-09
+(drafted 2026-09-06 sharing the 0018 number with the frontend ADR; renumbered to 0020 when
+the ADR index was reconciled — ADR-0019)
 
 ## Context
 
