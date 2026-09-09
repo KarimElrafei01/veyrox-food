@@ -1,0 +1,94 @@
+# Phase 0 production stack — one box, Docker Compose (ADR-0011).
+# Postgres is Neon (external). Redis runs here; the API is published on
+# 127.0.0.1:3001 for a reverse proxy to pick up.
+#
+#   cd code
+#   docker compose -f infra/compose.prod.yml --env-file infra/api.env up -d --build
+#
+# HTTPS:
+#   - Already run Caddy (or nginx) on the host? Leave it as-is. Add a site that
+#     does `reverse_proxy localhost:3001` and skip the `caddy` service here.
+#   - Nothing on 80/443 yet? Add `--profile edge` to the command above and set
+#     API_DOMAIN in infra/api.env (a *.nip.io name needs no DNS).
+
+name: veyroxai
+
+services:
+  caddy:
+    image: caddy:2
+    profiles: ['edge'] # opt-in: only when you have no host proxy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    image: veyroxai-api
+    command: ['pnpm', '--filter', '@veyroxai/api', 'start']
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: '3001'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_ADMIN_URL: ${DATABASE_ADMIN_URL}
+      REDIS_URL: redis://redis:6379
+      SESSION_KEY: ${SESSION_KEY}
+      SESSION_KEY_PREVIOUS: ${SESSION_KEY_PREVIOUS:-}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET}
+    ports:
+      - '127.0.0.1:3001:3001' # a host reverse proxy reaches it here
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3001/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    image: veyroxai-api
+    command: ['pnpm', '--filter', '@veyroxai/worker', 'start']
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  caddy_data:
+  caddy_config:
+  redis_data:
