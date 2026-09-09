@@ -1,0 +1,18 @@
+# The api/worker image needs every package.json for the frozen-lockfile check,
+# but no build output, no local env, and none of the frontend source.
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.turbo
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+.git
+*.log
+
+frontends/*/src
+frontends/*/public
+frontends/*/index.html
+frontends/*/*.config.ts

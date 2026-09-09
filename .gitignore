@@ -9,6 +9,7 @@ coverage/
 .env
 .env.*
 !.env.example
+code/infra/api.env
 
 # editor / OS
 .DS_Store

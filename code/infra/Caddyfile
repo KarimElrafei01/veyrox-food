@@ -1,0 +1,6 @@
+# Automatic HTTPS for the API. {$API_DOMAIN} comes from infra/api.env.
+# Caddy fetches a Let's Encrypt cert on first start (port 80 must be reachable).
+
+{$API_DOMAIN} {
+	reverse_proxy api:3001
+}
