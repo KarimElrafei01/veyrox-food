@@ -15,7 +15,7 @@ import type { Locale } from '@veyroxai/i18n';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import { useReadySession } from '../../../shared/session-context.js';
 import { useCart } from '../../../shared/cart-store.js';
-import type { ResolvedMenu } from '../usecases/loadMenu.js';
+import type { ResolvedMenu } from '../../../shared/menu-model.js';
 import { MenuItemCard } from './MenuItemCard.js';
 import styles from './MenuScreen.module.css';
 

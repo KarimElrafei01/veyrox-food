@@ -6,7 +6,7 @@ import {
   SessionExpired,
   SessionInvalid,
   verifyCustomerSession,
-} from '../../ordering/interface/session-token.js';
+} from '../../identity/domain/index.js';
 
 interface AvailabilityCache {
   get(key: string): Promise<string | null>;

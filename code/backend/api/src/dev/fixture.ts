@@ -12,7 +12,7 @@
  */
 import { and, createDatabase, createPool, eq, isNull, tables, type Database } from '@veyroxai/db';
 import { CatalogueRepository } from '../contexts/catalog/infrastructure/catalogue-repository.js';
-import { mintCustomerSession } from '../contexts/ordering/interface/session-token.js';
+import { mintCustomerSession } from '../contexts/identity/domain/index.js';
 
 const SLUG = 'brew-and-baladi';
 const now = new Date();

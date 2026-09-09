@@ -8,7 +8,7 @@
  * @veyroxai/api fixture` first (once) to create the customers and a menu version.
  */
 import { createDatabase, createPool, desc, eq, tables } from '@veyroxai/db';
-import { mintCustomerSession } from '../contexts/ordering/interface/session-token.js';
+import { mintCustomerSession } from '../contexts/identity/domain/index.js';
 
 const SLUG = 'brew-and-baladi';
 

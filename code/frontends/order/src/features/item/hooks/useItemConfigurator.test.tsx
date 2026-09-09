@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { MenuModifierGroup } from '@veyroxai/contracts';
-import type { ResolvedItem } from '../../menu/usecases/loadMenu.js';
+import type { ResolvedItem } from '../../../shared/menu-model.js';
 import { useItemConfigurator } from './useItemConfigurator.js';
 
 const item: ResolvedItem = {

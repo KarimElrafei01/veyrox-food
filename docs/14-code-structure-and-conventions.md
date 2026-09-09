@@ -94,8 +94,11 @@ contexts/ordering/
 ```
 
 The four folders exist in **every** context — `ordering` and `catalog` and `analytics`
-alike — each with an `index.ts` that is that layer's public surface. Where a layer has more
-than a handful of files they group by use case (`application/place-order/…`).
+alike. `domain/index.ts` is always present: it is the context's public face, the only thing
+another context may import (see rule 1). The other three layers get an `index.ts` once
+something outside the layer imports more than one file from it — until then, direct file
+imports within the app are fine. Where a layer has more than a handful of files they group by
+use case (`application/place-order/…`).
 
 **Uniform folders, not uniform ceremony.** The skeleton is the same everywhere so there is no
 per-context judgement call about "is this one allowed a domain layer". What goes *inside*

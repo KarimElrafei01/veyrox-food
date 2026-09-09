@@ -11,7 +11,7 @@ import type { Locale } from '@veyroxai/i18n';
 import type { LoyaltyTier, MenuModifierGroup } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import type { NewCartLine } from '../../../shared/cart-store.js';
-import type { ResolvedItem } from '../../menu/usecases/loadMenu.js';
+import type { ResolvedItem } from '../../../shared/menu-model.js';
 import { useItemConfigurator } from '../hooks/useItemConfigurator.js';
 import { isWaived } from '../usecases/configureItem.js';
 import styles from './ItemDetailScreen.module.css';

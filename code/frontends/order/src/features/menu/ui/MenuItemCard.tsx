@@ -1,6 +1,6 @@
 import { Badge, Button, Icon, Price, Stepper, useT } from '@veyroxai/ui';
 import type { Locale } from '@veyroxai/i18n';
-import type { ResolvedItem } from '../usecases/loadMenu.js';
+import type { ResolvedItem } from '../../../shared/menu-model.js';
 import styles from './MenuItemCard.module.css';
 
 function localized(map: { en: string; 'ar-EG'?: string }, locale: Locale): string {

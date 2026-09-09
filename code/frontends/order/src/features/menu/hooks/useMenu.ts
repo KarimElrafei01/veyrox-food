@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MenuResponse } from '@veyroxai/contracts';
 import { fetchAvailability, fetchMenu } from '../repo/menuRepo.js';
-import { mergeMenu, type ResolvedMenu } from '../usecases/loadMenu.js';
+import type { ResolvedMenu } from '../../../shared/menu-model.js';
+import { mergeMenu } from '../usecases/loadMenu.js';
 
 type State =
   | { status: 'loading'; menu: null }

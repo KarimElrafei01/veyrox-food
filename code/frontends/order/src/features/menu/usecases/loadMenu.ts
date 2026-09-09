@@ -1,29 +1,6 @@
-import type {
-  AvailabilityResponse,
-  MenuCategory,
-  MenuItem,
-  MenuModifierGroup,
-  MenuResponse,
-} from '@veyroxai/contracts';
+import type { AvailabilityResponse, MenuResponse } from '@veyroxai/contracts';
+import type { ResolvedCategory, ResolvedItem, ResolvedMenu } from '../../../shared/menu-model.js';
 import { fetchAvailability, fetchMenu } from '../repo/menuRepo.js';
-
-export interface ResolvedItem extends MenuItem {
-  available: boolean;
-  /** Reason it is off, when it is: an 86'd item, or every option of a required group 86'd. */
-  unavailableReason: 'eighty_sixed' | 'required_group_empty' | null;
-}
-
-export interface ResolvedCategory extends Omit<MenuCategory, 'items'> {
-  items: ResolvedItem[];
-}
-
-export interface ResolvedMenu {
-  menuVersion: string;
-  categories: ResolvedCategory[];
-  groupsById: Map<string, MenuModifierGroup>;
-  optionAvailable: (optionId: string) => boolean;
-  staleAgainstVersion: boolean;
-}
 
 interface Deps {
   fetchMenu: typeof fetchMenu;

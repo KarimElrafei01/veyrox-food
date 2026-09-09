@@ -3,7 +3,7 @@ import type {
   QuoteResponse,
   SessionResolveResponse,
 } from '@veyroxai/contracts';
-import type { ResolvedMenu } from '../features/menu/usecases/loadMenu.js';
+import type { ResolvedMenu } from '../shared/menu-model.js';
 
 const ID = {
   tenant: '3f1c0a11-0000-4000-8000-000000000001',

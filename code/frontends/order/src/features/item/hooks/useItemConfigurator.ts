@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { LoyaltyTier, MenuModifierGroup } from '@veyroxai/contracts';
-import type { ResolvedItem } from '../../menu/usecases/loadMenu.js';
+import type { ResolvedItem } from '../../../shared/menu-model.js';
 import {
   buildCartLine,
   estimateLineMinor,

@@ -2,7 +2,11 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { idempotencyKeyHeader, placeOrderRequest } from '@veyroxai/contracts';
 import { MenuVersionGone, ModifierGroupRequired, ModifierSelectionInvalid } from '@veyroxai/domain';
 import type { LoyaltyTier } from '@veyroxai/domain';
-import { verifyCustomerSession, SessionExpired, SessionInvalid } from './session-token.js';
+import {
+  verifyCustomerSession,
+  SessionExpired,
+  SessionInvalid,
+} from '../../identity/domain/index.js';
 import { assembleQuoteBody } from './quote-body.js';
 import {
   type PlaceOrder,

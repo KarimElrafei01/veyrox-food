@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildApp } from '../../../app.js';
 import { customerLocaleController } from './customer-locale-controller.js';
 import { CustomerLocaleRepository } from '../infrastructure/customer-locale-repository.js';
-import { mintCustomerSession } from './session-token.js';
+import { mintCustomerSession } from '../../identity/domain/index.js';
 
 const key = 'a test signing key with enough entropy';
 const idempotencyKey = '11111111-1111-4111-8111-111111111111';

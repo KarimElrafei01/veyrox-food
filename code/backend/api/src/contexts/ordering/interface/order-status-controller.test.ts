@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../../../app.js';
-import { mintCustomerSession } from './session-token.js';
+import { mintCustomerSession } from '../../identity/domain/index.js';
 import type { OrderStatusRepository } from '../infrastructure/order-status-repository.js';
 
 const KEY = 'status-key';

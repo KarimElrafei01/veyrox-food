@@ -6,7 +6,11 @@ import {
 } from '@veyroxai/contracts';
 import type { CustomerLocaleRepository } from '../infrastructure/customer-locale-repository.js';
 import { CustomerLocaleNotFound } from '../infrastructure/customer-locale-repository.js';
-import { SessionExpired, SessionInvalid, verifyCustomerSession } from './session-token.js';
+import {
+  SessionExpired,
+  SessionInvalid,
+  verifyCustomerSession,
+} from '../../identity/domain/index.js';
 
 export async function customerLocaleController(
   app: FastifyInstance,

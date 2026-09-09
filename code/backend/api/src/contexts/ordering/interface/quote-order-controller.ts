@@ -2,7 +2,11 @@ import type { FastifyInstance } from 'fastify';
 import { quoteOrderRequest } from '@veyroxai/contracts';
 import { MenuVersionGone, ModifierGroupRequired, ModifierSelectionInvalid } from '@veyroxai/domain';
 import type { QuoteOrder } from '../application/quote-order.js';
-import { SessionExpired, SessionInvalid, verifyCustomerSession } from './session-token.js';
+import {
+  SessionExpired,
+  SessionInvalid,
+  verifyCustomerSession,
+} from '../../identity/domain/index.js';
 import { assembleQuoteBody } from './quote-body.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import { recordEtaRead, type EtaMetricSink } from '../application/eta-metrics.js';

@@ -6,7 +6,7 @@ import type { QuoteOrder } from '../application/quote-order.js';
 import type { EtaMetricSink } from '../application/eta-metrics.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import { quoteOrderController } from './quote-order-controller.js';
-import { mintCustomerSession } from './session-token.js';
+import { mintCustomerSession } from '../../identity/domain/index.js';
 
 const key = 'unexpected-failure-test-key';
 const token = mintCustomerSession(

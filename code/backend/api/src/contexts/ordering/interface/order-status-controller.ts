@@ -1,6 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { verifyCustomerSession, SessionExpired, SessionInvalid } from './session-token.js';
+import {
+  verifyCustomerSession,
+  SessionExpired,
+  SessionInvalid,
+} from '../../identity/domain/index.js';
 import { describeOrderStatus, OrderNotFound } from '../application/order-status.js';
 import type { OrderStatusRepository } from '../infrastructure/order-status-repository.js';
 

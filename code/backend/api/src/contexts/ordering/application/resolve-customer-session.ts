@@ -1,5 +1,5 @@
-import { SessionInvalid } from '../interface/session-token.js';
-import type { CustomerSession } from '../interface/session-token.js';
+import { SessionInvalid } from '../../identity/domain/index.js';
+import type { CustomerSession } from '../../identity/domain/index.js';
 import type { CustomerSessionRepository } from '../infrastructure/customer-session-repository.js';
 import { isStoreOpen, nextStoreOpening } from '../domain/store-hours.js';
 import { perksForTier, pointsToNextTier, type LoyaltyTier } from '@veyroxai/domain';

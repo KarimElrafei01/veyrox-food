@@ -6,7 +6,11 @@ import {
   WhatsAppOrderingDisabled,
   type ResolveCustomerSession,
 } from '../application/resolve-customer-session.js';
-import { SessionExpired, SessionInvalid, verifyCustomerSession } from './session-token.js';
+import {
+  SessionExpired,
+  SessionInvalid,
+  verifyCustomerSession,
+} from '../../identity/domain/index.js';
 
 export async function customerSessionController(
   app: FastifyInstance,
