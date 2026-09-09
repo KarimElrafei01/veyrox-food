@@ -1,0 +1,8 @@
+# Vite fingerprints asset filenames, so they can be cached forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# index.html and the SPA fallback: no long cache, so a new deploy is picked up.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

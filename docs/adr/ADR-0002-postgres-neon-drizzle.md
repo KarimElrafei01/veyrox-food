@@ -56,10 +56,42 @@ The cross-tenant leak suite (`07-test-and-quality-strategy.md` §4) stays exactl
 
 **Bad**: roughly a week of auth work we were previously buying, and we now own its security posture — which is a real cost, mitigated by the independent security review already scheduled before M5 (NFR-26). We also lose Supabase's dashboard, which was convenient for ad-hoc inspection; the Platform Admin's support tooling (FR-11.13) covers the cases that actually matter, and `psql` covers the rest.
 
+## Amendment, 2026-09-07 — a Neon branch is a supported local database
+
+The Consequences above say "local development needs only Docker". That stays the
+**blessed** path — `pnpm compose:up` (`infra/docker-compose.yml`) with the roles,
+init SQL, and Redis all wired. It is what CI uses and what a new contributor
+should reach for.
+
+But Docker is not installable everywhere, so a **throwaway Neon branch is now a
+supported alternative** for local Postgres: point `.env` at it (`DATABASE_URL` as
+`veyroxai_app`, `DATABASE_ADMIN_URL` as the project owner, which carries
+`BYPASSRLS` — migrations and the cross-tenant leak harness need that), create the
+`veyroxai_app` role once by hand (the Docker init SQL does this automatically;
+Neon does not), and run `pnpm db:migrate && pnpm db:seed`. README "Local database"
+has the exact steps.
+
+This does not touch the decision:
+
+- **Schema still lives only in Drizzle migrations.** A Neon branch is just another
+  Postgres endpoint; `pnpm db:migrate` is still the only thing that changes tables.
+- **No vendor-specific SQL.** The migrations that run against a Neon branch are the
+  same ones that run against Docker and against production.
+- **Redis is not on Neon.** Local dev without Docker still needs a Redis endpoint
+  (hosted or otherwise) for the queue and the availability/ETA cache; the
+  `session` / `menu` / `status` endpoints and every `db:*` script do not.
+
+What surfaced this: two behaviours that only bite outside a fresh Docker Postgres —
+`drizzle-kit generate` had emitted `tenant_isolation` policies into `0001`/`0002`
+that `post/0030_rls.sql` then recreated (`42710`), and the deny-by-default RLS
+predicate `current_setting('app.tenant_id', true)::uuid` *raised* on an empty GUC
+instead of denying. Both are fixed (`NULLIF`, `DROP POLICY IF EXISTS`); running on
+Neon is what caught them.
+
 ## Amendment, 2026-09 — Neon CLI and `neon.ts` for project/branch policy
 
-The Neon CLI (`neon`, npm `neon`) is added, with a `neon.ts` policy file at the repo root and
-the project linked (`neon link --project-id … --branch production`). `neon deploy` (alias
+The Neon CLI (`neon`, npm `neon`) is added, with a `neon.ts` policy file at the workspace root
+(`code/`, ADR-0019) and the project linked (`neon link --project-id … --branch production`). `neon deploy` (alias
 `neon config apply`) reconciles the linked branch to that policy.
 
 The project: **`cold-truth-59832723`** ("veyrox food"), org `org-late-bird-64965382`, region
@@ -84,4 +116,8 @@ gated on the schema being merged to `main` — an agent never runs it. With `def
 and `infra/docker-compose.yml` (`postgres:16`) say 16. PG 18 has native `uuidv7()`, which would let
 `packages/db/drizzle/pre/0000_prereqs.sql` drop its shim. Reconcile before the pilot: either recreate
 the Neon branch on 16, or move local dev + the docs to 18. Tracked here, not silently absorbed.
+## Reversal
 
+Everything is plain Postgres and standard HTTP. Moving to RDS, Cloud SQL, or a self-managed instance
+is a `pg_dump` and a connection string. Schema lives in Drizzle migrations and never in a vendor
+dashboard; no vendor-specific SQL beyond RLS policies.

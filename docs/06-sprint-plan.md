@@ -48,7 +48,7 @@ Nothing here is a feature, and all of it is load-bearing. Every day spent on thi
 
 - Menu domain: categories, items, modifier groups/options, **versioned prices**, availability.
 - `domain.priceCart()` — modifiers, tier waivers, totals. **Full unit + property test coverage here before any UI exists.** This function is the reason the receipt and the dashboard will agree.
-- `apps/order` shell: routing, i18n (`en` default + `ar-EG`) with **RTL correct from the first screen**, design tokens, perf budget wired into CI as a failing check.
+- `code/frontends/order` shell: routing, i18n (`en` default + `ar-EG`) with **RTL correct from the first screen**, design tokens, perf budget wired into CI as a failing check.
 - Menu browse + item detail + modifier selection + cart, all local.
 - `POST /public/orders/quote` returning prices and availability.
 - **Q5 closed**: English-primary, Arabic secondary. `name_en` required, `name_ar` optional with fallback; RTL still built from the first screen.
@@ -76,7 +76,7 @@ Nothing here is a feature, and all of it is load-bearing. Every day spent on thi
 ### Sprint 3 — KDS, realtime, ETA *(weeks 7–8)* → **M1**
 
 - Order state machine in `domain`, with the DB trigger and the "re-entry is a no-op" semantics (FR-3.5).
-- `packages/ops-core`: device enrollment, staff PIN, **SSE stream with `Last-Event-ID` replay and gap-cap resync**, staleness banner (FR-3.6, ADR-0005) — built once, consumed by `apps/kds` and `apps/till`.
+- `packages/ops-core`: device enrollment, staff PIN, **SSE stream with `Last-Event-ID` replay and gap-cap resync**, staleness banner (FR-3.6, ADR-0005) — built once, consumed by `code/frontends/kds` and `code/frontends/till`.
 - KDS four-column board (**New** / Received / Preparing / Ready), tap-to-advance, 60-second undo, Gold priority sort.
 - **Kitchen-accept gate** (FR-3.11–3.13): Accept deducts materials and starts the ETA clock; Reject sends a polite message and deducts nothing; stale-New escalation.
 - Auto "order ready" message on transition to `ready`.
@@ -119,7 +119,7 @@ The most important sprint in the project.
 
 ### Sprint 6 — Owner console, digest, Review Shield *(weeks 13–14)*
 
-- `apps/console` shell: custom owner auth (argon2id + TOTP), tabs, the **`dataScope`-required panel wrapper** (FR-5.25).
+- `code/frontends/console` shell: custom owner auth (argon2id + TOTP), tabs, the **`dataScope`-required panel wrapper** (FR-5.25).
 - Item Analytics: ranked units sold, revenue, material usage from the ledger. Matviews + refresh job.
 - Nightly Digest: computation, Utility template, 22:00 **`Africa/Cairo`** BullMQ repeat, failure alerting.
 - **Submit the digest template to Meta this sprint** — four sprints before it is needed, so R6 surfaces early.
@@ -204,7 +204,7 @@ Deliberately under-planned. Real pilot feedback will fill it, and a sprint with 
 
 **New sprint.** Placed deliberately **before** GA: going live with multiple cafés without fleet tooling means operating them by hand, which does not scale past about three and is where data gets damaged.
 
-- Separate `apps/admin` deployable; platform auth realm with **mandatory WebAuthn**; `platform_owner` / `platform_support` / `platform_engineer` roles; `reason` required on every mutation; `platform_audit` append-only (FR-11.1–11.4, FR-11.20).
+- Separate `code/frontends/admin` deployable; platform auth realm with **mandatory WebAuthn**; `platform_owner` / `platform_support` / `platform_engineer` roles; `reason` required on every mutation; `platform_audit` append-only (FR-11.1–11.4, FR-11.20).
 - **CLI parity** for every mutating action, sharing the same domain functions — the console must never be the only path to a kill switch (FR-11.4).
 - Tenant lifecycle: provisioning in one action, onboarding progress, graceful suspension (FR-11.5–11.7).
 - Entitlements and plans with the four states, including `preview` running the **same computation** as the paid product (FR-11.10).

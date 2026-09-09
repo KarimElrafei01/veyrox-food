@@ -1,0 +1,3 @@
+# Workspace root is code/ (ADR-0019); resolve the message path from the repo root.
+root="$(git rev-parse --show-toplevel)"
+pnpm -C "$root/code" exec commitlint --edit "$root/$1"

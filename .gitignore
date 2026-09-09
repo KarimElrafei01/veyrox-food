@@ -19,3 +19,5 @@ coverage/
 # local artifacts
 stitch_whatsapp_caf_ordering_app.zip
 .neon
+.pnpm-store/
+.review-*/

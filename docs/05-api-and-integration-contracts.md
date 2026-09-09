@@ -45,7 +45,7 @@ The API is the single write path (`01-system-design.md` P1). Everything below is
 Request carries **IDs and quantities only**:
 
 ```json
-{ "items": [ { "menuItemId": "...", "qty": 1,
+{ "items": [ { "clientLineId": "...", "menuItemId": "...", "qty": 1,
                "modifierOptionIds": ["...","..."] } ] }
 ```
 
@@ -53,7 +53,7 @@ Response:
 
 ```json
 { "subtotalMinor": 14500, "discountMinor": 0, "totalMinor": 14500,
-  "lines": [ { "menuItemId": "...", "unitPriceMinor": 11000,
+  "lines": [ { "clientLineId": "...", "menuItemId": "...", "unitPriceMinor": 11000,
                "modifierTotalMinor": 3500, "lineTotalMinor": 14500,
                "modifiers": [ { "id": "...", "priceDeltaMinor": 3500,
                                 "waivedByTier": false } ] } ],
@@ -64,7 +64,7 @@ Response:
 
 **The request contains no prices.** This is FR-2.14 expressed in the contract: it is structurally impossible for a client to propose a price. `/quote` and `/orders` share one `domain.priceCart()` call, so the quoted total and the charged total cannot diverge.
 
-`unavailable` returns items or modifiers that went out of stock between menu load and quote, so the webview can correct the cart rather than fail at checkout.
+`clientLineId` is a client-generated UUID identifying one draft-cart line. It is echoed in both `lines` and `unavailable`, allowing the webview to reconcile duplicate menu items with distinct modifiers without relying on response position. `unavailable` returns items or modifiers that went out of stock between menu load and quote, so the webview can correct the cart rather than fail at checkout.
 
 ### `POST /public/orders`
 

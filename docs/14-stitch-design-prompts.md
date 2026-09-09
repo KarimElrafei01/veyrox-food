@@ -79,7 +79,7 @@ There are **five separate apps**. Keep each visually distinct but from one famil
 ## 2. Order Webview (customer, mobile, RTL-capable)
 
 **Delivery decision (confirmed 2026-09-06):** the ordering UI is a **CTA-URL webview** — a real
-web app (`apps/order`, React SPA) opened in WhatsApp's in-app browser from an "Order Ahead"
+web app (`code/frontends/order`, React SPA) opened in WhatsApp's in-app browser from an "Order Ahead"
 button in the chat. **Not** WhatsApp Flows (fixed component set, no custom styling, a server
 round-trip for every computed change) and **not** a standalone website (loses the phone-number
 identity and the free 24h messaging window). Matches ADR-0003.

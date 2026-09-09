@@ -1,0 +1,4 @@
+# Workspace root is code/ (ADR-0019); git runs hooks from the repo root above it.
+# --max-arg-length is below lint-staged's win32 default (8191) because its estimate
+# omits the cmd.exe wrapper + per-arg quoting, which tips a large rename commit over.
+pnpm -C "$(git rev-parse --show-toplevel)/code" exec lint-staged --max-arg-length 4000

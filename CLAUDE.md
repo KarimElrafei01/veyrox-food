@@ -12,14 +12,14 @@ WhatsApp-native operating layer for independent Egyptian cafés: ordering, KDS, 
 4. **Docs stay in sync in the same pass.** A behaviour change updates the affected FR / NFR / data-model / sprint docs together, and names the knock-on effects.
 5. **State schedule impact explicitly.** Scope changes come with a milestone delta and what they displace. Never absorb scope silently.
 6. **Never weaken a non-negotiable** (below). Propose an alternative instead.
-7. **Branch discipline.** An agent never commits to `main` and never `git push`. All work happens on a short-lived branch off `main`; commit there and stop — a human runs the merge and the push. When two agents work in parallel, each uses its own `git worktree` so one checkout is never shared.
+7. **Branch discipline.** An agent never commits to `main` and never `git push`. All work happens on a short-lived branch off `main`; commit there and stop — a human runs the merge and the push. Parallel agents work in the **one checkout** and coordinate on branches — no `git worktree`, no second working directory (ADR-0019).
 
 ## Non-negotiables
 
 - **Ledger.** Materials move only through append-only `material_ledger`. Voiding inserts the **exact negation** of that order's `sale_deduction` rows via `reverses_ledger_id` — it **never recomputes from `recipes`**. A recipe edited between send and void would otherwise return the wrong quantity, silently and cumulatively. `docs/04-data-model.md` §1.
 - **Abandoned ≠ voided.** Void (before prep) returns materials. Abandon (after prep) does **not** — the milk is gone; it is waste. INV-7.
 - **Snapshots.** `order_items` freeze price, cost, recipe version, menu-price version, and names. Yesterday's report must never change. NFR-19.
-- **Single write path — and single read path.** **No client ever connects to Postgres.** Every mutation and every live update goes through `apps/api`. RLS stays as defence in depth, scoped by `SET LOCAL app.tenant_id`.
+- **Single write path — and single read path.** **No client ever connects to Postgres.** Every mutation and every live update goes through the API (`code/backend/api`). RLS stays as defence in depth, scoped by `SET LOCAL app.tenant_id`.
 - **Schema lives in Drizzle migrations, never in a vendor dashboard.** This is what keeps every exit a `pg_dump`.
 - **No polling.** Live updates are SSE with `Last-Event-ID` replay off `order_events`. Heartbeat every 20s, gap cap → one snapshot, staleness banner always. ADR-0005.
 - **Money = integer minor units** (piastres) with a branded `Minor` type. **Material costs = `NUMERIC(14,6)`.** No floats. Round once, at display. ADR-0007.
@@ -34,24 +34,31 @@ WhatsApp-native operating layer for independent Egyptian cafés: ordering, KDS, 
 
 Full detail and rationale: `docs/14-code-structure-and-conventions.md`. Feature-level specs with exact API contracts, indexes, and caching: `docs/features/`.
 
-```
-apps/api          Backend · DDD bounded contexts · the single write path
-apps/worker       BullMQ jobs · same image as api
-apps/order        Customer webview · strictest perf budget
-apps/kds          Barista kitchen display
-apps/till         Cashier counter
-apps/console      Store Console — owner analytics, costing, CRUD
-apps/admin        Platform Admin — fleet ops, WebAuthn realm
+Git root is the parent, holding `docs/` and `code/`. `code/` is the workspace (ADR-0019).
 
-packages/domain          Shared kernel: money, pricing, ETA, loyalty, feature resolver
-packages/contracts       Zod → validation + types + OpenAPI
-packages/db              Drizzle schema + migrations
-packages/ops-core        Shared by kds + till: offline outbox, service worker,
-                         device enrollment, staff PIN, SSE client
-packages/ui · i18n · api-client · observability · testkit
+```
+code/backend/api          Backend · DDD bounded contexts · the single write/read path
+code/backend/worker       BullMQ jobs · same image as api, different entrypoint
+code/frontends/order      Customer webview · strictest perf budget
+code/frontends/kds        Barista kitchen display
+code/frontends/till       Cashier counter
+code/frontends/console    Store Console — owner analytics, costing, CRUD
+code/frontends/admin      Platform Admin — fleet ops, WebAuthn realm
+
+code/packages/domain          Shared kernel: money, pricing, ETA, loyalty, feature resolver
+code/packages/contracts       Zod → validation + types + OpenAPI
+code/packages/db              Drizzle schema + migrations
+code/packages/ops-core        Shared by kds + till: offline outbox, service worker,
+                              device enrollment, staff PIN, SSE client
+code/packages/ui · i18n · api-client · observability · testkit
 ```
 
-`apps/api` per context: `domain/` (pure) · `application/` (use cases) · `infrastructure/` (Drizzle, adapters) · `interface/` (thin HTTP).
+Every workspace member sits two levels under `code/`, so `../../`-relative config is
+unchanged from the old flat root.
+
+`code/backend/api` — every context carries `domain/` (pure) · `application/` (use cases) ·
+`infrastructure/` (Drizzle, adapters) · `interface/` (thin HTTP). Uniform folders, not
+uniform ceremony — an aggregate root appears only where you can name the invariant (ADR-0019).
 
 Anything deciding a price, cost, quantity, tier, or transition lives in `packages/domain` or a context's `domain/` — **never in a route handler**. That is what stops the Till and the dashboard disagreeing by 0.25 EGP.
 
@@ -87,15 +94,16 @@ TypeScript strict · Node 22 · pnpm + Turborepo · Fastify + Zod · **Postgres 
 - No literal strings in rendered components (CI fails).
 - Config resolves **platform capability → tenant entitlement → tenant preference**. Clients get *resolved state with a reason*, never raw flags. A key absent from `setting_definitions` cannot be set by anyone. ADR-0015.
 - Commits: **Conventional Commits** with scopes — `feat(till):`, `fix(ledger):`, `docs(adr):`. Short-lived branch off `main`, squash-merge, `main` always deployable. Agents commit on the branch only — never to `main`, never `git push` (working rule 7).
-- **Frontend feature layering** (`apps/*` SPAs): each feature folder separates `ui/` (presentational screens + components — props in, callbacks out, no fetch), `hooks/` (React glue calling usecases, holding loading/error/data), `usecases/` (pure orchestration over repos — testable without React), `repo/` (one backend call each: build request, parse the Zod response, return typed data or throw `ApiError`). ADR-0018.
+- **Frontend feature layering** (`code/frontends/*` SPAs): every feature folder carries six layers — `ui/` (screens), `components/` (feature-local presentational pieces), `hooks/` (React glue over usecases), `usecases/` (pure orchestration over repos — testable without React), `repo/` (wire DTO ↔ feature model, retry/fallback), `datasource/` (one transport call each: build request, call `api-client`, parse the contract schema, return DTO or throw `ApiError`). Same shape every feature, no exemptions; lint forbids cross-feature imports. ADR-0018.
 
 ## Commands
 
 *(Scaffold does not exist yet — Sprint 0 is the next task. These are the intended contracts.)*
 
 ```
-pnpm dev            all apps + workers
-docker compose up   local Postgres + Redis  (no vendor CLI)
+pnpm dev            all apps + workers  (run from code/; loads code/.env)
+pnpm compose:up     local Postgres + Redis via Docker  (blessed path)
+                    — or point .env at a Neon branch + hosted Redis (ADR-0002 amendment)
 pnpm test           unit + property (fast-check)
 pnpm test:int       integration against real Postgres
 pnpm test:e2e       Playwright, 7 journeys
@@ -109,11 +117,19 @@ Whole suite must stay **under 5 minutes**. A slow suite gets skipped, and there 
 
 ## Merge gate
 
-Typecheck · lint · unit + property · `domain` coverage · integration · contract · cross-tenant leak · offline suite · `axe` · `size-limit` (≤150 KB gz on `apps/order`) · OpenAPI regenerates without diff. Plus two manual checks that stay manual: **ordering-path changes verified inside the WhatsApp in-app browser** (iOS + Android), and **schema changes proven expand/contract**.
+Typecheck · lint · unit + property · `domain` coverage · integration · contract · cross-tenant leak · offline suite · `axe` · `size-limit` (≤150 KB gz on `frontends/order`) · OpenAPI regenerates without diff. Plus two manual checks that stay manual: **ordering-path changes verified inside the WhatsApp in-app browser** (iOS + Android), and **schema changes proven expand/contract**.
 
 ## State of play
 
-**Nothing is built.** `docs/` is complete; next task is **Sprint 0** (`docs/06-sprint-plan.md`) → M0 walking skeleton: a real WhatsApp message becomes a KDS ticket in under 1s, with CI/CD, observability, and rollback working.
+**Repo restructure in progress (ADR-0019, started 2026-09-09).** Moving to `parent/{docs,code}`
+with `code/backend` + `code/frontends/*` + `code/packages/*`, uniform four-layer contexts, and
+six-folder frontend features. Displaces ~2–4 days of M0. Until it lands, paths in older docs
+still say `apps/*`.
+
+**F1 skeleton exists.** `docs/` is complete and Sprint-0 F1 work (customer ordering — backend
+contexts + the `order` webview) is partly built. Next milestone is still **M0** walking
+skeleton (`docs/06-sprint-plan.md`): a real WhatsApp message becomes a KDS ticket in under 1s,
+with CI/CD, observability, and rollback working.
 
 **No pilot café is signed.** "Brew & Baladi" is the PRD fictional persona. Until one signs, seed costs carry `source='placeholder'` and the console **refuses to render a margin** (FR-5.14) — that stays a hard M3 gate, now phrased as "the pilot café has entered its own real costs."
 

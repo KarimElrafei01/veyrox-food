@@ -1,0 +1,16 @@
+packages:
+  - 'backend/*'
+  - 'frontends/*'
+  - 'packages/*'
+
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: true
+  # napi-rs resolver behind eslint-plugin-import-x — the import/no-restricted-paths
+  # context + feature walls (ADR-0018, ADR-0019) need it to resolve import targets.
+  unrs-resolver: true
+
+# Force a patched esbuild everywhere — the only remaining advisory is a dev-server
+# SSRF in esbuild <0.25 pulled transitively by drizzle-kit's legacy loader.
+overrides:
+  esbuild: '>=0.25.0'
