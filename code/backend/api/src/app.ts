@@ -27,6 +27,8 @@ import type { CustomerLocaleRepository } from './contexts/ordering/infrastructur
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
 import { orderStatusController } from './contexts/ordering/interface/order-status-controller.js';
 import type { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
+import { devSessionController } from './dev/dev-session-controller.js';
+import type { Database } from '@veyroxai/db';
 
 export interface AppDeps {
   pingPostgres: () => Promise<boolean>;
@@ -60,6 +62,8 @@ export interface AppDeps {
     keys: readonly [string, ...string[]];
   };
   orderStatus?: { orders: OrderStatusRepository; keys: readonly [string, ...string[]] };
+  /** Dev-only session picker (DEV_LOGIN). Off in production. */
+  devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
 }
 
 declare module 'fastify' {
@@ -126,6 +130,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.quoteOrder) await app.register(quoteOrderController, deps.quoteOrder);
   if (deps.placeOrder) await app.register(placeOrderController, deps.placeOrder);
   if (deps.orderStatus) await app.register(orderStatusController, deps.orderStatus);
+  if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
 
   return app;
 }

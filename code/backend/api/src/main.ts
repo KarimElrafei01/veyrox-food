@@ -44,6 +44,12 @@ async function main(): Promise<void> {
   const whatsappAppSecret = process.env.WHATSAPP_APP_SECRET;
   if (!whatsappAppSecret) throw new Error('WHATSAPP_APP_SECRET is not set');
   const database = createDatabase(pool);
+  const devLogin = ['1', 'true', 'yes'].includes((process.env.DEV_LOGIN ?? '').toLowerCase());
+  if (devLogin) {
+    log.warn(
+      'DEV_LOGIN is on: GET /dev/sessions mints a session token for every customer. Never enable this against real tenant data.',
+    );
+  }
   const queue: Queue | DevQueue = memoryRedis
     ? createNoopQueue()
     : new Queue('veyrox', { connection: redis as Redis });
@@ -122,6 +128,9 @@ async function main(): Promise<void> {
       orders: new OrderStatusRepository(database),
       keys: sessionKeys,
     },
+    devSessions: devLogin
+      ? { db: database, sessionKey, catalogue: new CatalogueRepository(database) }
+      : undefined,
   });
 
   const port = Number(process.env.API_PORT ?? 3001);

@@ -11,6 +11,9 @@ import {
   StoreClosedScreen,
 } from '../features/session/ui/SessionScreens.js';
 import { LocaleSync } from '../shared/LocaleSync.js';
+import { DevLoginScreen } from '../features/session/ui/DevLoginScreen.js';
+import { DevSwitcher, isDevSession } from '../features/session/ui/DevSwitcher.js';
+import { useDevSessions } from '../features/session/hooks/useDevSessions.js';
 import { useRoute } from './router.js';
 import { Flow } from './Flow.js';
 
@@ -23,6 +26,9 @@ export function App(): React.JSX.Element {
   const route = useRoute();
   const { status, error, session, resolve } = useSession();
   const { locale } = useT();
+
+  const noToken = route.name === 'entry' && !route.params.token && status === 'idle';
+  const devSessions = useDevSessions(noToken);
 
   // Keep the API's Accept-Language aligned with the chosen locale.
   useEffect(() => {
@@ -44,7 +50,25 @@ export function App(): React.JSX.Element {
     );
   }
 
-  if (route.name === 'entry' && !route.params.token && status === 'idle') {
+  if (noToken) {
+    if (devSessions.status === 'loading' || devSessions.status === 'idle') {
+      return <LoadingScreen />;
+    }
+    if (devSessions.status === 'available') {
+      return (
+        <DevLoginScreen
+          cafes={devSessions.cafes}
+          onPick={(token) => {
+            try {
+              sessionStorage.setItem('vx.dev', '1');
+            } catch {
+              /* private mode */
+            }
+            window.location.assign(`/s/${token}`);
+          }}
+        />
+      );
+    }
     return <GenericErrorScreen onRetry={() => window.location.assign(REOPEN_URL)} />;
   }
 
@@ -73,6 +97,7 @@ export function App(): React.JSX.Element {
       <CartProvider menuVersion={session.session.menuVersion}>
         <LocaleSync sessionLocale={session.session.locale} />
         <Flow />
+        {isDevSession() ? <DevSwitcher /> : null}
       </CartProvider>
     );
   }
