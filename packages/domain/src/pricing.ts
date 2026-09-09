@@ -3,6 +3,7 @@ import { addMinor, mulMinor, sumMinor, toMinor, ZERO_MINOR, type Minor } from '.
 export type LoyaltyTier = 'bronze' | 'silver' | 'gold';
 
 export interface CartLine {
+  clientLineId: string;
   menuItemId: string;
   qty: number;
   modifierOptionIds: readonly string[];
@@ -44,6 +45,7 @@ export interface PricedModifier {
 }
 
 export interface PricedLine {
+  clientLineId: string;
   menuItemId: string;
   qty: number;
   unitPriceMinor: Minor;
@@ -53,6 +55,7 @@ export interface PricedLine {
 }
 
 export interface UnavailableLine {
+  clientLineId: string;
   menuItemId: string;
   modifierOptionId?: string;
   reason: 'item_unavailable' | 'modifier_unavailable';
@@ -109,6 +112,7 @@ function tierCanUse(tier: LoyaltyTier | null, required: LoyaltyTier | null): boo
 
 function priceModifiers(
   selectedByGroup: ReadonlyMap<string, readonly MenuOption[]>,
+  clientLineId: string,
   menuItemId: string,
   tier: LoyaltyTier | null,
 ): { modifiers: PricedModifier[]; unavailable: UnavailableLine[] } {
@@ -116,6 +120,7 @@ function priceModifiers(
   const unavailable = selected
     .filter((option) => !option.isAvailable)
     .map((option) => ({
+      clientLineId,
       menuItemId,
       modifierOptionId: option.id,
       reason: 'modifier_unavailable' as const,
@@ -152,7 +157,11 @@ export function priceCart(
     const item = itemById.get(line.menuItemId);
     if (!item) throw new MenuVersionGone(line.menuItemId);
     if (!item.isAvailable) {
-      unavailable.push({ menuItemId: item.id, reason: 'item_unavailable' });
+      unavailable.push({
+        clientLineId: line.clientLineId,
+        menuItemId: item.id,
+        reason: 'item_unavailable',
+      });
       continue;
     }
 
@@ -187,7 +196,7 @@ export function priceCart(
       }
     }
 
-    const pricedModifiers = priceModifiers(selectedByGroup, item.id, tier);
+    const pricedModifiers = priceModifiers(selectedByGroup, line.clientLineId, item.id, tier);
     unavailable.push(...pricedModifiers.unavailable);
     if (pricedModifiers.unavailable.length > 0) continue;
 
@@ -198,6 +207,7 @@ export function priceCart(
     );
     const lineTotalMinor = mulMinor(addMinor(item.basePriceMinor, modifierTotalMinor), line.qty);
     lines.push({
+      clientLineId: line.clientLineId,
       menuItemId: item.id,
       qty: line.qty,
       unitPriceMinor: item.basePriceMinor,

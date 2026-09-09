@@ -12,6 +12,7 @@ function pricedCart(overrides: Partial<PricedCart> = {}): PricedCart & {
   return {
     lines: [
       {
+        clientLineId: ITEM,
         menuItemId: ITEM,
         qty: 1,
         unitPriceMinor: toMinor(9000),
@@ -65,7 +66,7 @@ const input = {
   minOrderValueMinor: 0,
   idempotencyKey: 'key',
   traceId: 'trace-1',
-  request: { items: [{ menuItemId: ITEM, qty: 1, modifierOptionIds: [] }] },
+  request: { items: [{ clientLineId: ITEM, menuItemId: ITEM, qty: 1, modifierOptionIds: [] }] },
 };
 
 describe('PlaceOrder', () => {
@@ -117,7 +118,9 @@ describe('PlaceOrder', () => {
   it('rejects items the pinned menu now reports unavailable', async () => {
     const { useCase } = subject({
       quote: async () =>
-        pricedCart({ unavailable: [{ menuItemId: ITEM, reason: 'item_unavailable' }] }),
+        pricedCart({
+          unavailable: [{ clientLineId: ITEM, menuItemId: ITEM, reason: 'item_unavailable' }],
+        }),
     });
     await expect(useCase.execute(input)).rejects.toBeInstanceOf(ItemUnavailable);
   });

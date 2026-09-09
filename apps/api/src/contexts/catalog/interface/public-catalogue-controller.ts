@@ -2,7 +2,11 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { renderPublishedMenu } from '../application/render-published-menu.js';
 import type { CatalogueRepository } from '../infrastructure/catalogue-repository.js';
-import { verifyCustomerSession } from '../../ordering/interface/session-token.js';
+import {
+  SessionExpired,
+  SessionInvalid,
+  verifyCustomerSession,
+} from '../../ordering/interface/session-token.js';
 
 interface AvailabilityCache {
   get(key: string): Promise<string | null>;
@@ -62,12 +66,16 @@ export async function publicCatalogueController(
         code: 'SESSION_INVALID',
         traceId: request.id,
       });
+    let session;
     try {
-      const session = verifyCustomerSession(
-        token,
-        options.sessionKeys,
-        Math.floor(Date.now() / 1000),
-      );
+      session = verifyCustomerSession(token, options.sessionKeys, Math.floor(Date.now() / 1000));
+    } catch (error) {
+      return reply.status(401).send({
+        code: error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID',
+        traceId: request.id,
+      });
+    }
+    try {
       const cacheKey = `avail:${session.tenantId}`;
       const cached = await options.availabilityCache.get(cacheKey);
       const availability = cached
@@ -86,8 +94,10 @@ export async function publicCatalogueController(
         asOf: new Date().toISOString(),
         traceId: request.id,
       });
-    } catch {
-      return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+    } catch (error) {
+      if (error instanceof SessionInvalid)
+        return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+      throw error;
     }
   });
 }

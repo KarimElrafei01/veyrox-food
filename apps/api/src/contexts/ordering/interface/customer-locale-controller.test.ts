@@ -53,4 +53,28 @@ describe('customer locale route', () => {
     expect(response.headers['idempotency-replayed']).toBe('true');
     expect(response.json()).toMatchObject({ locale: 'ar-EG', sequence: 2 });
   });
+
+  it('uses the sanitized internal-error problem for repository failures', async () => {
+    const repository = Object.create(
+      CustomerLocaleRepository.prototype,
+    ) as CustomerLocaleRepository;
+    repository.update = async () => {
+      throw new Error('database unavailable');
+    };
+    const app = await buildApp({ pingPostgres: async () => true, pingRedis: async () => true });
+    await app.register(customerLocaleController, { repository, keys: [key] });
+    const response = await app.inject({
+      method: 'POST',
+      url: '/public/session/locale',
+      headers: { authorization: `Bearer ${token}`, 'idempotency-key': idempotencyKey },
+      payload: { locale: 'ar-EG', sequence: 2 },
+    });
+    expect(response.statusCode).toBe(500);
+    expect(response.json()).toMatchObject({
+      code: 'INTERNAL',
+      status: 500,
+      traceId: expect.any(String),
+    });
+    await app.close();
+  });
 });

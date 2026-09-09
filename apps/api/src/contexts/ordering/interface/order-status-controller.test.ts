@@ -79,4 +79,22 @@ describe('GET /public/orders/:orderId/status', () => {
     expect(res.statusCode).toBe(401);
     await app.close();
   });
+
+  it('uses the sanitized internal-error problem for repository failures', async () => {
+    const { app } = await harness(async () => {
+      throw new Error('database unavailable');
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: `/public/orders/${ORDER_ID}/status`,
+      headers: { authorization: `Bearer ${token()}` },
+    });
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toMatchObject({
+      code: 'INTERNAL',
+      status: 500,
+      traceId: expect.any(String),
+    });
+    await app.close();
+  });
 });

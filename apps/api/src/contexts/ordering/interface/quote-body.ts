@@ -34,6 +34,7 @@ export function assembleQuoteBody(
   );
   return {
     lines: priced.lines.map((line) => ({
+      clientLineId: line.clientLineId,
       menuItemId: line.menuItemId,
       qty: line.qty,
       unitPriceMinor: line.unitPriceMinor,
@@ -44,6 +45,7 @@ export function assembleQuoteBody(
     discountMinor: priced.discountMinor,
     totalMinor: priced.totalMinor,
     unavailable: priced.unavailable.map((entry) => ({
+      clientLineId: entry.clientLineId,
       menuItemId: entry.menuItemId,
       ...(entry.modifierOptionId ? { modifierOptionId: entry.modifierOptionId } : {}),
     })),

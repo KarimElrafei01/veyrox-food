@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { verifyCustomerSession, SessionExpired } from './session-token.js';
+import { verifyCustomerSession, SessionExpired, SessionInvalid } from './session-token.js';
 import { describeOrderStatus, OrderNotFound } from '../application/order-status.js';
 import type { OrderStatusRepository } from '../infrastructure/order-status-repository.js';
 
@@ -14,12 +14,20 @@ export async function orderStatusController(
     const authorization = request.headers.authorization;
     if (!authorization?.startsWith('Bearer '))
       return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+    let session;
     try {
-      const session = verifyCustomerSession(
+      session = verifyCustomerSession(
         authorization.slice(7),
         options.keys,
         Math.floor(Date.now() / 1000),
       );
+    } catch (error) {
+      return reply.status(401).send({
+        code: error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID',
+        traceId: request.id,
+      });
+    }
+    try {
       const { orderId } = params.parse(request.params);
       const row = await options.orders.findOwnedOrder(
         session.tenantId,
@@ -34,9 +42,9 @@ export async function orderStatusController(
     } catch (error) {
       if (error instanceof OrderNotFound)
         return reply.status(404).send({ code: 'ORDER_NOT_FOUND', traceId: request.id });
-      if (error instanceof SessionExpired)
-        return reply.status(401).send({ code: 'SESSION_EXPIRED', traceId: request.id });
-      return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+      if (error instanceof SessionInvalid)
+        return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+      throw error;
     }
   });
 }

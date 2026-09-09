@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 const cartLine = z.object({
+  /** Client-generated stable key used to reconcile this row with a quote response. */
+  clientLineId: z.uuid(),
   menuItemId: z.uuid(),
   qty: z.number().int().min(1).max(20),
   modifierOptionIds: z.array(z.uuid()).max(20),
@@ -27,6 +29,7 @@ const etaEnvelope = z.object({
 });
 
 const pricedLine = z.object({
+  clientLineId: z.uuid(),
   menuItemId: z.uuid(),
   qty: z.number().int(),
   unitPriceMinor: z.number().int(),
@@ -40,7 +43,13 @@ export const quoteResponse = z.object({
   subtotalMinor: z.number().int(),
   discountMinor: z.number().int(),
   totalMinor: z.number().int(),
-  unavailable: z.array(z.object({ menuItemId: z.uuid(), modifierOptionId: z.uuid().optional() })),
+  unavailable: z.array(
+    z.object({
+      clientLineId: z.uuid(),
+      menuItemId: z.uuid(),
+      modifierOptionId: z.uuid().optional(),
+    }),
+  ),
   eta: z.object({
     lowerMinutes: z.number().int(),
     upperMinutes: z.number().int(),
@@ -70,15 +79,15 @@ export type QuoteResponse = z.infer<typeof quoteResponse>;
 export type PlaceOrderResponse = z.infer<typeof placeOrderResponse>;
 
 /** A monotonic client sequence stops an older, delayed toggle replacing a newer choice. */
-export const updateSessionLocaleRequest = z.object({
+export const updateLocaleRequest = z.object({
   locale: z.enum(['en', 'ar-EG']),
   sequence: z.number().int().nonnegative(),
 });
 
-export const updateSessionLocaleResponse = z.object({
+export const updateLocaleResponse = z.object({
   locale: z.enum(['en', 'ar-EG']),
   sequence: z.number().int().nonnegative(),
 });
 
-export type UpdateSessionLocaleRequest = z.infer<typeof updateSessionLocaleRequest>;
-export type UpdateSessionLocaleResponse = z.infer<typeof updateSessionLocaleResponse>;
+export type UpdateLocaleRequest = z.infer<typeof updateLocaleRequest>;
+export type UpdateLocaleResponse = z.infer<typeof updateLocaleResponse>;

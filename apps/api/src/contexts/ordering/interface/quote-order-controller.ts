@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { quoteOrderRequest } from '@veyroxai/contracts';
 import { MenuVersionGone, ModifierGroupRequired, ModifierSelectionInvalid } from '@veyroxai/domain';
 import type { QuoteOrder } from '../application/quote-order.js';
-import { verifyCustomerSession } from './session-token.js';
+import { SessionExpired, SessionInvalid, verifyCustomerSession } from './session-token.js';
 import { assembleQuoteBody } from './quote-body.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import { recordEtaRead, type EtaMetricSink } from '../application/eta-metrics.js';
@@ -23,12 +23,20 @@ export async function quoteOrderController(
       const authorization = request.headers.authorization;
       if (!authorization?.startsWith('Bearer '))
         return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+      let session;
       try {
-        const session = verifyCustomerSession(
+        session = verifyCustomerSession(
           authorization.slice(7),
           options.keys,
           Math.floor(Date.now() / 1000),
         );
+      } catch (error) {
+        return reply.status(401).send({
+          code: error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID',
+          traceId: request.id,
+        });
+      }
+      try {
         const body = quoteOrderRequest.parse(
           Buffer.isBuffer(request.body) ? JSON.parse(request.body.toString('utf8')) : request.body,
         );
@@ -62,7 +70,9 @@ export async function quoteOrderController(
           });
         if (error instanceof MenuVersionGone)
           return reply.status(409).send({ code: 'MENU_VERSION_GONE', traceId: request.id });
-        return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+        if (error instanceof SessionInvalid)
+          return reply.status(401).send({ code: 'SESSION_INVALID', traceId: request.id });
+        throw error;
       }
     },
   );

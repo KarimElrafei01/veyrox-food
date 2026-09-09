@@ -24,7 +24,7 @@ const menu: PricingMenu = {
 describe('priceCart', () => {
   it('multiplies selected modifiers by quantity and gives Gold inherited perks', () => {
     const result = priceCart(
-      [{ menuItemId: 'latte', qty: 2, modifierOptionIds: ['oat'] }],
+      [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 2, modifierOptionIds: ['oat'] }],
       menu,
       'gold',
     );
@@ -38,7 +38,14 @@ describe('priceCart', () => {
 
   it('deduplicates modifier ids so a customer cannot be charged twice', () => {
     const result = priceCart(
-      [{ menuItemId: 'latte', qty: 1, modifierOptionIds: ['whole', 'whole'] }],
+      [
+        {
+          clientLineId: 'line-1',
+          menuItemId: 'latte',
+          qty: 1,
+          modifierOptionIds: ['whole', 'whole'],
+        },
+      ],
       menu,
       'bronze',
     );
@@ -51,39 +58,66 @@ describe('priceCart', () => {
       options: [{ ...menu.options[1]!, isAvailable: false }, menu.options[0]!],
     };
     const result = priceCart(
-      [{ menuItemId: 'latte', qty: 1, modifierOptionIds: ['oat'] }],
+      [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 1, modifierOptionIds: ['oat'] }],
       unavailableMenu,
       'bronze',
     );
     expect(result).toMatchObject({
       lines: [],
       totalMinor: 0,
-      unavailable: [{ menuItemId: 'latte', modifierOptionId: 'oat' }],
+      unavailable: [{ clientLineId: 'line-1', menuItemId: 'latte', modifierOptionId: 'oat' }],
     });
   });
 
   it('enforces required and bounded modifier selections', () => {
     expect(() =>
-      priceCart([{ menuItemId: 'latte', qty: 1, modifierOptionIds: [] }], menu, null),
+      priceCart(
+        [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 1, modifierOptionIds: [] }],
+        menu,
+        null,
+      ),
     ).toThrow(ModifierGroupRequired);
     expect(() =>
-      priceCart([{ menuItemId: 'latte', qty: 1, modifierOptionIds: ['whole', 'oat'] }], menu, null),
+      priceCart(
+        [
+          {
+            clientLineId: 'line-1',
+            menuItemId: 'latte',
+            qty: 1,
+            modifierOptionIds: ['whole', 'oat'],
+          },
+        ],
+        menu,
+        null,
+      ),
     ).toThrow(ModifierSelectionInvalid);
   });
 
   it('rejects invalid quantities, unknown items, detached options, and missing groups', () => {
     expect(() =>
-      priceCart([{ menuItemId: 'latte', qty: 0, modifierOptionIds: [] }], menu, null),
+      priceCart(
+        [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 0, modifierOptionIds: [] }],
+        menu,
+        null,
+      ),
     ).toThrow(InvalidQuantity);
     expect(() =>
-      priceCart([{ menuItemId: 'missing', qty: 1, modifierOptionIds: [] }], menu, null),
+      priceCart(
+        [{ clientLineId: 'line-1', menuItemId: 'missing', qty: 1, modifierOptionIds: [] }],
+        menu,
+        null,
+      ),
     ).toThrow(MenuVersionGone);
     expect(() =>
-      priceCart([{ menuItemId: 'latte', qty: 1, modifierOptionIds: ['missing'] }], menu, null),
+      priceCart(
+        [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 1, modifierOptionIds: ['missing'] }],
+        menu,
+        null,
+      ),
     ).toThrow(ModifierSelectionInvalid);
     expect(() =>
       priceCart(
-        [{ menuItemId: 'latte', qty: 1, modifierOptionIds: [] }],
+        [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 1, modifierOptionIds: [] }],
         { ...menu, items: [{ ...menu.items[0]!, modifierGroupIds: ['missing-group'] }] },
         null,
       ),
@@ -92,7 +126,7 @@ describe('priceCart', () => {
 
   it('keeps unavailable items out of totals and applies explicit discounts', () => {
     const result = priceCart(
-      [{ menuItemId: 'latte', qty: 1, modifierOptionIds: ['whole'] }],
+      [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 1, modifierOptionIds: ['whole'] }],
       { ...menu, items: [{ ...menu.items[0]!, isAvailable: false }] },
       'bronze',
       toMinor(500),
@@ -100,7 +134,7 @@ describe('priceCart', () => {
     expect(result).toMatchObject({
       subtotalMinor: 0,
       totalMinor: -500,
-      unavailable: [{ menuItemId: 'latte', reason: 'item_unavailable' }],
+      unavailable: [{ clientLineId: 'line-1', menuItemId: 'latte', reason: 'item_unavailable' }],
     });
   });
 
@@ -109,7 +143,8 @@ describe('priceCart', () => {
       fc.property(
         fc.array(fc.integer({ min: 1, max: 20 }), { minLength: 1, maxLength: 8 }),
         (quantities) => {
-          const cart = quantities.map((qty) => ({
+          const cart = quantities.map((qty, index) => ({
+            clientLineId: `line-${index}`,
             menuItemId: 'latte',
             qty,
             modifierOptionIds: ['whole'],

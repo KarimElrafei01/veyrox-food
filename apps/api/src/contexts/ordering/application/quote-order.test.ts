@@ -17,7 +17,7 @@ describe('QuoteOrder', () => {
       tenantId: 'tenant',
       menuVersionId: 'menu',
       tier: 'bronze',
-      items: [{ menuItemId: 'latte', qty: 2, modifierOptionIds: [] }],
+      items: [{ clientLineId: 'line-1', menuItemId: 'latte', qty: 2, modifierOptionIds: [] }],
     });
     expect(quote.totalMinor).toBe(18000);
   });

@@ -6,7 +6,7 @@ import {
   WhatsAppOrderingDisabled,
   type ResolveCustomerSession,
 } from '../application/resolve-customer-session.js';
-import { SessionExpired, verifyCustomerSession } from './session-token.js';
+import { SessionExpired, SessionInvalid, verifyCustomerSession } from './session-token.js';
 
 export async function customerSessionController(
   app: FastifyInstance,
@@ -16,9 +16,23 @@ export async function customerSessionController(
     '/public/session/:token',
     { schema: { params: z.object({ token: z.string().min(1) }) } },
     async (request, reply) => {
+      const { token } = z.object({ token: z.string().min(1) }).parse(request.params);
+      let session;
       try {
-        const { token } = z.object({ token: z.string().min(1) }).parse(request.params);
-        const session = verifyCustomerSession(token, options.keys, Math.floor(Date.now() / 1000));
+        session = verifyCustomerSession(token, options.keys, Math.floor(Date.now() / 1000));
+      } catch (error) {
+        return reply
+          .status(401)
+          .type('application/problem+json')
+          .send({
+            type: 'about:blank',
+            title: 'Session unavailable',
+            status: 401,
+            code: error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID',
+            traceId: request.id,
+          });
+      }
+      try {
         const result = await options.resolver.execute(session, new Date());
         return {
           tenant: {
@@ -88,14 +102,15 @@ export async function customerSessionController(
             traceId: request.id,
           });
         }
-        const code = error instanceof SessionExpired ? 'SESSION_EXPIRED' : 'SESSION_INVALID';
-        return reply.status(401).type('application/problem+json').send({
-          type: 'about:blank',
-          title: 'Session unavailable',
-          status: 401,
-          code,
-          traceId: request.id,
-        });
+        if (error instanceof SessionInvalid)
+          return reply.status(401).type('application/problem+json').send({
+            type: 'about:blank',
+            title: 'Session unavailable',
+            status: 401,
+            code: 'SESSION_INVALID',
+            traceId: request.id,
+          });
+        throw error;
       }
     },
   );

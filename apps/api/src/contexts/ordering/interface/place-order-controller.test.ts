@@ -72,7 +72,7 @@ function harness(placeImpl: PlaceOrder['execute'], emit = vi.fn(async () => {}))
 }
 
 const payload = JSON.stringify({
-  items: [{ menuItemId: IDEMPOTENCY, qty: 1, modifierOptionIds: [] }],
+  items: [{ clientLineId: IDEMPOTENCY, menuItemId: IDEMPOTENCY, qty: 1, modifierOptionIds: [] }],
 });
 const headers = () => ({
   authorization: `Bearer ${token()}`,
@@ -139,6 +139,7 @@ describe('POST /public/orders', () => {
       throw new PriceChanged({
         lines: [
           {
+            clientLineId: IDEMPOTENCY,
             menuItemId: IDEMPOTENCY,
             qty: 1,
             unitPriceMinor: 9500 as never,
