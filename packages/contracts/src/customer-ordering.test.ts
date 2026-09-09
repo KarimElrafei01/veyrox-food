@@ -1,35 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { placeOrderRequest, updateLocaleRequest } from './customer-ordering.js';
 
-describe('customer ordering contracts', () => {
+const LINE = {
+  clientLineId: '0192d425-9790-7dd9-8aa9-8cbd4c3844dc',
+  menuItemId: '0192d425-9790-7dd9-8aa9-8cbd4c3844db',
+  qty: 1,
+  modifierOptionIds: [],
+};
+
+describe('customer ordering request contracts', () => {
   it('does not accept client-supplied prices', () => {
-    const result = placeOrderRequest.safeParse({
-      items: [
-        {
-          clientLineId: '0192d425-9790-7dd9-8aa9-8cbd4c3844dc',
-          menuItemId: '0192d425-9790-7dd9-8aa9-8cbd4c3844db',
-          qty: 1,
-          modifierOptionIds: [],
-          unitPriceMinor: 1,
-        },
-      ],
-    });
-    expect(result.success).toBe(true);
-    if (result.success) expect(result.data.items[0]).not.toHaveProperty('unitPriceMinor');
+    const result = placeOrderRequest.parse({ items: [{ ...LINE, unitPriceMinor: 1 }] });
+    expect(result.items[0]).not.toHaveProperty('unitPriceMinor');
   });
 
   it('requires a client line ID for quote reconciliation', () => {
-    expect(
-      placeOrderRequest.safeParse({
-        items: [
-          {
-            menuItemId: '0192d425-9790-7dd9-8aa9-8cbd4c3844db',
-            qty: 1,
-            modifierOptionIds: [],
-          },
-        ],
-      }).success,
-    ).toBe(false);
+    const { clientLineId: _clientLineId, ...withoutLineId } = LINE;
+    expect(placeOrderRequest.safeParse({ items: [withoutLineId] }).success).toBe(false);
   });
 
   it('requires a monotonic sequence when updating a locale', () => {

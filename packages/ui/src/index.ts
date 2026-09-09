@@ -17,3 +17,34 @@ export function physicalSide(logical: 'start' | 'end', direction: Direction): 'l
   }
   return startIsLeft ? 'right' : 'left';
 }
+
+// — React bindings —
+export { LocaleProvider, useT } from './react/LocaleProvider.js';
+export { ThemeProvider, useTheme, type ThemeName } from './react/ThemeProvider.js';
+export { T } from './react/T.js';
+
+// — icons —
+export { Icon, type IconName } from './icons/Icon.js';
+
+// — primitives —
+export { Button } from './primitives/Button/Button.js';
+export { IconButton } from './primitives/IconButton/IconButton.js';
+export { Chip } from './primitives/Chip/Chip.js';
+export { Card } from './primitives/Card/Card.js';
+export { Badge } from './primitives/Badge/Badge.js';
+export { Price } from './primitives/Price/Price.js';
+export { Spinner } from './primitives/Spinner/Spinner.js';
+export { Stepper } from './primitives/Stepper/Stepper.js';
+export {
+  SelectionCardGroup,
+  type SelectionCardOption,
+} from './primitives/SelectionCardGroup/SelectionCardGroup.js';
+export { Field, TextInput } from './primitives/Field/Field.js';
+export { Stack, Inline, Screen, StickyBar } from './primitives/Layout/Layout.js';
+export { AppHeader } from './primitives/AppHeader/AppHeader.js';
+export { Alert, EmptyState, Skeleton, StatusDot } from './primitives/Feedback/Feedback.js';
+export {
+  ProgressTracker,
+  type ProgressStep,
+} from './primitives/ProgressTracker/ProgressTracker.js';
+export { BottomSheet } from './primitives/BottomSheet/BottomSheet.js';

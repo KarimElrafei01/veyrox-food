@@ -23,7 +23,9 @@ This repository is currently **documentation only**. The next implementation wor
 - Update affected docs in the same pass as behavior changes: requirements, schema/contracts, tests, sprint plan, runbooks, and/or risk controls as applicable.
 - State schedule impact for any scope change: milestone delta and what is displaced. Use the explicit cut list in `docs/00-master-plan.md`; never silently absorb scope.
 - Keep `main` deployable. Use Conventional Commits with scopes, e.g. `feat(till):`, `fix(ledger):`, `docs(adr):`.
+- **Branch discipline.** Never commit to `main`, never `git push`. Work on a short-lived branch off `main`, commit there, and stop — a human runs the merge and the push. When agents work in parallel, each uses its own `git worktree` so one checkout is never shared.
 - Do not weaken a non-negotiable to make a feature easier. Propose an alternative.
+- **Frontend feature layering** (`apps/*` SPAs): separate `ui/` (presentational — no fetch, no rules), `hooks/` (React glue over usecases), `usecases/` (pure orchestration over repos), `repo/` (one backend call each — build request, parse the Zod response, return typed data or throw `ApiError`). ADR-0018.
 
 ## Intended repository and stack
 
@@ -151,6 +153,10 @@ pnpm build
 pnpm db:generate
 pnpm db:migrate
 ```
+
+`neon deploy` (Neon CLI, `neon.ts` policy → the linked `production` branch, ADR-0002 amendment) is
+**human-run after review** — an agent never runs it. Schema changes still go through Drizzle
+migrations only.
 
 The merge gate requires typecheck, lint, unit/property tests, domain coverage (90% line, 100% branch), real-Postgres integration tests, contracts, cross-tenant leak tests, offline suite, axe, size limit, and OpenAPI regeneration without a diff. Keep the full suite under five minutes.
 

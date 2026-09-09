@@ -1,0 +1,111 @@
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 50dvh;
+}
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--vx-space-xs);
+  padding-block: var(--vx-space-sm);
+}
+.heroIcon {
+  inline-size: 4rem;
+  block-size: 4rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary-container);
+  color: var(--vx-on-secondary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.heroTitle {
+  font-size: var(--vx-text-headline-lg);
+  color: var(--vx-primary-container);
+}
+.heroSub {
+  font-size: var(--vx-text-body-md);
+  color: var(--vx-on-surface-variant);
+}
+.codeRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--vx-space-sm);
+}
+.codeLabel {
+  display: block;
+  font-size: var(--vx-text-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vx-on-surface-variant);
+  font-weight: 600;
+}
+.code {
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-display);
+  font-weight: 700;
+  color: var(--vx-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-surface-container);
+  font-size: var(--vx-text-label-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.etaLabel {
+  font-size: var(--vx-text-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vx-on-surface-variant);
+}
+.etaValue {
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-md);
+  font-weight: 700;
+  color: var(--vx-primary-container);
+}
+.progressHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: var(--vx-text-label-md);
+  color: var(--vx-on-surface);
+  margin-block-end: var(--vx-space-md);
+}
+.updated {
+  color: var(--vx-secondary);
+  font-weight: 500;
+}
+.payRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.payTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--vx-on-surface);
+}
+.payTitle svg {
+  color: var(--vx-secondary);
+}
+.payBody {
+  margin-block-start: var(--vx-space-xs);
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface-variant);
+  line-height: var(--vx-leading-normal);
+}

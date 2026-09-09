@@ -23,7 +23,7 @@ export function assembleQuoteBody(
   queue: { state: EtaQueueState; source: 'redis' | 'postgres' | 'degraded' },
   tier: LoyaltyTier | null,
   now: Date,
-): QuoteResponse {
+): Omit<QuoteResponse, 'traceId'> {
   const eta = estimateEta(
     priced.etaItems,
     queue.state.tickets,
@@ -40,6 +40,7 @@ export function assembleQuoteBody(
       unitPriceMinor: line.unitPriceMinor,
       modifierTotalMinor: line.modifierTotalMinor,
       lineTotalMinor: line.lineTotalMinor,
+      modifiers: [...line.modifiers],
     })),
     subtotalMinor: priced.subtotalMinor,
     discountMinor: priced.discountMinor,
@@ -47,6 +48,7 @@ export function assembleQuoteBody(
     unavailable: priced.unavailable.map((entry) => ({
       clientLineId: entry.clientLineId,
       menuItemId: entry.menuItemId,
+      reason: entry.reason,
       ...(entry.modifierOptionId ? { modifierOptionId: entry.modifierOptionId } : {}),
     })),
     eta,

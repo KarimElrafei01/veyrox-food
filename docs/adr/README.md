@@ -9,7 +9,7 @@ The reasoning is the point. Code shows *what* was decided; only these show *why*
 | ADR | Decision | Status |
 |---|---|---|
 | [0001](ADR-0001-monorepo-typescript-fastify.md) | TypeScript monorepo, Node 22, Fastify | Accepted |
-| [0002](ADR-0002-postgres-neon-drizzle.md) | Postgres on Neon; Drizzle; custom auth; no BaaS | Accepted · supersedes Supabase, 2026-09-06 |
+| [0002](ADR-0002-postgres-neon-drizzle.md) | Postgres on Neon; Drizzle; custom auth; no BaaS | Accepted · supersedes Supabase 2026-09-06 · amended 2026-09 (Neon CLI + neon.ts) |
 | [0003](ADR-0003-messaging-rails.md) | Cloud API + webview for ordering; isolated whatsapp-web.js for habits | Accepted |
 | [0004](ADR-0004-jobs-bullmq-not-n8n.md) | BullMQ on Redis; n8n dropped; Cairo-timezone schedules | Accepted |
 | [0005](ADR-0005-server-push-sse.md) | Server push over SSE with event replay; no polling | Accepted · supersedes Supabase Realtime, 2026-09-06 |
@@ -25,3 +25,4 @@ The reasoning is the point. Code shows *what* was decided; only these show *why*
 | [0015](ADR-0015-configuration-model.md) | Three-layer configuration model, settings registry, versioned CRUD | Accepted |
 | [0017](ADR-0017-immutable-menu-publications.md) | Immutable menu publications for customer sessions | Accepted |
 | [0016](ADR-0016-whatsapp-provider-strategy.md) | WhatsApp via Fiwano (Tech Provider), per-café WABAs, behind a MessagingChannel adapter | Accepted · final 2026-09-06 |
+| [0018](ADR-0018-customer-webview-architecture.md) | Customer webview: Brew & Baladi design system in packages/ui (CSS tokens, no Tailwind), four-layer feature folders, response contracts in packages/contracts | Accepted |

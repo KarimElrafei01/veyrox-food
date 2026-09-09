@@ -1,0 +1,36 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-block: 0.125rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--vx-radius-pill);
+  font-size: var(--vx-text-label-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.neutral {
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface-variant);
+}
+.secondary {
+  background: var(--vx-secondary-fixed);
+  color: var(--vx-on-secondary-fixed-variant);
+}
+.success {
+  background: color-mix(in srgb, var(--vx-success) 16%, transparent);
+  color: var(--vx-success);
+}
+.warning {
+  background: color-mix(in srgb, var(--vx-warning) 18%, transparent);
+  color: var(--vx-warning);
+}
+.danger {
+  background: var(--vx-error-container);
+  color: var(--vx-on-error-container);
+}
+.loyalty {
+  background: linear-gradient(90deg, var(--vx-loyalty-from), var(--vx-loyalty-to));
+  color: var(--vx-loyalty-ink);
+  border: 1px solid var(--vx-loyalty-border);
+}

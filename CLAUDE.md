@@ -12,6 +12,7 @@ WhatsApp-native operating layer for independent Egyptian cafés: ordering, KDS, 
 4. **Docs stay in sync in the same pass.** A behaviour change updates the affected FR / NFR / data-model / sprint docs together, and names the knock-on effects.
 5. **State schedule impact explicitly.** Scope changes come with a milestone delta and what they displace. Never absorb scope silently.
 6. **Never weaken a non-negotiable** (below). Propose an alternative instead.
+7. **Branch discipline.** An agent never commits to `main` and never `git push`. All work happens on a short-lived branch off `main`; commit there and stop — a human runs the merge and the push. When two agents work in parallel, each uses its own `git worktree` so one checkout is never shared.
 
 ## Non-negotiables
 
@@ -85,7 +86,8 @@ TypeScript strict · Node 22 · pnpm + Turborepo · Fastify + Zod · **Postgres 
 - Migrations are **forward-only, expand/contract**. The previous image must run against the new schema — that is what makes rollback a 3-minute redeploy.
 - No literal strings in rendered components (CI fails).
 - Config resolves **platform capability → tenant entitlement → tenant preference**. Clients get *resolved state with a reason*, never raw flags. A key absent from `setting_definitions` cannot be set by anyone. ADR-0015.
-- Commits: **Conventional Commits** with scopes — `feat(till):`, `fix(ledger):`, `docs(adr):`. Short-lived branch off `main`, squash-merge, `main` always deployable.
+- Commits: **Conventional Commits** with scopes — `feat(till):`, `fix(ledger):`, `docs(adr):`. Short-lived branch off `main`, squash-merge, `main` always deployable. Agents commit on the branch only — never to `main`, never `git push` (working rule 7).
+- **Frontend feature layering** (`apps/*` SPAs): each feature folder separates `ui/` (presentational screens + components — props in, callbacks out, no fetch), `hooks/` (React glue calling usecases, holding loading/error/data), `usecases/` (pure orchestration over repos — testable without React), `repo/` (one backend call each: build request, parse the Zod response, return typed data or throw `ApiError`). ADR-0018.
 
 ## Commands
 
@@ -100,6 +102,8 @@ pnpm test:int       integration against real Postgres
 pnpm test:e2e       Playwright, 7 journeys
 pnpm typecheck / lint / build
 pnpm db:generate / db:migrate / db:seed
+neon deploy         apply neon.ts project/branch policy to the linked Neon branch — HUMAN-RUN,
+                    after review; never an agent. Schema still lives in Drizzle migrations (ADR-0002)
 ```
 
 Whole suite must stay **under 5 minutes**. A slow suite gets skipped, and there is nobody to catch what was skipped.

@@ -1,0 +1,39 @@
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vx-space-md);
+  min-block-size: 70dvh;
+  text-align: center;
+}
+.muted {
+  color: var(--vx-on-surface-variant);
+  font-size: var(--vx-text-body-md);
+}
+.hint {
+  color: var(--vx-on-surface-variant);
+  font-size: var(--vx-text-label-sm);
+  text-align: center;
+  margin-block-start: var(--vx-space-2xs);
+}
+.countdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.countdownLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+  font-size: var(--vx-text-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vx-on-surface-variant);
+}
+.countdown {
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--vx-primary-container);
+}

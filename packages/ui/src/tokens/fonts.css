@@ -1,0 +1,7 @@
+/* Self-hosted — the WhatsApp in-app browser on thin data cannot be trusted to
+   reach a font CDN, and unstyled text loses the UI's affordances (ADR-0018). */
+@import '@fontsource-variable/plus-jakarta-sans';
+@import '@fontsource-variable/inter';
+@import '@fontsource/cairo/400.css';
+@import '@fontsource/cairo/600.css';
+@import '@fontsource/cairo/700.css';

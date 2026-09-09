@@ -29,6 +29,10 @@ export const base = tseslint.config(
       // No `any` without an inline justification (CLAUDE.md code rules).
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
       'no-console': 'off',
 
       // Guard clauses over nesting, max depth 3 (CLAUDE.md).

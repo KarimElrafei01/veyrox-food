@@ -1,0 +1,25 @@
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--vx-tap-min);
+  block-size: var(--vx-tap-min);
+  border-radius: var(--vx-radius-pill);
+  color: var(--vx-on-surface);
+  transition:
+    background-color var(--vx-motion-fast) var(--vx-ease),
+    transform var(--vx-motion-fast) var(--vx-ease);
+}
+.iconButton:active {
+  transform: scale(0.92);
+}
+.iconButton:focus-visible {
+  outline: 2px solid var(--vx-secondary);
+  outline-offset: 2px;
+}
+.surface {
+  background: var(--vx-surface-container);
+}
+.surface:hover {
+  background: var(--vx-surface-high);
+}
