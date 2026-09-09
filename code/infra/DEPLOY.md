@@ -152,6 +152,13 @@ then redeploy each SPA.
 
 (Add `--profile edge` to every command if you use the bundled Caddy.)
 
+## Dev login (skip the WhatsApp QR)
+
+While pointed at the **dev** database, set `DEV_LOGIN=1` in `infra/api.env` and
+`docker compose ... up -d`. The order webview, opened with no token, then shows a
+café + customer picker (`GET /dev/sessions`). Turn it off (`DEV_LOGIN=`) before the
+database holds anything real — it mints a session token for every customer.
+
 ## Not done yet
 
 - CI/CD — the image is built on the box by hand for now.
