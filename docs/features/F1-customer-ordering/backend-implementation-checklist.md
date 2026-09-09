@@ -6,7 +6,7 @@ checked only after the implementation and its required automated coverage pass.
 > **Coverage debt (2026-09-07).** F1.1–F1.7 implementation is done and covered by
 > unit/API tests. Migrations 0006–0008 apply cleanly to a real Postgres 16 and
 > `packages/db` `test:int` is green. Still owed: per-feature real-Postgres suites
-> (F1.1–F1.7), an `apps/api` `test:int` harness, and honestly-remarked F1.4/F1.5
+> (F1.1–F1.7), an `code/backend/api` `test:int` harness, and honestly-remarked F1.4/F1.5
 > integration items. See "Coverage backfill" — not release-ready until it is clear.
 
 ## F1.1 — Session and entry
@@ -66,7 +66,7 @@ checked only after the implementation and its required automated coverage pass.
 
 ## Coverage backfill (blocks release)
 
-- [ ] Stand up the `apps/api` `test:int` harness against real Postgres (docker compose or a Neon branch).
+- [ ] Stand up the `code/backend/api` `test:int` harness against real Postgres (docker compose or a Neon branch).
 - [x] Complete `packages/db/src/__integration__/graph.ts` — now seeds all 31 tables; `pnpm --filter @veyroxai/db test:int` is green (cross-tenant leak + append-only) against real Postgres 16.
 - [ ] F1.1 — WhatsApp webhook replay/dedup integration test and session-resolution integration test.
 - [ ] F1.2 — publication atomicity, retention, availability invalidation, byte-identity, and payload-budget suites.

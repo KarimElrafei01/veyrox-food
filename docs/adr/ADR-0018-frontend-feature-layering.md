@@ -7,13 +7,13 @@ and response-contract decisions from that record are unchanged and restated here
 
 ## Context
 
-`apps/order` was the first SPA and set the pattern the other four inherit. The 2026-09-06
+`code/frontends/order` was the first SPA and set the pattern the other four inherit. The 2026-09-06
 record fixed three things: the design system lives in `packages/ui` as CSS custom properties
 (no Tailwind), a feature folder has internal layers, and response contracts sit in
 `packages/contracts` next to the requests.
 
 The layer split it chose was four folders — `ui / hooks / usecases / repo`. Two gaps showed
-up as `apps/order` filled in, and the same gaps will hit `till`, `console`, and `admin`:
+up as `code/frontends/order` filled in, and the same gaps will hit `till`, `console`, and `admin`:
 
 1. **`repo/` was doing two jobs.** "Build the request, call the client, parse the Zod
    response, map the DTO to something the feature wants to hold" is a transport concern and a
@@ -81,7 +81,7 @@ lint rule catches a misplaced file. `repo` and `datasource` are each testable as
 a feature's screen legible by separating it from its parts. RTL stays nearly free; the design
 system stays theme-swappable.
 
-**Bad**: up to six folders on a feature that needs two — `apps/order`'s `loyalty` (one
+**Bad**: up to six folders on a feature that needs two — `code/frontends/order`'s `loyalty` (one
 celebration screen) carries `hooks/ usecases/ repo/ datasource/` as near-empty or
 pass-through files. This is deliberate: the cost is navigation, not logic, and it is paid
 once at scaffold time. If a feature's `repo` and `datasource` are still pure pass-throughs

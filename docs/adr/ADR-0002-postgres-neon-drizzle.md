@@ -90,8 +90,8 @@ Neon is what caught them.
 
 ## Amendment, 2026-09 — Neon CLI and `neon.ts` for project/branch policy
 
-The Neon CLI (`neon`, npm `neon`) is added, with a `neon.ts` policy file at the repo root and
-the project linked (`neon link --project-id … --branch production`). `neon deploy` (alias
+The Neon CLI (`neon`, npm `neon`) is added, with a `neon.ts` policy file at the workspace root
+(`code/`, ADR-0019) and the project linked (`neon link --project-id … --branch production`). `neon deploy` (alias
 `neon config apply`) reconciles the linked branch to that policy.
 
 The project: **`cold-truth-59832723`** ("veyrox food"), org `org-late-bird-64965382`, region

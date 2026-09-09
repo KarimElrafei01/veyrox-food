@@ -2,8 +2,8 @@
 
 Two new surfaces:
 
-- **Store Console** (`apps/console`) — the café owner configures and manages **their** café. Expanded from the analytics-only surface in the original plan into the full operational back-office.
-- **Platform Admin** (`apps/admin`) — Veyrox operates and configures **the fleet**: tenants, entitlements, flags, billing, fleet health, and support tooling.
+- **Store Console** (`code/frontends/console`) — the café owner configures and manages **their** café. Expanded from the analytics-only surface in the original plan into the full operational back-office.
+- **Platform Admin** (`code/frontends/admin`) — Veyrox operates and configures **the fleet**: tenants, entitlements, flags, billing, fleet health, and support tooling.
 
 They sit on **one configuration model**, described in §2. Building that model first is what stops the two consoles from becoming two competing sources of truth about what a café's system does — which is the failure mode that turns "turn feature X off" into a support ticket nobody can answer.
 

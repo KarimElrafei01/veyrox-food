@@ -8,7 +8,7 @@ Companion to `00-master-plan.md`. This document is the architecture of record. I
 
 | # | Principle | Consequence |
 |---|---|---|
-| P1 | **One write path — and, since ADR-0002, one read path.** No client ever connects to Postgres at all. | Every mutation and every live update goes through `apps/api`. RLS remains as defence in depth, scoped by `SET LOCAL app.tenant_id`. |
+| P1 | **One write path — and, since ADR-0002, one read path.** No client ever connects to Postgres at all. | Every mutation and every live update goes through `code/backend/api`. RLS remains as defence in depth, scoped by `SET LOCAL app.tenant_id`. |
 | P2 | **History is append-only; state is derived.** | `material_ledger`, `order_events`, `loyalty_ledger`, `outbound_messages` are insert-only. Reports read history. |
 | P3 | **Every external effect is idempotent and replayable.** | Idempotency keys on writes, dedupe keys on inbound webhooks, exactly-once semantics on outbound messages. |
 | P4 | **Failure is a designed state, not an exception.** | Every dependency has a defined degraded mode (§7). |
@@ -24,19 +24,19 @@ Six, plus one isolated worker host.
 
 | Deployable | Runtime | Hosted on | Scales on | Notes |
 |---|---|---|---|---|
-| `apps/api` | Fastify / Node 22 | Phase 0: Hetzner VPS · Phase 1+: Fly.io `fra` ×2 | Requests | Single write path. Stateless. Also serves the WhatsApp webhook. |
-| `apps/worker` | BullMQ workers / Node 22 | Same host as `api` (ADR-0011) | Queue depth | Same image as `api`, different entrypoint. Shares `@veyroxai/domain`. |
-| `apps/order` | Vite + React SPA | Cloudflare Pages | CDN | Customer webview opened from WhatsApp. Public, token-gated. Hardest perf budget. |
-| `apps/kds` and `apps/till` | Vite + React SPA (PWA) | Cloudflare Pages | CDN | KDS + Till in one app. Offline-capable. Staff auth. |
-| `apps/console` | Vite + React SPA | Cloudflare Pages | CDN | **Store Console** — owner analytics, costing, and full configuration/CRUD. Auth-gated, no SSR needed. |
-| `apps/admin` | Vite + React SPA | Cloudflare Pages | CDN | **Platform Admin** — fleet operations. Separate deployable, separate auth realm, mandatory WebAuthn. See ADR-0014. |
+| `code/backend/api` | Fastify / Node 22 | Phase 0: Hetzner VPS · Phase 1+: Fly.io `fra` ×2 | Requests | Single write path. Stateless. Also serves the WhatsApp webhook. |
+| `code/backend/worker` | BullMQ workers / Node 22 | Same host as `api` (ADR-0011) | Queue depth | Same image as `api`, different entrypoint. Shares `@veyroxai/domain`. |
+| `code/frontends/order` | Vite + React SPA | Cloudflare Pages | CDN | Customer webview opened from WhatsApp. Public, token-gated. Hardest perf budget. |
+| `code/frontends/kds` and `code/frontends/till` | Vite + React SPA (PWA) | Cloudflare Pages | CDN | KDS + Till in one app. Offline-capable. Staff auth. |
+| `code/frontends/console` | Vite + React SPA | Cloudflare Pages | CDN | **Store Console** — owner analytics, costing, and full configuration/CRUD. Auth-gated, no SSR needed. |
+| `code/frontends/admin` | Vite + React SPA | Cloudflare Pages | CDN | **Platform Admin** — fleet operations. Separate deployable, separate auth realm, mandatory WebAuthn. See ADR-0014. |
 | `habit-worker` | Node + whatsapp-web.js + Chromium | **Hetzner CX22, isolated** | n/a | Separate project, separate secrets, separate egress IP. See §8. |
 
 `api` and `worker` share one Docker image so a domain-logic change cannot ship to one and not the other.
 
 ### 2.1 Why KDS and Till are one app
 
-They run on the same class of device, in the same room, with the same auth, the same offline requirements, and the same SSE stream. Splitting them doubles the service worker, the outbox, the auth flow, and the deploy surface for zero benefit. They are two routes in `apps/kds` and `apps/till`, and a device is enrolled as `kds`, `till`, or `both`.
+They run on the same class of device, in the same room, with the same auth, the same offline requirements, and the same SSE stream. Splitting them doubles the service worker, the outbox, the auth flow, and the deploy surface for zero benefit. They are two routes in `code/frontends/kds` and `code/frontends/till`, and a device is enrolled as `kds`, `till`, or `both`.
 
 ### 2.1a Why the Platform Admin is its own deployable
 
@@ -297,7 +297,7 @@ These are not tests. They run in production, forever, and they are the reason th
 
 Full treatment in `09-security-privacy-compliance.md`. Structural points:
 
-- **Four auth realms, all custom, all in `apps/api`** (ADR-0002). (a) *Customer*: no account; an HMAC-signed, 15-minute, single-session token bound to `wa_id + tenant_id + menu_version`. (b) *Staff*: device enrollment (long-lived device token in secure storage) + per-staff PIN for attributable actions; manager PIN for voids, refunds, and price edits. (c) *Owner*: email + password (argon2id) with TOTP required before GA. (d) *Platform admin*: **mandatory WebAuthn hardware key, no password fallback**, 4-hour sessions, scoped platform roles, `reason` required on every mutation (ADR-0014). All four share one session-issuing module and one argon2id/JWT primitive set — three were always going to be bespoke, which is why buying the fourth stopped making sense.
+- **Four auth realms, all custom, all in `code/backend/api`** (ADR-0002). (a) *Customer*: no account; an HMAC-signed, 15-minute, single-session token bound to `wa_id + tenant_id + menu_version`. (b) *Staff*: device enrollment (long-lived device token in secure storage) + per-staff PIN for attributable actions; manager PIN for voids, refunds, and price edits. (c) *Owner*: email + password (argon2id) with TOTP required before GA. (d) *Platform admin*: **mandatory WebAuthn hardware key, no password fallback**, 4-hour sessions, scoped platform roles, `reason` required on every mutation (ADR-0014). All four share one session-issuing module and one argon2id/JWT primitive set — three were always going to be bespoke, which is why buying the fourth stopped making sense.
 - **Impersonation** is read-only by default, write-mode requires escalation and is time-boxed to 30 minutes, is always visible in a banner, is attributed as `platform_user` rather than disguised as the owner, appears in the **tenant's own** audit log, and can never void, refund, or change a price, cost, or plan. See `13-admin-and-configuration.md` §6.
 - **JWT claims** carry `tenant_id` and `role`, issued by our own session module. The API opens each request transaction with `SET LOCAL app.tenant_id`, and RLS policies read `current_setting('app.tenant_id')`. **RLS is now defence in depth rather than the primary control**, since no client touches Postgres — it guards against a leaked connection string or a query that forgets its `WHERE`, and it is what stands between two cafés' books when multi-branch ships. The cross-tenant leak suite still runs on every merge.
 - **Secrets** in the host environment (Hetzner env / Fly secrets from Phase 1), never in the repo; rotation runbook documented. The habit environment shares no secret with the main environment.

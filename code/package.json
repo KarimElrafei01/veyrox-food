@@ -21,7 +21,7 @@
     "db:seed": "pnpm --filter @veyroxai/db db:seed",
     "compose:up": "docker compose -f infra/docker-compose.yml up -d",
     "compose:down": "docker compose -f infra/docker-compose.yml down",
-    "prepare": "husky"
+    "prepare": "cd .. && husky code/.husky"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

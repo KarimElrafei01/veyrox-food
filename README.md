@@ -24,6 +24,7 @@ the message → KDS ticket walking skeleton (M0).
 ## Quickstart
 
 ```bash
+cd code                  # the workspace root (ADR-0019)
 pnpm install
 cp .env.example .env     # then fill in DATABASE_URL / DATABASE_ADMIN_URL / REDIS_URL
 pnpm db:migrate          # apply pre/ + generated + post/ migrations
@@ -31,7 +32,7 @@ pnpm db:seed             # pilot menu (placeholder costs)
 pnpm dev                 # api :3001 · order :3002 · kds :3003 · worker
 ```
 
-`db:migrate`, `db:seed`, and the API load `.env` from the repo root automatically
+`db:migrate`, `db:seed`, and the API load `code/.env` automatically
 (`--env-file-if-exists`); `pnpm test:int` still needs the two `DATABASE_*` vars
 exported.
 
@@ -78,22 +79,25 @@ Whole suite budget: **under 5 minutes** (NFR-59).
 
 ## Layout
 
-```
-apps/api        Fastify — the single write path
-apps/worker     BullMQ jobs — same image, different entrypoint
-apps/order      Customer webview (Vite + React 19)
-apps/kds        Barista kitchen display
-                (till, console, admin scaffolded in later sprints)
+Git root holds `docs/` and `code/`. `code/` is the pnpm + Turborepo workspace — run every
+`pnpm` command from there (ADR-0019).
 
-packages/domain         Money (branded Minor), and later pricing/ETA/loyalty
-packages/db             Drizzle schema + migrations + RLS + seed
-packages/contracts      Zod → validation + types + OpenAPI
-packages/observability  Logger + redaction (phone numbers never logged)
-packages/testkit        Real-Postgres provisioning for integration tests
-packages/i18n           en (default) + ar-EG catalogs, RTL helpers
-packages/ui             Design tokens, direction helpers
-packages/api-client     Typed client (generated later from contracts)
-packages/ops-core       Shared kds/till device layer (populated in S3–S4)
+```
+code/backend/api        Fastify — the single write/read path
+code/backend/worker     BullMQ jobs — same image, different entrypoint
+code/frontends/order    Customer webview (Vite + React 19)
+code/frontends/kds      Barista kitchen display
+                        (till, console, admin scaffolded in later sprints)
+
+code/packages/domain         Money (branded Minor), and later pricing/ETA/loyalty
+code/packages/db             Drizzle schema + migrations + RLS + seed
+code/packages/contracts      Zod → validation + types + OpenAPI
+code/packages/observability  Logger + redaction (phone numbers never logged)
+code/packages/testkit        Real-Postgres provisioning for integration tests
+code/packages/i18n           en (default) + ar-EG catalogs, RTL helpers
+code/packages/ui             Design tokens, direction helpers
+code/packages/api-client     Typed HTTP client (auth, base URL, problem details)
+code/packages/ops-core       Shared kds/till device layer (populated in S3–S4)
 ```
 
 ## Conventions worth knowing before your first commit

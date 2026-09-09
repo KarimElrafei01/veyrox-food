@@ -158,7 +158,7 @@ importers:
         specifier: 8.69.0
         version: 8.69.0(eslint@10.10.0(jiti@2.6.1))(typescript@6.0.3)
 
-  apps/api:
+  backend/api:
     dependencies:
       '@fastify/helmet':
         specifier: 13.1.1
@@ -204,7 +204,32 @@ importers:
         specifier: 5.0.0
         version: 5.0.0(@types/node@26.4.1)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.6.1))
 
-  apps/kds:
+  backend/worker:
+    dependencies:
+      '@veyroxai/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@veyroxai/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@veyroxai/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      bullmq:
+        specifier: 6.3.4
+        version: 6.3.4(ioredis@6.0.0)(pg@8.23.0)
+      ioredis:
+        specifier: 6.0.0
+        version: 6.0.0
+    devDependencies:
+      tsx:
+        specifier: 4.23.13
+        version: 4.23.13
+      vitest:
+        specifier: 5.0.0
+        version: 5.0.0(@types/node@26.4.1)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.6.1))
+
+  frontends/kds:
     dependencies:
       '@veyroxai/api-client':
         specifier: workspace:*
@@ -247,7 +272,7 @@ importers:
         specifier: 5.0.0
         version: 5.0.0(@types/node@26.4.1)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.6.1))
 
-  apps/order:
+  frontends/order:
     dependencies:
       '@veyroxai/api-client':
         specifier: workspace:*
@@ -298,31 +323,6 @@ importers:
       vite:
         specifier: 8.2.2
         version: 8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.13)(yaml@2.9.0)
-      vitest:
-        specifier: 5.0.0
-        version: 5.0.0(@types/node@26.4.1)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.6.1))
-
-  apps/worker:
-    dependencies:
-      '@veyroxai/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@veyroxai/domain':
-        specifier: workspace:*
-        version: link:../../packages/domain
-      '@veyroxai/observability':
-        specifier: workspace:*
-        version: link:../../packages/observability
-      bullmq:
-        specifier: 6.3.4
-        version: 6.3.4(ioredis@6.0.0)(pg@8.23.0)
-      ioredis:
-        specifier: 6.0.0
-        version: 6.0.0
-    devDependencies:
-      tsx:
-        specifier: 4.23.13
-        version: 4.23.13
       vitest:
         specifier: 5.0.0
         version: 5.0.0(@types/node@26.4.1)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.6.1))
