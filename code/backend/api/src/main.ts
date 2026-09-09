@@ -45,11 +45,19 @@ async function main(): Promise<void> {
   if (!whatsappAppSecret) throw new Error('WHATSAPP_APP_SECRET is not set');
   const database = createDatabase(pool);
   const devLogin = ['1', 'true', 'yes'].includes((process.env.DEV_LOGIN ?? '').toLowerCase());
+  const devAdminUrl = process.env.DATABASE_ADMIN_URL;
   if (devLogin) {
+    if (!devAdminUrl)
+      throw new Error(
+        'DEV_LOGIN requires DATABASE_ADMIN_URL (it lists every tenant, which RLS hides from the app role).',
+      );
     log.warn(
       'DEV_LOGIN is on: GET /dev/sessions mints a session token for every customer. Never enable this against real tenant data.',
     );
   }
+  // The dev picker lists every tenant/customer, which RLS hides from the app role,
+  // so it runs on the BYPASSRLS admin connection (same as the fixture script).
+  const devDatabase = devLogin && devAdminUrl ? createDatabase(createPool(devAdminUrl)) : null;
   const queue: Queue | DevQueue = memoryRedis
     ? createNoopQueue()
     : new Queue('veyrox', { connection: redis as Redis });
@@ -128,8 +136,8 @@ async function main(): Promise<void> {
       orders: new OrderStatusRepository(database),
       keys: sessionKeys,
     },
-    devSessions: devLogin
-      ? { db: database, sessionKey, catalogue: new CatalogueRepository(database) }
+    devSessions: devDatabase
+      ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }
       : undefined,
   });
 
