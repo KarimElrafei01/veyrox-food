@@ -1,17 +1,22 @@
 # Phase 0 production stack — one box, Docker Compose (ADR-0011).
-# Postgres is Neon (external). Redis and the HTTPS proxy run here.
+# Postgres is Neon (external). Redis runs here; the API is published on
+# 127.0.0.1:3001 for a reverse proxy to pick up.
 #
 #   cd code
 #   docker compose -f infra/compose.prod.yml --env-file infra/api.env up -d --build
 #
-# Caddy gets a real Let's Encrypt cert for the API_DOMAIN in infra/api.env, so no
-# DNS setup is needed if you use a *.nip.io name (it resolves to the box's IP).
+# HTTPS:
+#   - Already run Caddy (or nginx) on the host? Leave it as-is. Add a site that
+#     does `reverse_proxy localhost:3001` and skip the `caddy` service here.
+#   - Nothing on 80/443 yet? Add `--profile edge` to the command above and set
+#     API_DOMAIN in infra/api.env (a *.nip.io name needs no DNS).
 
 name: veyroxai
 
 services:
   caddy:
     image: caddy:2
+    profiles: ['edge'] # opt-in: only when you have no host proxy
     restart: unless-stopped
     ports:
       - '80:80'
@@ -43,8 +48,8 @@ services:
       SESSION_KEY: ${SESSION_KEY}
       SESSION_KEY_PREVIOUS: ${SESSION_KEY_PREVIOUS:-}
       WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET}
-    expose:
-      - '3001'
+    ports:
+      - '127.0.0.1:3001:3001' # a host reverse proxy reaches it here
     depends_on:
       redis:
         condition: service_healthy
