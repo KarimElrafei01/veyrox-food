@@ -26,6 +26,9 @@ export const en = {
 
   'order.title': 'Order',
   'kds.title': 'Kitchen',
+  'till.title': 'Counter',
+  'console.title': 'Store Console',
+  'admin.title': 'Platform Admin',
 
   'entry.opening': 'Opening your order…',
   'entry.greeting': 'Welcome back, {name}',

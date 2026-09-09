@@ -26,6 +26,9 @@ export const arEG: Partial<Record<MessageKey, string>> = {
 
   'order.title': 'الطلب',
   'kds.title': 'المطبخ',
+  'till.title': 'الكاشير',
+  'console.title': 'لوحة المتجر',
+  'admin.title': 'إدارة المنصة',
 
   'entry.opening': 'جارٍ فتح طلبك…',
   'entry.greeting': 'أهلاً بعودتك، {name}',
