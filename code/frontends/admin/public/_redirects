@@ -1,0 +1,4 @@
+# Cloudflare Pages SPA fallback — client-side routing via history.pushState needs a
+# direct hit or refresh on any in-app path to serve index.html. Static assets under
+# /assets/* are matched before this rule and served directly.
+/*  /index.html  200
