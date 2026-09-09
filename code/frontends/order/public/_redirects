@@ -1,0 +1,5 @@
+# Cloudflare Pages SPA fallback. The webview routes on real paths
+# (/s/:token, /menu, /item/:id, /cart, /checkout, /o/:orderId) via history.pushState,
+# so a direct hit or refresh must serve index.html and let the client router take over.
+# Static assets are matched before this rule, so /assets/* is unaffected.
+/*  /index.html  200
