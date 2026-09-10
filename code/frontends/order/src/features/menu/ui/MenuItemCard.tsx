@@ -7,6 +7,11 @@ function localized(map: { en: string; 'ar-EG'?: string }, locale: Locale): strin
   return (locale === 'ar-EG' && map['ar-EG']) || map.en;
 }
 
+function imageSource(imageUrl: string): string {
+  if (/^https?:\/\//.test(imageUrl)) return imageUrl;
+  return new URL(imageUrl, import.meta.env.VITE_API_BASE_URL ?? window.location.origin).toString();
+}
+
 interface MenuItemCardProps {
   item: ResolvedItem;
   locale: Locale;
@@ -43,7 +48,7 @@ export function MenuItemCard({
       >
         <span className={styles.thumb}>
           {item.imageUrl ? (
-            <img src={item.imageUrl} alt="" loading="lazy" />
+            <img src={imageSource(item.imageUrl)} alt="" loading="lazy" />
           ) : (
             <Icon name="local-cafe" size={24} />
           )}

@@ -81,6 +81,7 @@ export class CatalogueRepository {
           descriptionAr: item.descriptionAr,
           basePriceMinor: item.basePriceMinor,
           prepSeconds: item.prepSeconds,
+          imageObjectKey: item.imageObjectKey,
           modifierGroupIds: attachments
             .filter((attachment) => attachment.menuItemId === item.menuItemId)
             .map((attachment) => attachment.modifierGroupId),
@@ -181,6 +182,7 @@ export class CatalogueRepository {
             descriptionAr: item.descriptionAr,
             basePriceMinor: priceByItem.get(item.id)!.priceMinor,
             prepSeconds: item.basePrepSeconds,
+            imageObjectKey: item.imageObjectKey,
             sort: item.sort,
           })),
         );

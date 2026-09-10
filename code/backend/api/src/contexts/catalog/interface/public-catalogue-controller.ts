@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { renderPublishedMenu } from '../application/render-published-menu.js';
 import type { CatalogueRepository } from '../infrastructure/catalogue-repository.js';
+import type { MenuImageStore } from '../infrastructure/r2-menu-image-store.js';
 import {
   SessionExpired,
   SessionInvalid,
@@ -27,6 +28,7 @@ export async function publicCatalogueController(
     catalogue: CatalogueRepository;
     availabilityCache: AvailabilityCache;
     sessionKeys: readonly [string, ...string[]];
+    imageStore?: MenuImageStore;
   },
 ): Promise<void> {
   app.get(
@@ -51,6 +53,25 @@ export async function publicCatalogueController(
         .header('ETag', rendered.etag)
         .type('application/json')
         .send(rendered.body);
+    },
+  );
+
+  app.get(
+    '/public/menu-images/:menuVersion/:menuItemId',
+    { schema: { params: z.object({ menuVersion: z.uuid(), menuItemId: z.uuid() }) } },
+    async (request, reply) => {
+      if (!options.imageStore) return reply.status(404).send();
+      const { menuVersion, menuItemId } = z
+        .object({ menuVersion: z.uuid(), menuItemId: z.uuid() })
+        .parse(request.params);
+      const menu = await options.catalogue.loadPublishedMenu(menuVersion);
+      const item = menu?.items.find((candidate) => candidate.id === menuItemId);
+      if (!item?.imageObjectKey) return reply.status(404).send();
+      const image = await options.imageStore.get(item.imageObjectKey);
+      return reply
+        .header('Cache-Control', 'public, max-age=31536000, immutable')
+        .type(image.contentType)
+        .send(image.body);
     },
   );
 

@@ -60,6 +60,7 @@ export const menuItems = pgTable('menu_items', {
   nameAr: text('name_ar'),
   descriptionEn: text('description_en'),
   descriptionAr: text('description_ar'),
+  imageObjectKey: text('image_object_key'),
   basePrepSeconds: integer('base_prep_seconds').notNull().default(120), // ETA input
   isAvailable: boolean('is_available').notNull().default(true), // "86-ing" (GAP-02, P0)
   unavailableUntil: ts('unavailable_until'),
@@ -169,6 +170,7 @@ export const menuVersionItems = pgTable(
     nameAr: text('name_ar'),
     descriptionEn: text('description_en'),
     descriptionAr: text('description_ar'),
+    imageObjectKey: text('image_object_key'),
     basePriceMinor: bigint('base_price_minor', { mode: 'number' }).notNull(),
     prepSeconds: integer('prep_seconds').notNull(),
     sort: integer('sort').notNull(),

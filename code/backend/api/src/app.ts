@@ -17,6 +17,7 @@ import {
 } from './contexts/messaging/interface/whatsapp-webhook-controller.js';
 import { publicCatalogueController } from './contexts/catalog/interface/public-catalogue-controller.js';
 import type { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
+import type { MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 import { quoteOrderController } from './contexts/ordering/interface/quote-order-controller.js';
 import type { QuoteOrder } from './contexts/ordering/application/quote-order.js';
 import type { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-queue-repository.js';
@@ -43,6 +44,7 @@ export interface AppDeps {
       set(key: string, value: string, mode: 'EX', seconds: number): Promise<unknown>;
     };
     sessionKeys: readonly [string, ...string[]];
+    imageStore?: MenuImageStore;
   };
   quoteOrder?: {
     quote: QuoteOrder;
@@ -135,6 +137,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       catalogue: deps.catalogue.repository,
       availabilityCache: deps.catalogue.availabilityCache,
       sessionKeys: deps.catalogue.sessionKeys,
+      imageStore: deps.catalogue.imageStore,
     });
   }
   if (deps.quoteOrder) await app.register(quoteOrderController, deps.quoteOrder);
