@@ -22,6 +22,7 @@ import {
 } from '@veyroxai/i18n';
 import type { QuotedLine, QuoteResponse } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
+import { ErrorAlert } from '../../../shared/ui/ErrorAlert.js';
 import { useReadySession } from '../../../shared/session-context.js';
 import { useCart } from '../../../shared/cart-store.js';
 import type { PlaceOutcome } from '../usecases/placeOrder.js';
@@ -201,9 +202,10 @@ export function CheckoutScreen({
         ) : null}
 
         {errorCode ? (
-          <Card tone="raised" pad="sm">
-            <span className={styles.error}>{t(errorCode)}</span>
-          </Card>
+          <ErrorAlert
+            messageKey={errorCode}
+            onRetry={outcome?.kind === 'network' ? () => place(activeQuote.totalMinor) : undefined}
+          />
         ) : null}
       </Stack>
 

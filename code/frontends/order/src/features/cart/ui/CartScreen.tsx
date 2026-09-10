@@ -17,6 +17,7 @@ import { translate, type MessageKey } from '@veyroxai/i18n';
 import type { QuotedLine, QuoteResponse } from '@veyroxai/contracts';
 import { useState } from 'react';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
+import { ErrorAlert } from '../../../shared/ui/ErrorAlert.js';
 import { useReadySession } from '../../../shared/session-context.js';
 import { useCart, simpleCartLine, type CartLine } from '../../../shared/cart-store.js';
 import { useUpsell, markUpsellSeen } from '../hooks/useUpsell.js';
@@ -107,7 +108,7 @@ export function CartScreen({
           </Alert>
         ) : null}
         {errorCode && !loading ? (
-          <Alert tone="danger">{t(`error.${errorCode}` as MessageKey)}</Alert>
+          <ErrorAlert messageKey={`error.${errorCode}` as MessageKey} />
         ) : null}
 
         {cart.lines.map((line) => (
