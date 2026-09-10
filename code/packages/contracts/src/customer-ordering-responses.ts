@@ -268,3 +268,18 @@ export const orderStatusResponse = z.discriminatedUnion('status', [
   }),
 ]);
 export type OrderStatusResponse = z.infer<typeof orderStatusResponse>;
+
+/**
+ * `GET /public/upsell` — one add-on suggestion for the cart (FR-2.12), or `null` when the
+ * café has flagged none. Shown once per session after the first item is added.
+ */
+export const upsellResponse = z.object({ item: menuItem.nullable() });
+export type UpsellResponse = z.infer<typeof upsellResponse>;
+
+/**
+ * `GET /public/pairings` — "frequently bought together" items for the cart's contents
+ * (FR-2.13), from order co-occurrence. Empty when the data is too thin to be meaningful,
+ * in which case the cross-sell screen is not shown.
+ */
+export const pairingsResponse = z.object({ pairings: z.array(menuItem) });
+export type PairingsResponse = z.infer<typeof pairingsResponse>;

@@ -279,25 +279,40 @@ async function main() {
     const milk = await ensureMaterial(db, t, 'Whole milk', 'ml');
     await ensureMaterial(db, t, 'Oat milk', 'ml');
 
-    const category = await selectOne(
+    const espressoCategory = await selectOne(
       db
         .select()
         .from(tables.menuCategories)
         .where(
-          and(
-            eq(tables.menuCategories.tenantId, t),
-            eq(tables.menuCategories.nameEn, 'Hot drinks'),
-          ),
+          and(eq(tables.menuCategories.tenantId, t), eq(tables.menuCategories.nameEn, 'Espresso')),
         ),
     );
-    const catId = category!.id;
+    const pastryCategory = await selectOne(
+      db
+        .select()
+        .from(tables.menuCategories)
+        .where(
+          and(eq(tables.menuCategories.tenantId, t), eq(tables.menuCategories.nameEn, 'Pastries')),
+        ),
+    );
 
-    const latte = await ensureItem(db, t, catId, 'Latte', 6500, { prepSeconds: 150 });
-    const cappuccino = await ensureItem(db, t, catId, 'Cappuccino', 6000, { prepSeconds: 120 });
-    const icedLatte = await ensureItem(db, t, catId, 'Iced Latte', 7000, { isAvailable: false });
+    const latte = await ensureItem(db, t, espressoCategory!.id, 'Cardamom Baladi Latte', 7000, {
+      prepSeconds: 180,
+    });
+    const americano = await ensureItem(db, t, espressoCategory!.id, 'Americano', 5000, {
+      prepSeconds: 90,
+    });
+    const breadPudding = await ensureItem(
+      db,
+      t,
+      pastryCategory!.id,
+      'Baladi Date Bread Pudding',
+      5500,
+      { isAvailable: false, prepSeconds: 120 },
+    );
 
     // recipe lines (idempotent-ish: only add when the recipe has none)
-    for (const item of [latte, cappuccino, icedLatte]) {
+    for (const item of [latte, americano, breadPudding]) {
       const recipe = await selectOne(
         db
           .select()
@@ -315,17 +330,23 @@ async function main() {
       }
     }
 
-    const milkGroup = await ensureGroup(db, t, 'Milk', 'single', true, 1, 1);
-    await ensureOption(db, t, milkGroup.id, 'Regular', 0);
-    const oat = await ensureOption(db, t, milkGroup.id, 'Oat', 1000, { freeForTier: 'silver' });
-    await ensureOption(db, t, milkGroup.id, 'Almond', 1000, { isAvailable: false });
+    const sizeGroup = await ensureGroup(db, t, 'Size', 'single', true, 1, 1);
+    const regular = await ensureOption(db, t, sizeGroup.id, 'Regular (250ml)', 0);
+    const milkGroup = await ensureGroup(db, t, 'Milk Choice', 'single', true, 1, 1);
+    const oat = await ensureOption(db, t, milkGroup.id, 'Oat milk', 1200, {
+      freeForTier: 'silver',
+    });
+    await ensureOption(db, t, milkGroup.id, 'Almond milk', 1200);
+    const temperatureGroup = await ensureGroup(db, t, 'Ice / Temperature', 'single', true, 1, 1);
+    const hot = await ensureOption(db, t, temperatureGroup.id, 'Hot, steamed', 0);
 
-    const shotsGroup = await ensureGroup(db, t, 'Extra shots', 'multi', false, 0, 2);
-    const extraShot = await ensureOption(db, t, shotsGroup.id, 'Extra shot', 1500);
+    const shotsGroup = await ensureGroup(db, t, 'Barista Extras', 'multi', false, 0, 3);
+    const extraShot = await ensureOption(db, t, shotsGroup.id, 'Extra espresso shot', 1500);
 
+    await attach(db, t, latte.id, sizeGroup.id);
     await attach(db, t, latte.id, milkGroup.id);
+    await attach(db, t, latte.id, temperatureGroup.id);
     await attach(db, t, latte.id, shotsGroup.id);
-    await attach(db, t, cappuccino.id, milkGroup.id);
 
     const menuVersionId = await new CatalogueRepository(db).publish(t, now);
 
@@ -398,9 +419,11 @@ async function main() {
       SESSION_KEY: sessionKey,
       tenantId: t,
       menuVersionId,
-      items: { latte: latte.id, cappuccino: cappuccino.id, icedLatte86: icedLatte.id },
+      items: { latte: latte.id, americano: americano.id, breadPudding86: breadPudding.id },
       modifierOptions: {
+        regular: regular.id,
         oatMilk: oat.id,
+        hot: hot.id,
         extraShot: extraShot.id,
         milkGroupRequired: milkGroup.id,
       },
@@ -436,23 +459,23 @@ curl -s ${b}/public/availability -H "authorization: Bearer ${fT}" | jq
 
 # F1.3 quote — Latte + Oat milk (required group satisfied) + 1 extra shot
 curl -s ${b}/public/orders/quote -H "authorization: Bearer ${fT}" -H 'content-type: application/json' \\
-  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${oat.id}","${extraShot.id}"]}]}' | jq
+  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${regular.id}","${oat.id}","${hot.id}","${extraShot.id}"]}]}' | jq
 # quote for gold — Oat milk is waived by tier
 curl -s ${b}/public/orders/quote -H "authorization: Bearer ${out.customers.gold.token}" -H 'content-type: application/json' \\
-  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${oat.id}"]}]}' | jq
+  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${regular.id}","${oat.id}","${hot.id}"]}]}' | jq
 
 # F1.6 place order (fresh customer, needs Idempotency-Key)
 curl -s ${b}/public/orders -H "authorization: Bearer ${fT}" -H 'content-type: application/json' \\
   -H "idempotency-key: $(uuidgen | tr A-F a-f)" \\
-  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${oat.id}"]}]}' | jq
+  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${regular.id}","${oat.id}","${hot.id}"]}]}' | jq
 # 86'd item -> 409 ITEM_UNAVAILABLE
 curl -s ${b}/public/orders -H "authorization: Bearer ${fT}" -H 'content-type: application/json' \\
   -H "idempotency-key: $(uuidgen | tr A-F a-f)" \\
-  -d '{"items":[{"menuItemId":"${icedLatte.id}","qty":1,"modifierOptionIds":[]}]}' | jq
+  -d '{"items":[{"menuItemId":"${breadPudding.id}","qty":1,"modifierOptionIds":[]}]}' | jq
 # bronze customer already has an open order -> 409 OPEN_ORDER_LIMIT
 curl -s ${b}/public/orders -H "authorization: Bearer ${out.customers.bronze.token}" -H 'content-type: application/json' \\
   -H "idempotency-key: $(uuidgen | tr A-F a-f)" \\
-  -d '{"items":[{"menuItemId":"${cappuccino.id}","qty":1,"modifierOptionIds":[]}]}' | jq
+  -d '{"items":[{"menuItemId":"${latte.id}","qty":1,"modifierOptionIds":["${regular.id}","${oat.id}","${hot.id}"]}]}' | jq
 
 # F1.7 order status
 curl -s ${b}/public/orders/${bronzeOpen!.id}/status -H "authorization: Bearer ${out.customers.bronze.token}" | jq
