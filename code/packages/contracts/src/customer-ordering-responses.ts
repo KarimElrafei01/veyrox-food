@@ -87,6 +87,17 @@ export const sessionResolveResponse = z.object({
     payAt,
   }),
   links: z.object({ menu: z.string(), availability: z.string() }),
+  /**
+   * The customer's order still in progress, if any. One at a time (F1.6). The webview
+   * sends a re-entering customer straight to its live status instead of the menu.
+   */
+  openOrder: z
+    .object({
+      orderId: z.uuid(),
+      orderNumber: z.string(),
+      status: z.enum(['placed', 'received', 'preparing', 'ready']),
+    })
+    .nullable(),
   traceId: z.string(),
 });
 export type SessionResolveResponse = z.infer<typeof sessionResolveResponse>;

@@ -225,7 +225,26 @@ async function ensureOrder(
       .from(tables.orders)
       .where(and(eq(tables.orders.tenantId, t), eq(tables.orders.orderNumber, orderNumber))),
   );
-  if (found) return found;
+  if (found) {
+    // Converge an existing fixture order to the wanted status on re-run
+    // (order_events is append-only, so record the move rather than editing).
+    if (found.status !== status) {
+      await db
+        .update(tables.orders)
+        .set({ status, ...extra })
+        .where(eq(tables.orders.id, found.id));
+      await db.insert(tables.orderEvents).values({
+        tenantId: t,
+        orderId: found.id,
+        fromStatus: found.status,
+        toStatus: status,
+        actorType: 'customer',
+        actorId: customerId,
+        source: 'webview',
+      });
+    }
+    return found;
+  }
   const [row] = await db
     .insert(tables.orders)
     .values({
@@ -355,27 +374,11 @@ async function main() {
     const bronze = await ensureCustomer(db, t, 'bronze', 'bronze', 120);
     const suspended = await ensureCustomer(db, t, 'suspended', 'bronze', 0);
 
-    // bronze has one open order -> GET status "placed" AND OPEN_ORDER_LIMIT on a new POST
-    await ensureOrder(db, t, bronze.id, 'A-101', 'placed', {
-      placementResponse: {
-        orderId: '(set on read)',
-        orderNumber: 'A-101',
-        status: 'placed',
-        totalMinor: 6500,
-        payAt: 'counter',
-        eta: {
-          lowerMinutes: null,
-          upperMinutes: null,
-          startsOnAccept: true,
-          promisedLowerAt: null,
-          promisedUpperAt: null,
-        },
-        loyalty: { pointsToEarn: 6 },
-        placedAt: now.toISOString(),
-        traceId: 'fixture',
-      },
-    });
-    // gold has an accepted order -> GET status with a running countdown
+    // Only ONE customer has an order in progress (gold, below). Everyone else's
+    // history is terminal, so a re-entering fresh/bronze customer lands on the menu.
+    await ensureOrder(db, t, bronze.id, 'A-101', 'collected', { collectedAt: now });
+    // gold has an accepted order still in progress -> re-entry redirects to its live
+    // status, and a new placement returns OPEN_ORDER_LIMIT.
     await ensureOrder(db, t, gold.id, 'A-102', 'received', {
       acceptedAt: now,
       promisedEtaLowerAt: new Date(now.getTime() + 8 * 60_000),

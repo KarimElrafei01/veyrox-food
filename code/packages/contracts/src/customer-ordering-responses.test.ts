@@ -38,6 +38,7 @@ describe('sessionResolveResponse', () => {
       store: { isOpen: true, closesAt: '2026-09-07T01:00:00+03:00' },
       ordering: { enabled: true, askTableNumber: false, minOrderValueMinor: 0, payAt: 'counter' },
       links: { menu: '/public/menu/8a2e', availability: '/public/availability' },
+      openOrder: null,
       traceId: '0af7651916cd43dd',
     });
     expect(parsed.customer.tier).toBe('silver');
