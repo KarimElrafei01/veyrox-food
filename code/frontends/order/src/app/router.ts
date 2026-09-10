@@ -1,7 +1,16 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
 export type RouteName =
-  'entry' | 'menu' | 'item' | 'cart' | 'crosssell' | 'checkout' | 'status' | 'dev' | 'notFound';
+  | 'entry'
+  | 'menu'
+  | 'item'
+  | 'cart'
+  | 'crosssell'
+  | 'checkout'
+  | 'status'
+  | 'dev'
+  | 'preview'
+  | 'notFound';
 
 export interface Route {
   name: RouteName;
@@ -18,6 +27,7 @@ const PATTERNS: { name: RouteName; re: RegExp; keys: string[] }[] = [
   { name: 'checkout', re: /^\/checkout$/, keys: [] },
   { name: 'status', re: /^\/o\/([^/]+)$/, keys: ['orderId'] },
   { name: 'dev', re: /^\/dev$/, keys: [] },
+  { name: 'preview', re: /^\/preview\/([a-z-]+)$/, keys: ['state'] },
 ];
 
 export function matchRoute(pathname: string): Route {
