@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import helmet from '@fastify/helmet';
+import cors from '@fastify/cors';
 import {
   serializerCompiler,
   validatorCompiler,
@@ -99,6 +100,15 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     });
   });
   app.decorate('deps', deps);
+
+  // The five SPAs are each on their own origin (ADR-0009), so every browser call
+  // is cross-origin. CORS_ORIGINS is a comma-separated allow-list; unset reflects
+  // any origin (dev only — never leave it unset with real data).
+  const corsOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  await app.register(cors, { origin: corsOrigins.length > 0 ? corsOrigins : true });
 
   await app.register(helmet);
   if (deps.whatsappWebhook) {

@@ -50,6 +50,9 @@ services:
       WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET}
       # DEV_LOGIN=1 exposes GET /dev/sessions (token picker, no QR). Dev DB only.
       DEV_LOGIN: ${DEV_LOGIN:-}
+      # Comma-separated SPA origins allowed to call the API. Unset = reflect any
+      # origin (fine for dev; set it once the frontends have real domains).
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
     ports:
       - '127.0.0.1:3001:3001' # a host reverse proxy reaches it here
     depends_on:
