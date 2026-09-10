@@ -9,9 +9,24 @@ import {
   StatusDot,
   useT,
 } from '@veyroxai/ui';
-import { formatClock, formatCountdown } from '@veyroxai/i18n';
+import {
+  formatClock,
+  formatCountdown,
+  translate,
+  type Locale,
+  type MessageKey,
+} from '@veyroxai/i18n';
 import { useEffect, useState } from 'react';
 import styles from './SessionScreens.module.css';
+
+/** The other language's copy for a headline, so terminal screens read bilingually (design 2.7–2.9). */
+function otherLang(
+  locale: Locale,
+  key: MessageKey,
+  params?: Record<string, string | number>,
+): string {
+  return translate(locale === 'ar-EG' ? 'en' : 'ar-EG', key, params);
+}
 
 function CenteredScreen({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
@@ -32,12 +47,13 @@ export function LoadingScreen(): React.JSX.Element {
 }
 
 export function SessionExpiredScreen({ reopenUrl }: { reopenUrl: string }): React.JSX.Element {
-  const { t } = useT();
+  const { t, locale } = useT();
   return (
     <CenteredScreen>
       <EmptyState
         icon="schedule"
         title={t('session.expiredTitle')}
+        titleSecondary={otherLang(locale, 'session.expiredTitle')}
         body={t('session.expiredBody')}
         action={
           <Stack gap="xs">
@@ -60,10 +76,15 @@ export function SessionExpiredScreen({ reopenUrl }: { reopenUrl: string }): Reac
 }
 
 export function OrderingSuspendedScreen(): React.JSX.Element {
-  const { t } = useT();
+  const { t, locale } = useT();
   return (
     <CenteredScreen>
-      <EmptyState icon="storefront" title={t('suspended.title')} body={t('suspended.body')} />
+      <EmptyState
+        icon="storefront"
+        title={t('suspended.title')}
+        titleSecondary={otherLang(locale, 'suspended.title')}
+        body={t('suspended.body')}
+      />
       <Alert tone="info">{t('suspended.help')}</Alert>
     </CenteredScreen>
   );
@@ -112,6 +133,7 @@ export function StoreClosedScreen({
         <EmptyState
           icon="wb-twilight"
           title={t('store.closedTitle', { store: storeName })}
+          titleSecondary={otherLang(locale, 'store.closedTitle', { store: storeName })}
           body={t('store.closedSubtitle')}
         />
         {opensAt ? (
@@ -153,13 +175,14 @@ export function OpenOrderBlockScreen({
   orderNumber: string;
   onView: () => void;
 }): React.JSX.Element {
-  const { t } = useT();
+  const { t, locale } = useT();
   return (
     <CenteredScreen>
       <Stack gap="md">
         <EmptyState
           icon="shopping-bag"
           title={t('openOrder.title')}
+          titleSecondary={otherLang(locale, 'openOrder.title')}
           body={t('openOrder.body', { number: orderNumber })}
         />
         <Alert tone="info">{t('openOrder.freshBrew')}</Alert>
