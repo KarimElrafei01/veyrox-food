@@ -19,6 +19,7 @@ const menu: PublishedMenuData = {
       descriptionAr: null,
       basePriceMinor: 6500,
       prepSeconds: 150,
+      imageObjectKey: 'menu/latte.webp',
       modifierGroupIds: ['milk'],
     },
   ],
@@ -55,5 +56,8 @@ describe('renderPublishedMenu', () => {
         { name: { en: 'Drinks', 'ar-EG': 'مشروبات' }, items: [{ name: { 'ar-EG': 'Latte' } }] },
       ],
     });
+    expect(JSON.parse(first.body).categories[0].items[0].imageUrl).toBe(
+      '/public/menu-images/version/latte',
+    );
   });
 });

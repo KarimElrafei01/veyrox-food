@@ -63,6 +63,12 @@
   font-size: var(--vx-text-headline-md);
   color: var(--vx-primary-container);
 }
+.emptyTitleSecondary {
+  margin-block-start: calc(-1 * var(--vx-space-2xs));
+  font-size: var(--vx-text-headline-sm);
+  font-weight: 600;
+  color: var(--vx-secondary);
+}
 .emptyBody {
   font-size: var(--vx-text-body-md);
   color: var(--vx-on-surface-variant);

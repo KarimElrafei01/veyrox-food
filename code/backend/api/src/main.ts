@@ -21,6 +21,7 @@ import { OrderPlacementRepository } from './contexts/ordering/infrastructure/ord
 import { CustomerLocaleRepository } from './contexts/ordering/infrastructure/customer-locale-repository.js';
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
 import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
+import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -65,6 +66,17 @@ async function main(): Promise<void> {
     ? [sessionKey, previousSessionKey]
     : [sessionKey];
   const publishedMenus = new PublishedMenuRepository(database, redis);
+  const imageStore =
+    process.env.R2_BUCKET &&
+    process.env.R2_ENDPOINT &&
+    process.env.R2_ACCESS_KEY_ID &&
+    process.env.R2_SECRET_ACCESS_KEY
+      ? new R2MenuImageStore(process.env.R2_BUCKET, {
+          endpoint: process.env.R2_ENDPOINT,
+          accessKeyId: process.env.R2_ACCESS_KEY_ID,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        })
+      : undefined;
   const quoteOrder = new QuoteOrder(publishedMenus);
   const etaQueue = new EtaQueueRepository(database, redis);
   const placementMetrics: OrderPlacementMetricSink = {
@@ -112,6 +124,7 @@ async function main(): Promise<void> {
       repository: new CatalogueRepository(database),
       availabilityCache: redis,
       sessionKeys: previousSessionKey ? [sessionKey, previousSessionKey] : [sessionKey],
+      imageStore,
     },
     quoteOrder: {
       quote: quoteOrder,

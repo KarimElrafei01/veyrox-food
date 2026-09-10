@@ -33,11 +33,14 @@ export function Alert({
 export function EmptyState({
   icon,
   title,
+  titleSecondary,
   body,
   action,
 }: {
   icon: IconName;
   title: string;
+  /** The other language's headline, shown under the title (design 2.7–2.9). */
+  titleSecondary?: string;
   body?: React.ReactNode;
   action?: React.ReactNode;
 }): React.JSX.Element {
@@ -47,6 +50,11 @@ export function EmptyState({
         <Icon name={icon} size={28} />
       </span>
       <h2 className={styles.emptyTitle}>{title}</h2>
+      {titleSecondary ? (
+        <p className={styles.emptyTitleSecondary} dir="auto">
+          {titleSecondary}
+        </p>
+      ) : null}
       {body ? <p className={styles.emptyBody}>{body}</p> : null}
       {action ? <div className={styles.emptyAction}>{action}</div> : null}
     </div>

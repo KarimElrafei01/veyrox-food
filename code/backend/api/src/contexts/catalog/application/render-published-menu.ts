@@ -19,6 +19,7 @@ export interface PublishedMenuData {
     descriptionAr: string | null;
     basePriceMinor: number;
     prepSeconds: number;
+    imageObjectKey: string | null;
     modifierGroupIds: readonly string[];
   }[];
   modifierGroups: readonly {
@@ -64,7 +65,9 @@ export function renderPublishedMenu(menu: PublishedMenuData): {
             : null,
           basePriceMinor: item.basePriceMinor,
           prepSeconds: item.prepSeconds,
-          imageUrl: null,
+          imageUrl: item.imageObjectKey
+            ? `/public/menu-images/${menu.menuVersion}/${item.id}`
+            : null,
           modifierGroupIds: [...item.modifierGroupIds],
         }));
       return items.length === 0
