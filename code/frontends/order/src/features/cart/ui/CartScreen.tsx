@@ -15,9 +15,13 @@ import {
 import type { Locale } from '@veyroxai/i18n';
 import { translate, type MessageKey } from '@veyroxai/i18n';
 import type { QuotedLine, QuoteResponse } from '@veyroxai/contracts';
+import { useState } from 'react';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
+import { ErrorAlert } from '../../../shared/ui/ErrorAlert.js';
 import { useReadySession } from '../../../shared/session-context.js';
-import { useCart, type CartLine } from '../../../shared/cart-store.js';
+import { useCart, simpleCartLine, type CartLine } from '../../../shared/cart-store.js';
+import { useUpsell, markUpsellSeen } from '../hooks/useUpsell.js';
+import { UpsellCard } from './UpsellCard.js';
 import styles from './CartScreen.module.css';
 
 interface CartScreenProps {
@@ -49,6 +53,8 @@ export function CartScreen({
   const { t } = useT();
   const session = useReadySession();
   const cart = useCart();
+  const upsell = useUpsell();
+  const [upsellHidden, setUpsellHidden] = useState(false);
   const needsReconfigure = new Set(reconfigureLineIds);
 
   if (cart.count === 0) {
@@ -102,7 +108,7 @@ export function CartScreen({
           </Alert>
         ) : null}
         {errorCode && !loading ? (
-          <Alert tone="danger">{t(`error.${errorCode}` as MessageKey)}</Alert>
+          <ErrorAlert messageKey={`error.${errorCode}` as MessageKey} />
         ) : null}
 
         {cart.lines.map((line) => (
@@ -117,6 +123,22 @@ export function CartScreen({
             onEdit={() => onEditLine(line)}
           />
         ))}
+
+        {upsell && !upsellHidden ? (
+          <UpsellCard
+            item={upsell}
+            locale={locale}
+            onAdd={() => {
+              cart.addLine(simpleCartLine(upsell));
+              markUpsellSeen();
+              setUpsellHidden(true);
+            }}
+            onDismiss={() => {
+              markUpsellSeen();
+              setUpsellHidden(true);
+            }}
+          />
+        ) : null}
 
         {session.customer.tier != null && quote != null ? (
           <LoyaltyCallout

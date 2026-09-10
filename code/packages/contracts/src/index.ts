@@ -49,4 +49,8 @@ export {
   type OpenOrderLimitProblem,
   orderStatusResponse,
   type OrderStatusResponse,
+  upsellResponse,
+  type UpsellResponse,
+  pairingsResponse,
+  type PairingsResponse,
 } from './customer-ordering-responses.js';

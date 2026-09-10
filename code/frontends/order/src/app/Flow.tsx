@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useT } from '@veyroxai/ui';
 import type { MenuModifierGroup, QuotedLine } from '@veyroxai/contracts';
 import { useSession } from '../shared/session-context.js';
-import { useCart, type CartLine } from '../shared/cart-store.js';
+import { useCart, simpleCartLine, type CartLine } from '../shared/cart-store.js';
+import { useCrossSell, markCrossSellSeen } from '../features/cross-sell/hooks/useCrossSell.js';
+import { CrossSellScreen } from '../features/cross-sell/ui/CrossSellScreen.js';
 import { useRoute } from './router.js';
 import { useMenu } from '../features/menu/hooks/useMenu.js';
 import { MenuScreen } from '../features/menu/ui/MenuScreen.js';
@@ -26,6 +28,7 @@ export function Flow(): React.JSX.Element {
   const menu = useMenu(session.links);
   const quote = useQuote();
   const place = usePlaceOrder();
+  const crossSell = useCrossSell();
 
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [reconciled, setReconciled] = useState(false);
@@ -195,8 +198,30 @@ export function Flow(): React.JSX.Element {
           setEditingLineId(line.lineId);
           route.navigate(`/item/${line.menuItemId}`);
         }}
-        onCheckout={() => route.navigate('/checkout')}
+        onCheckout={() => route.navigate(crossSell.status === 'ready' ? '/pairings' : '/checkout')}
         onBack={() => route.navigate('/menu')}
+      />
+    );
+  }
+
+  if (route.name === 'crosssell') {
+    if (crossSell.status !== 'ready') {
+      route.navigate('/checkout', { replace: true });
+      return <LoadingScreen />;
+    }
+    const toCheckout = () => {
+      markCrossSellSeen();
+      route.navigate('/checkout', { replace: true });
+    };
+    return (
+      <CrossSellScreen
+        pairings={crossSell.pairings}
+        itemCount={cart.count}
+        totalMinor={quote.quote?.totalMinor ?? null}
+        locale={locale}
+        onAdd={(item) => cart.addLine(simpleCartLine(item))}
+        onSkip={toCheckout}
+        onContinue={toCheckout}
       />
     );
   }

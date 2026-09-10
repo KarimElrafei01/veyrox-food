@@ -17,6 +17,26 @@ export interface CartLine {
 
 export type NewCartLine = Omit<CartLine, 'lineId'>;
 
+/** A cart line for an item with no modifiers — used by the upsell card and the
+ *  cross-sell screen (a configurable item goes through the item detail screen). */
+export function simpleCartLine(item: {
+  id: string;
+  name: { en: string; 'ar-EG'?: string };
+  imageUrl: string | null;
+  basePriceMinor: number;
+}): NewCartLine {
+  return {
+    menuItemId: item.id,
+    qty: 1,
+    modifierOptionIds: [],
+    nameEn: item.name.en,
+    nameAr: item.name['ar-EG'],
+    modifierSummary: '',
+    imageUrl: item.imageUrl,
+    unitBasePriceMinor: item.basePriceMinor,
+  };
+}
+
 interface CartContextValue {
   lines: CartLine[];
   count: number;

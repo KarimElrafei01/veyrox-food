@@ -1,0 +1,71 @@
+.panel {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-sm);
+  background: var(--vx-surface-container);
+  border-radius: var(--vx-radius-md);
+}
+
+.thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: var(--vx-radius);
+  background: var(--vx-surface-lowest);
+  color: var(--vx-on-surface-variant);
+  overflow: hidden;
+}
+
+.thumb img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.body {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tag {
+  font-size: var(--vx-text-label-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vx-secondary);
+}
+
+.name {
+  font-weight: 600;
+  color: var(--vx-on-surface);
+}
+
+.price {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface-variant);
+}
+
+.actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--vx-space-2xs);
+}
+
+.dismiss {
+  border: 0;
+  background: none;
+  padding: var(--vx-space-2xs);
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-on-surface-variant);
+  cursor: pointer;
+}
