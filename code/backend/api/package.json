@@ -14,6 +14,7 @@
     "tokens": "tsx --env-file-if-exists=../../.env src/dev/session-tokens.ts"
   },
   "dependencies": {
+    "@fastify/cors": "11.3.0",
     "@fastify/helmet": "13.1.1",
     "@veyroxai/contracts": "workspace:*",
     "@veyroxai/db": "workspace:*",
