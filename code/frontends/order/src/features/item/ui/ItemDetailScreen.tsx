@@ -13,6 +13,7 @@ import {
 import { translate, type Locale } from '@veyroxai/i18n';
 import type { LoyaltyTier, MenuModifierGroup } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
+import { menuImageSource } from '../../../shared/menu-image.js';
 import type { NewCartLine } from '../../../shared/cart-store.js';
 import type { ResolvedItem } from '../../../shared/menu-model.js';
 import { useItemConfigurator } from '../hooks/useItemConfigurator.js';
@@ -115,7 +116,10 @@ export function ItemDetailScreen({
       }
     >
       {item.imageUrl ? (
-        <div className={styles.hero} style={{ backgroundImage: `url(${item.imageUrl})` }}>
+        <div
+          className={styles.hero}
+          style={{ backgroundImage: `url(${menuImageSource(item.imageUrl)})` }}
+        >
           <div className={styles.heroOverlay}>
             <span className={styles.heroText}>
               <h1 className={styles.heroTitle}>{name}</h1>

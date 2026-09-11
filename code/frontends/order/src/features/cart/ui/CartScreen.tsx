@@ -20,6 +20,7 @@ import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import { ErrorAlert } from '../../../shared/ui/ErrorAlert.js';
 import { useReadySession } from '../../../shared/session-context.js';
 import { useCart, simpleCartLine, type CartLine } from '../../../shared/cart-store.js';
+import { menuImageSource } from '../../../shared/menu-image.js';
 import { useUpsell, markUpsellSeen } from '../hooks/useUpsell.js';
 import { UpsellCard } from './UpsellCard.js';
 import styles from './CartScreen.module.css';
@@ -178,7 +179,7 @@ function CartLineRow({
       <div className={styles.row}>
         <span className={styles.thumb}>
           {line.imageUrl ? (
-            <img src={line.imageUrl} alt="" />
+            <img src={menuImageSource(line.imageUrl)} alt="" />
           ) : (
             <Icon name="local-cafe" size={20} />
           )}

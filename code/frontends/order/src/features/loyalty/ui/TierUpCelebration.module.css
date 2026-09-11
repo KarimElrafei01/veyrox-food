@@ -10,30 +10,30 @@
 }
 .card {
   inline-size: 100%;
-  max-inline-size: 22rem;
+  max-inline-size: 28rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: var(--vx-space-sm);
-  padding: var(--vx-space-xl) var(--vx-space-lg);
-  background: var(--vx-surface);
-  border-radius: var(--vx-radius-xl);
+  padding: var(--vx-space-2xl) var(--vx-space-lg) var(--vx-space-lg);
+  background: linear-gradient(145deg, var(--vx-surface-lowest), var(--vx-surface));
+  border-radius: var(--vx-radius-xl) var(--vx-radius-xl) var(--vx-radius-lg) var(--vx-radius-lg);
   box-shadow: var(--vx-elevation-mid);
 }
 .badge {
-  inline-size: 4.5rem;
-  block-size: 4.5rem;
+  inline-size: 6rem;
+  block-size: 6rem;
   border-radius: var(--vx-radius-pill);
   background: linear-gradient(135deg, var(--vx-loyalty-from), var(--vx-loyalty-to));
-  border: 1px solid var(--vx-loyalty-border);
+  border: 0.5rem solid var(--vx-surface-container);
   color: var(--vx-loyalty-ink);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .title {
-  font-size: var(--vx-text-headline-md);
+  font-size: var(--vx-text-display);
   color: var(--vx-primary-container);
 }
 .body {
