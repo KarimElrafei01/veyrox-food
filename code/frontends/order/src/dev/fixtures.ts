@@ -18,6 +18,7 @@ const ID = {
   gSize: '90000000-0000-4000-8000-000000000030',
   gMilk: '91000000-0000-4000-8000-000000000031',
   gExtras: '92000000-0000-4000-8000-000000000032',
+  gTemperature: '93000000-0000-4000-8000-000000000033',
   oRegular: 'a0000000-0000-4000-8000-000000000040',
   oLarge: 'a1000000-0000-4000-8000-000000000041',
   mWhole: 'b0000000-0000-4000-8000-000000000050',
@@ -26,6 +27,9 @@ const ID = {
   xShot: 'c0000000-0000-4000-8000-000000000060',
   xCinnamon: 'c1000000-0000-4000-8000-000000000061',
   xVanilla: 'c2000000-0000-4000-8000-000000000062',
+  tIced: 'd0000000-0000-4000-8000-000000000070',
+  tBlended: 'd1000000-0000-4000-8000-000000000071',
+  tHot: 'd2000000-0000-4000-8000-000000000072',
 };
 
 export const sessionFixture: SessionResolveResponse = {
@@ -156,6 +160,40 @@ export const menuFixture: ResolvedMenu = {
         ],
       },
     ],
+    [
+      ID.gTemperature,
+      {
+        id: ID.gTemperature,
+        name: { en: 'Ice / Temperature', 'ar-EG': 'الثلج / الحرارة' },
+        selection: 'single',
+        required: false,
+        minSelect: 0,
+        maxSelect: 1,
+        options: [
+          {
+            id: ID.tIced,
+            name: { en: 'Ice cubes', 'ar-EG': 'مكعبات ثلج' },
+            priceDeltaMinor: 0,
+            freeForTier: null,
+            sort: 1,
+          },
+          {
+            id: ID.tBlended,
+            name: { en: 'Blended, crushed ice', 'ar-EG': 'ثلج مجروش' },
+            priceDeltaMinor: 0,
+            freeForTier: null,
+            sort: 2,
+          },
+          {
+            id: ID.tHot,
+            name: { en: 'Hot, steamed', 'ar-EG': 'ساخن، مبخر' },
+            priceDeltaMinor: 0,
+            freeForTier: null,
+            sort: 3,
+          },
+        ],
+      },
+    ],
   ]),
   categories: [
     {
@@ -174,7 +212,7 @@ export const menuFixture: ResolvedMenu = {
           basePriceMinor: 7000,
           prepSeconds: 150,
           imageUrl: null,
-          modifierGroupIds: [ID.gSize, ID.gMilk, ID.gExtras],
+          modifierGroupIds: [ID.gSize, ID.gMilk, ID.gTemperature, ID.gExtras],
           available: true,
           unavailableReason: null,
         },

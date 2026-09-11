@@ -29,6 +29,8 @@ it('lists customers and reports the picked token', () => {
 
   expect(screen.getByText(/Brew & Baladi · default/)).toBeInTheDocument();
 
+  expect(screen.getByRole('button', { name: 'Tier-up celebration' })).toBeInTheDocument();
+
   fireEvent.click(screen.getByRole('button', { name: /gold · gold/ }));
 
   expect(onPick).toHaveBeenCalledWith('tok-gold');

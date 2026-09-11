@@ -16,23 +16,13 @@ import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import { menuImageSource } from '../../../shared/menu-image.js';
 import type { NewCartLine } from '../../../shared/cart-store.js';
 import type { ResolvedItem } from '../../../shared/menu-model.js';
+import { PreparationIcon, preparationStyle } from '../components/PreparationIcon.js';
 import { useItemConfigurator } from '../hooks/useItemConfigurator.js';
 import { isWaived } from '../usecases/configureItem.js';
 import styles from './ItemDetailScreen.module.css';
 
 function localized(map: { en: string; 'ar-EG'?: string }, locale: Locale): string {
   return (locale === 'ar-EG' && map['ar-EG']) || map.en;
-}
-
-function preparationIcon(optionName: string): 'local-cafe' | 'ac-unit' | 'blender' {
-  const name = optionName.toLowerCase();
-  if (name.includes('blend') || name.includes('crushed')) {
-    return 'blender';
-  }
-  if (name.includes('ice') || name.includes('iced')) {
-    return 'ac-unit';
-  }
-  return 'local-cafe';
 }
 
 interface ItemDetailScreenProps {
@@ -191,7 +181,7 @@ export function ItemDetailScreen({
                   value: o.id,
                   label: localized(o.name, locale),
                   icon: isPrepStyle ? (
-                    <Icon name={preparationIcon(o.name.en)} size={22} />
+                    <PreparationIcon style={preparationStyle(o.name.en)} />
                   ) : undefined,
                   disabled: !optionAvailable(o.id),
                   trailing: isPrepStyle ? undefined : o.priceDeltaMinor === 0 ? (
