@@ -183,6 +183,22 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
         />
       );
     case 'menu':
+      return (
+        <SeedCart>
+          {() => (
+            <MenuScreen
+              menu={menuFixture}
+              status="ready"
+              locale={locale}
+              quoteTotalMinor={quoteFixture.totalMinor}
+              onOpenItem={noop}
+              onQuickAdd={noop}
+              onStepItem={noop}
+              onViewCart={noop}
+            />
+          )}
+        </SeedCart>
+      );
     case 'menu-closed':
     default:
       return (
@@ -190,7 +206,7 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
           menu={menuFixture}
           status="ready"
           locale={locale}
-          quoteTotalMinor={screen === 'menu' ? 14500 : null}
+          quoteTotalMinor={null}
           onOpenItem={noop}
           onQuickAdd={noop}
           onStepItem={noop}

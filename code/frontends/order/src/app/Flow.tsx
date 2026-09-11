@@ -105,12 +105,17 @@ export function Flow(): React.JSX.Element {
   };
 
   const stepItem = (itemId: string, qty: number): void => {
-    const line = cart.lines.find(
-      (l) => l.menuItemId === itemId && (l.modifierSummary ?? '') === '',
-    );
-    if (line) {
-      cart.setQty(line.lineId, qty);
+    // Different-modifier lines for the same item never merge (F1.3 §5), so the
+    // card's single aggregate counter can only move one line — the most
+    // recently added — by the requested delta, never overwrite the total.
+    const matching = cart.lines.filter((l) => l.menuItemId === itemId);
+    const target = matching[matching.length - 1];
+    if (!target) {
+      return;
     }
+    const currentAggregate = matching.reduce((n, l) => n + l.qty, 0);
+    const delta = qty - currentAggregate;
+    cart.setQty(target.lineId, target.qty + delta);
   };
 
   // — route → screen —

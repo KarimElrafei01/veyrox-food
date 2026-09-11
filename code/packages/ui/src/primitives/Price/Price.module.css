@@ -13,6 +13,9 @@
   color: var(--vx-on-surface-variant);
   font-weight: 500;
 }
+.inherit {
+  color: inherit;
+}
 .sm {
   font-size: var(--vx-text-label-md);
 }

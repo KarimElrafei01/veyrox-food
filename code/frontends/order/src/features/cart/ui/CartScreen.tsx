@@ -89,7 +89,7 @@ export function CartScreen({
           >
             <span className={styles.ctaText}>{t('cart.reviewOrder')}</span>
             <span className={styles.ctaRight}>
-              {total != null ? <Price minor={total} /> : <Spinner size={16} />}
+              {total != null ? <Price minor={total} tone="inherit" /> : <Spinner size={16} />}
               <Icon name="arrow-forward" size={18} />
             </span>
           </Button>

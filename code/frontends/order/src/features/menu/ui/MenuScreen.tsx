@@ -75,7 +75,7 @@ export function MenuScreen({
                 {t('menu.viewCart')}
               </span>
               <span className={styles.cartTotal}>
-                {quoteTotalMinor != null ? <Price minor={quoteTotalMinor} /> : null}
+                {quoteTotalMinor != null ? <Price minor={quoteTotalMinor} tone="inherit" /> : null}
                 <Icon name="arrow-forward" size={18} />
               </span>
             </Button>
