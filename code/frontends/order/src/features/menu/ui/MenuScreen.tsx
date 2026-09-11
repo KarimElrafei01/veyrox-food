@@ -17,6 +17,7 @@ import { useReadySession } from '../../../shared/session-context.js';
 import { useCart } from '../../../shared/cart-store.js';
 import type { ResolvedMenu } from '../../../shared/menu-model.js';
 import { MenuItemCard } from './MenuItemCard.js';
+import { ClosedBanner } from '../components/ClosedBanner.js';
 import styles from './MenuScreen.module.css';
 
 interface MenuScreenProps {
@@ -84,11 +85,7 @@ export function MenuScreen({
       }
     >
       {!session.store.isOpen ? (
-        <div className={styles.banner}>
-          <Alert tone="warning" title={session.tenant.name}>
-            {t('store.browseOnly')}
-          </Alert>
-        </div>
+        <ClosedBanner storeName={session.tenant.name} opensAt={session.store.opensAt ?? null} />
       ) : null}
 
       {menu?.staleAgainstVersion ? (
@@ -134,6 +131,7 @@ export function MenuScreen({
                     item={item}
                     locale={locale}
                     qtyInCart={qtyByItem.get(item.id) ?? 0}
+                    orderingDisabled={!session.store.isOpen}
                     onOpen={() => onOpenItem(item.id)}
                     onQuickAdd={() => onQuickAdd(item.id)}
                     onStep={(qty) => onStepItem(item.id, qty)}

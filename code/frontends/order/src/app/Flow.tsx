@@ -20,6 +20,10 @@ import { DevKitchenControls } from '../features/order-status/components/DevKitch
 import { LoadingScreen, OpenOrderBlockScreen } from '../features/session/ui/SessionScreens.js';
 import { isDevSession } from '../features/session/ui/DevSwitcher.js';
 import { buildCartLine } from '../features/item/usecases/configureItem.js';
+import {
+  createPlacedOrderSnapshot,
+  readPlacedOrderSnapshot,
+} from '../shared/placed-order-snapshot.js';
 
 export function Flow(): React.JSX.Element {
   const route = useRoute();
@@ -86,6 +90,11 @@ export function Flow(): React.JSX.Element {
     menu.menu?.categories.flatMap((c) => c.items).find((i) => i.id === itemId) ?? null;
 
   const quickAdd = (itemId: string): void => {
+    // Defense in depth — MenuItemCard already locks its own controls (F1.1
+    // browse-only mode); this stops a stray call from the item-detail route too.
+    if (!session.store.isOpen) {
+      return;
+    }
     const item = findItem(itemId);
     if (!item || !item.available) {
       return;
@@ -107,6 +116,9 @@ export function Flow(): React.JSX.Element {
   };
 
   const stepItem = (itemId: string, qty: number): void => {
+    if (!session.store.isOpen) {
+      return;
+    }
     // Different-modifier lines for the same item never merge (F1.3 §5), so the
     // card's single aggregate counter can only move one line — the most
     // recently added — by the requested delta, never overwrite the total.
@@ -128,6 +140,7 @@ export function Flow(): React.JSX.Element {
         orderId={route.params.orderId}
         tenantId={session.tenant.id}
         storeName={session.tenant.name}
+        pointsBalance={session.customer.pointsBalance}
       />
     );
   }
@@ -184,6 +197,11 @@ export function Flow(): React.JSX.Element {
           route.back();
         }}
         onAdd={(line) => {
+          // The item detail page stays open for preview while the café is closed
+          // (F1.1 browse-only mode); only the final add/update is blocked.
+          if (!session.store.isOpen) {
+            return;
+          }
           if (editingLineId) {
             cart.replaceLine(editingLineId, line);
             setEditingLineId(null);
@@ -254,8 +272,11 @@ export function Flow(): React.JSX.Element {
         outcome={place.outcome}
         onBack={() => route.navigate('/cart')}
         onEditCart={() => route.navigate('/cart')}
-        onPlace={(note, expectedTotalMinor, tableLabel) => {
-          void place.submit({ customerNote: note, expectedTotalMinor, tableLabel });
+        onPlace={(note, activeQuote, tableLabel) => {
+          void place.submit(
+            { customerNote: note, expectedTotalMinor: activeQuote.totalMinor, tableLabel },
+            createPlacedOrderSnapshot(cart.lines, activeQuote),
+          );
         }}
         onDismissPriceChange={place.clearOutcome}
       />
@@ -284,10 +305,12 @@ function StatusRoute({
   orderId,
   tenantId,
   storeName,
+  pointsBalance,
 }: {
   orderId: string;
   tenantId: string;
   storeName: string;
+  pointsBalance: number;
 }): React.JSX.Element {
   const { locale } = useT();
   const route = useRoute();
@@ -300,6 +323,8 @@ function StatusRoute({
         notFound={status.notFound}
         order={status.order}
         storeName={storeName}
+        pointsBalance={pointsBalance}
+        orderSnapshot={readPlacedOrderSnapshot(orderId)}
         onRetry={status.refresh}
         onBackToMenu={() => route.navigate('/menu')}
       />

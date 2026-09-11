@@ -7,6 +7,7 @@ import { CartProvider } from '../shared/cart-store.js';
 import {
   GenericErrorScreen,
   LoadingScreen,
+  OpenOrderBlockScreen,
   OrderingSuspendedScreen,
   SessionExpiredScreen,
   StoreClosedScreen,
@@ -16,10 +17,12 @@ import { DevLoginScreen } from '../features/session/ui/DevLoginScreen.js';
 import { DevPreview } from '../features/session/ui/DevPreview.js';
 import { DevSwitcher, isDevSession } from '../features/session/ui/DevSwitcher.js';
 import { useDevSessions } from '../features/session/hooks/useDevSessions.js';
+import { useOrderStatus } from '../features/order-status/hooks/useOrderStatus.js';
 import { useRoute } from './router.js';
 import { Flow } from './Flow.js';
 
 const Gallery = lazy(() => import('../dev/Gallery.js').then((m) => ({ default: m.Gallery })));
+const TierUpDev = lazy(() => import('../dev/TierUpDev.js').then((m) => ({ default: m.TierUpDev })));
 
 /** wa.me deep link back into WhatsApp for a fresh session. */
 const REOPEN_URL = 'https://wa.me/';
@@ -52,18 +55,18 @@ export function App(): React.JSX.Element {
     }
   }, [sessionToken, status, resolve]);
 
-  // A re-entering customer with an order still in progress goes straight to its live
-  // status (F1.6 — one order at a time), not the menu.
-  useEffect(() => {
-    if (status === 'ready' && route.name === 'entry' && session?.openOrder) {
-      route.navigate(`/o/${session.openOrder.orderId}`, { replace: true });
-    }
-  }, [status, route, session]);
-
   if (route.name === 'dev' && import.meta.env.DEV) {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <Gallery />
+      </Suspense>
+    );
+  }
+
+  if (route.name === 'tierUpDev' && import.meta.env.DEV) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <TierUpDev />
       </Suspense>
     );
   }
@@ -108,7 +111,7 @@ export function App(): React.JSX.Element {
   if (status === 'error' && error) {
     switch (error.kind) {
       case 'store_closed':
-        return <StoreClosedScreen storeName="" opensAt={error.opensAt} timezone="Africa/Cairo" />;
+        return <StoreClosedScreen storeName="" opensAt={error.opensAt} />;
       case 'ordering_suspended':
         return <OrderingSuspendedScreen />;
       case 'expired':
@@ -122,10 +125,35 @@ export function App(): React.JSX.Element {
   }
 
   if (status === 'ready' && session) {
-    // The redirect effect above hasn't committed the route change yet — render the
-    // loading state for this one tick rather than flashing the menu first.
+    // A re-entering customer (app/browser closed and reopened) with an order still
+    // in progress sees the block screen first, not the menu or the live status
+    // directly — they choose to view it, rather than being dropped onto it.
     if (route.name === 'entry' && session.openOrder) {
-      return <LoadingScreen />;
+      const openOrder = session.openOrder;
+      return (
+        <OpenOrderRoute
+          orderId={openOrder.orderId}
+          orderNumber={openOrder.orderNumber}
+          onView={() => route.navigate(`/o/${openOrder.orderId}`, { replace: true })}
+        />
+      );
+    }
+    // F1.1 §6 (spec correction 2026-09-11): a closed café still resolves — browsing
+    // is allowed, only placement gates on hours. Entry alone shows the interstitial;
+    // once inside `/menu` the persistent banner there is enough (no repeat popup).
+    if (route.name === 'entry' && !session.store.isOpen) {
+      return (
+        <StoreClosedScreen
+          storeName={session.tenant.name}
+          opensAt={session.store.opensAt ?? null}
+          today={session.store.today}
+          tomorrow={session.store.tomorrow}
+          tier={session.customer.tier}
+          pointsBalance={session.customer.pointsBalance}
+          whatsappUrl={REOPEN_URL}
+          onBrowse={() => route.navigate('/menu', { replace: true })}
+        />
+      );
     }
     return (
       <CartProvider menuVersion={session.session.menuVersion}>
@@ -137,4 +165,27 @@ export function App(): React.JSX.Element {
   }
 
   return <LoadingScreen />;
+}
+
+/** Fetches the blocked order's live status (ETA, total, statusLabel) for the
+ *  richer open-order block screen — falling back to just the order number if
+ *  the fetch is still loading or fails. */
+function OpenOrderRoute({
+  orderId,
+  orderNumber,
+  onView,
+}: {
+  orderId: string;
+  orderNumber: string;
+  onView: () => void;
+}): React.JSX.Element {
+  const status = useOrderStatus(orderId);
+  return (
+    <OpenOrderBlockScreen
+      orderNumber={orderNumber}
+      order={status.status === 'ready' ? status.order : null}
+      whatsappUrl={REOPEN_URL}
+      onView={onView}
+    />
+  );
 }

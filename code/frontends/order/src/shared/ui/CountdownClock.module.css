@@ -1,0 +1,23 @@
+.digits {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--vx-font-display);
+  font-variant-numeric: tabular-nums;
+}
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.colon {
+  color: var(--vx-on-surface-variant);
+}
+.box {
+  padding: var(--vx-space-3xs, 0.125rem) var(--vx-space-xs);
+  border-radius: var(--vx-radius-sm);
+  background: var(--vx-surface-container);
+  color: var(--vx-primary);
+  font-weight: 700;
+  font-size: var(--vx-text-headline-sm);
+}

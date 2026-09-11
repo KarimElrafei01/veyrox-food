@@ -37,7 +37,7 @@ export async function customerSessionController(
           });
       }
       try {
-        const result = await options.resolver.execute(session, new Date());
+        const result = await options.resolver.execute(session, new Date(), { allowClosed: true });
         return {
           tenant: {
             id: result.tenantId,
@@ -62,6 +62,9 @@ export async function customerSessionController(
           store: {
             isOpen: result.store.isOpen,
             closesAt: result.store.closesAt?.toISOString() ?? null,
+            opensAt: result.store.opensAt?.toISOString() ?? null,
+            today: result.store.today,
+            tomorrow: result.store.tomorrow,
           },
           ordering: result.ordering,
           links: {
