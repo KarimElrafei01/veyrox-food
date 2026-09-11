@@ -26,6 +26,12 @@ interface SessionState {
 
 interface SessionContextValue extends SessionState {
   resolve: (token: string) => Promise<void>;
+  /**
+   * Patches `session.openOrder` in place, without a network round-trip. Used to
+   * reflect an order just placed, or a status change seen while viewing it,
+   * immediately — a full re-resolve only happens at re-entry.
+   */
+  setOpenOrder: (openOrder: SessionResolveResponse['openOrder']) => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -94,7 +100,14 @@ export function SessionProvider({
     }
   }, []);
 
-  const value = useMemo<SessionContextValue>(() => ({ ...state, resolve }), [state, resolve]);
+  const setOpenOrder = useCallback((openOrder: SessionResolveResponse['openOrder']) => {
+    setState((s) => (s.session ? { ...s, session: { ...s.session, openOrder } } : s));
+  }, []);
+
+  const value = useMemo<SessionContextValue>(
+    () => ({ ...state, resolve, setOpenOrder }),
+    [state, resolve, setOpenOrder],
+  );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

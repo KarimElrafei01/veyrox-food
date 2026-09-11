@@ -90,6 +90,7 @@ export const arEG: Partial<Record<MessageKey, string>> = {
   'menu.empty': 'يجري تحديث المنيو. عاود المحاولة قريبًا.',
   'menu.viewCart': 'عرض السلة',
   'menu.closedBannerTitle': '{store} مغلق',
+  'menu.activeOrderTitle': 'طلب قيد التنفيذ',
 
   'item.sectionSize': 'الحجم',
   'item.sectionMilk': 'الحليب',

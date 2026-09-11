@@ -1,0 +1,41 @@
+/* Lives inside Screen's sticky header slot (not the scrolling body) — that is
+   what keeps it reachable no matter how far the customer scrolls the menu,
+   without fighting the header's own stickiness for the same screen real estate. */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-sm);
+  inline-size: calc(100% - 2 * var(--vx-gutter));
+  margin: 0 var(--vx-gutter) var(--vx-space-sm);
+  padding: var(--vx-space-sm) var(--vx-space-md);
+  border: none;
+  border-radius: var(--vx-radius-lg);
+  background: var(--vx-primary-container);
+  color: var(--vx-on-primary);
+  box-shadow: var(--vx-elevation-mid);
+  text-align: start;
+  cursor: pointer;
+  font-family: inherit;
+}
+.banner:active {
+  transform: scale(0.98);
+}
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-inline-size: 0;
+}
+.title {
+  font-size: var(--vx-text-label-md);
+  font-weight: 700;
+}
+.detail {
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-on-primary-container);
+}
