@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, it } from 'vitest';
 import { LocaleProvider, ThemeProvider } from '@veyroxai/ui';
 import { SessionProvider } from '../shared/session-context.js';
@@ -53,4 +53,40 @@ it('stays on the menu when there is no open order', async () => {
   await waitFor(() => {
     expect(window.location.pathname).toBe('/s/test-token');
   });
+});
+
+it('shows a reopen-session state instead of loading forever for a direct internal URL', () => {
+  window.history.pushState(null, '', '/pairings');
+
+  render(
+    <ThemeProvider>
+      <LocaleProvider>
+        <SessionProvider>
+          <App />
+        </SessionProvider>
+      </LocaleProvider>
+    </ThemeProvider>,
+  );
+
+  expect(screen.getByRole('heading')).toHaveTextContent('Your session expired');
+});
+
+it('keeps the direct internal-route recovery state RTL-safe', async () => {
+  localStorage.setItem('vx.locale', 'ar-EG');
+  window.history.pushState(null, '', '/pairings');
+
+  render(
+    <ThemeProvider>
+      <LocaleProvider>
+        <SessionProvider>
+          <App />
+        </SessionProvider>
+      </LocaleProvider>
+    </ThemeProvider>,
+  );
+
+  await waitFor(() => {
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
+  });
+  expect(screen.getByRole('heading')).toHaveTextContent('انتهت صلاحية الجلسة');
 });

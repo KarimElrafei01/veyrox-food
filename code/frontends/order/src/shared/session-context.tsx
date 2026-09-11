@@ -3,6 +3,10 @@ import type { SessionResolveResponse } from '@veyroxai/contracts';
 import { ApiError, NetworkError } from '@veyroxai/api-client';
 import { resolveSession } from '../features/session/usecases/resolveSession.js';
 import { setAuthToken } from './api.js';
+import {
+  clearStoredCustomerSessionToken,
+  storeCustomerSessionToken,
+} from './customer-session-token.js';
 
 export type SessionError =
   | { kind: 'store_closed'; opensAt: string | null }
@@ -76,9 +80,15 @@ export function SessionProvider({
     setState((s) => ({ ...s, status: 'loading', token, error: null }));
     try {
       const session = await resolveSession(token);
+      storeCustomerSessionToken(token);
       setState({ status: 'ready', token, session, error: null });
     } catch (err) {
-      setState({ status: 'error', token, session: null, error: classify(err) });
+      const error = classify(err);
+      if (error.kind === 'expired' || error.kind === 'invalid' || error.kind === 'disabled') {
+        clearStoredCustomerSessionToken();
+        setAuthToken(null);
+      }
+      setState({ status: 'error', token, session: null, error });
     } finally {
       inFlight.current = null;
     }

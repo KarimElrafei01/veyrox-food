@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useT } from '@veyroxai/ui';
 import { setApiLocale } from '../shared/api.js';
 import { useSession } from '../shared/session-context.js';
+import { readStoredCustomerSessionToken } from '../shared/customer-session-token.js';
 import { CartProvider } from '../shared/cart-store.js';
 import {
   GenericErrorScreen,
@@ -23,12 +24,19 @@ const Gallery = lazy(() => import('../dev/Gallery.js').then((m) => ({ default: m
 /** wa.me deep link back into WhatsApp for a fresh session. */
 const REOPEN_URL = 'https://wa.me/';
 
+function isCustomerRoute(routeName: ReturnType<typeof useRoute>['name']): boolean {
+  return ['menu', 'item', 'cart', 'crosssell', 'checkout', 'status'].includes(routeName);
+}
+
 export function App(): React.JSX.Element {
   const route = useRoute();
   const { status, error, session, resolve } = useSession();
   const { locale } = useT();
+  const entryToken = route.name === 'entry' ? route.params.token : null;
+  const restoredToken = isCustomerRoute(route.name) ? readStoredCustomerSessionToken() : null;
+  const sessionToken = entryToken ?? restoredToken;
 
-  const noToken = route.name === 'entry' && !route.params.token && status === 'idle';
+  const noToken = route.name === 'entry' && !entryToken && status === 'idle';
   const devSessions = useDevSessions(noToken);
 
   // Keep the API's Accept-Language aligned with the chosen locale.
@@ -36,12 +44,13 @@ export function App(): React.JSX.Element {
     setApiLocale(locale);
   }, [locale]);
 
-  // Resolve the session from the entry token.
+  // Internal routes omit the token from the URL, so restore the tab-scoped copy
+  // and have the API verify it again before rendering customer data.
   useEffect(() => {
-    if (route.name === 'entry' && route.params.token && status === 'idle') {
-      void resolve(route.params.token);
+    if (sessionToken && status === 'idle') {
+      void resolve(sessionToken);
     }
-  }, [route.name, route.params.token, status, resolve]);
+  }, [sessionToken, status, resolve]);
 
   // A re-entering customer with an order still in progress goes straight to its live
   // status (F1.6 — one order at a time), not the menu.
@@ -84,6 +93,12 @@ export function App(): React.JSX.Element {
       );
     }
     return <GenericErrorScreen onRetry={() => window.location.assign(REOPEN_URL)} />;
+  }
+
+  // A direct internal URL without a recoverable tab session must not spin
+  // indefinitely. It has the same customer action as an expired session.
+  if (status === 'idle' && !sessionToken) {
+    return <SessionExpiredScreen reopenUrl={REOPEN_URL} />;
   }
 
   if (status === 'idle' || status === 'loading') {
