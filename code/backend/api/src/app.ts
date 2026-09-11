@@ -57,6 +57,7 @@ export interface AppDeps {
     resolver: ResolveCustomerSession;
     keys: readonly [string, ...string[]];
     etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
     metrics: OrderPlacementMetricSink;
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
   };

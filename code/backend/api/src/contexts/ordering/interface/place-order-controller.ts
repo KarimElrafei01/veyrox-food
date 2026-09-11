@@ -27,6 +27,7 @@ import {
   OpenOrderLimit,
 } from '../infrastructure/order-placement-repository.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import { recordEtaRead, type EtaMetricSink } from '../application/eta-metrics.js';
 
 export async function placeOrderController(
   app: FastifyInstance,
@@ -35,6 +36,7 @@ export async function placeOrderController(
     resolver: ResolveCustomerSession;
     keys: readonly [string, ...string[]];
     etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
     metrics: OrderPlacementMetricSink;
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
   },
@@ -100,15 +102,14 @@ export async function placeOrderController(
         if (error instanceof PriceChanged) {
           options.metrics.increment('price_changed_total');
           const quote = tenantId
-            ? {
-                ...assembleQuoteBody(
-                  error.priced,
-                  await options.etaQueue.load(tenantId),
-                  tier,
-                  new Date(),
-                ),
-                traceId: request.id,
-              }
+            ? await (async () => {
+                const queue = await options.etaQueue.load(tenantId);
+                recordEtaRead(options.etaMetrics, queue.source, queue.state.tickets.length);
+                return {
+                  ...assembleQuoteBody(error.priced, queue, tier, new Date()),
+                  traceId: request.id,
+                };
+              })()
             : undefined;
           return reject('PRICE_CHANGED', 409, quote ? { quote } : undefined);
         }

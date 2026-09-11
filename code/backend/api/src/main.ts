@@ -20,6 +20,7 @@ import { PlaceOrder } from './contexts/ordering/application/place-order.js';
 import { OrderPlacementRepository } from './contexts/ordering/infrastructure/order-placement-repository.js';
 import { CustomerLocaleRepository } from './contexts/ordering/infrastructure/customer-locale-repository.js';
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
+import type { EtaMetricSink } from './contexts/ordering/application/eta-metrics.js';
 import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
 import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 
@@ -79,6 +80,12 @@ async function main(): Promise<void> {
       : undefined;
   const quoteOrder = new QuoteOrder(publishedMenus);
   const etaQueue = new EtaQueueRepository(database, redis);
+  // Shared by the quote and placement paths so a degraded (no-cache, or Postgres-down)
+  // ETA read is one signal regardless of which endpoint hit it.
+  const etaMetrics: EtaMetricSink = {
+    increment: (name) => log.info('eta metric increment', { name }),
+    gauge: (name, value) => log.info('eta metric gauge', { name, value }),
+  };
   const placementMetrics: OrderPlacementMetricSink = {
     increment: (name, labels) => log.info('order placement metric', { name, ...labels }),
     observe: (name, seconds) => log.info('order placement metric', { name, seconds }),
@@ -130,16 +137,19 @@ async function main(): Promise<void> {
       quote: quoteOrder,
       keys: sessionKeys,
       etaQueue,
-      etaMetrics: {
-        increment: (name) => log.info('eta metric increment', { name }),
-        gauge: (name, value) => log.info('eta metric gauge', { name, value }),
-      },
+      etaMetrics,
     },
     placeOrder: {
-      place: new PlaceOrder(quoteOrder, new OrderPlacementRepository(database), etaQueue),
+      place: new PlaceOrder(
+        quoteOrder,
+        new OrderPlacementRepository(database),
+        etaQueue,
+        etaMetrics,
+      ),
       resolver: new ResolveCustomerSession(new CustomerSessionRepository(database)),
       keys: sessionKeys,
       etaQueue,
+      etaMetrics,
       metrics: placementMetrics,
       emit: async (event) => {
         log.info('OrderPlaced', event);

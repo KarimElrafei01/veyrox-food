@@ -4,6 +4,7 @@ import { PlaceOrder, ItemUnavailable, MinimumOrderValue, PriceChanged } from './
 import type { QuoteOrder } from './quote-order.js';
 import type { OrderPlacementRepository } from '../infrastructure/order-placement-repository.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import type { EtaMetricSink } from './eta-metrics.js';
 
 const ITEM = '11111111-1111-4111-8111-111111111111';
 
@@ -35,6 +36,7 @@ function subject(options: {
   quote?: () => Promise<ReturnType<typeof pricedCart>>;
   findReplay?: OrderPlacementRepository['findReplay'];
   place?: OrderPlacementRepository['place'];
+  etaSource?: 'redis' | 'postgres' | 'degraded';
 }) {
   const quote = {
     execute: vi.fn(options.quote ?? (async () => pricedCart())),
@@ -44,9 +46,10 @@ function subject(options: {
   const etaQueue = {
     load: vi.fn(async () => ({
       state: { activeStations: 1, tickets: [], updatedAt: '2026-09-07T00:00:00.000Z' },
-      source: 'postgres' as const,
+      source: options.etaSource ?? ('postgres' as const),
     })),
   } as unknown as EtaQueueRepository;
+  const etaMetrics = { increment: vi.fn(), gauge: vi.fn() } as unknown as EtaMetricSink;
   const place =
     options.place ??
     vi.fn(async () => ({
@@ -65,9 +68,10 @@ function subject(options: {
     place,
   } as unknown as OrderPlacementRepository;
   return {
-    useCase: new PlaceOrder(quote, orders, etaQueue),
+    useCase: new PlaceOrder(quote, orders, etaQueue, etaMetrics),
     place,
     findReplay: orders.findReplay,
+    etaMetrics,
   };
 }
 
@@ -158,6 +162,18 @@ describe('PlaceOrder', () => {
       promisedLowerAt: null,
       promisedUpperAt: null,
     });
+  });
+
+  it("still returns a pessimistic estimate — and flags it — when the queue can't be read", async () => {
+    // A café with no queue signal (Redis and Postgres both unavailable) is the
+    // literal "no eta" case: rather than omit the field, F1.4 §Failure mode widens
+    // the range ×1.5 and counts it, so a customer never sees a blank promise.
+    const { useCase, place, etaMetrics } = subject({ etaSource: 'degraded' });
+    await useCase.execute(input);
+    const call = (place as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+    expect(call.responseSeed.eta.lowerMinutes).toBeGreaterThan(0);
+    expect(call.responseSeed.eta.upperMinutes).toBeGreaterThan(call.responseSeed.eta.lowerMinutes);
+    expect(etaMetrics.increment).toHaveBeenCalledWith('eta_fallback_total');
   });
 
   it('does not accrue loyalty — placement writes no loyalty fact', async () => {

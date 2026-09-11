@@ -7,6 +7,7 @@ import type {
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import type { QuoteOrder } from './quote-order.js';
 import type { PricedForQuote } from '../interface/quote-body.js';
+import { recordEtaRead, type EtaMetricSink } from './eta-metrics.js';
 
 export class ItemUnavailable extends Error {
   constructor(readonly unavailable: readonly { menuItemId: string; modifierOptionId?: string }[]) {
@@ -35,6 +36,7 @@ export class PlaceOrder {
     private readonly quote: QuoteOrder,
     private readonly orders: OrderPlacementRepository,
     private readonly etaQueue: EtaQueueRepository,
+    private readonly etaMetrics: EtaMetricSink,
   ) {}
 
   async execute(input: {
@@ -73,6 +75,10 @@ export class PlaceOrder {
     // wall-clock promise waits for a barista to accept. Same queue snapshot the
     // quote endpoint uses, so a customer never sees quote and placement disagree.
     const queue = await this.etaQueue.load(input.tenantId);
+    // Same signal the quote endpoint emits (F1.4 §Failure mode) — a degraded read
+    // here means this café got the pessimistic ×1.5 fallback on its *placement*
+    // promise, not just its quote, which is worth paging on if it persists.
+    recordEtaRead(this.etaMetrics, queue.source, queue.state.tickets.length);
     const estimate = estimateEta(
       priced.etaItems,
       queue.state.tickets,
