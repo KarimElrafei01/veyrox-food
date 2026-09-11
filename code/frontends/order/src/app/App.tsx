@@ -107,6 +107,11 @@ export function App(): React.JSX.Element {
   }
 
   if (status === 'ready' && session) {
+    // The redirect effect above hasn't committed the route change yet — render the
+    // loading state for this one tick rather than flashing the menu first.
+    if (route.name === 'entry' && session.openOrder) {
+      return <LoadingScreen />;
+    }
     return (
       <CartProvider menuVersion={session.session.menuVersion}>
         <LocaleSync sessionLocale={session.session.locale} />

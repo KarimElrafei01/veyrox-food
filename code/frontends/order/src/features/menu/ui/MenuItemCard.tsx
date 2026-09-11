@@ -1,15 +1,11 @@
 import { Badge, Button, Icon, Price, Stepper, useT } from '@veyroxai/ui';
 import type { Locale } from '@veyroxai/i18n';
+import { menuImageSource } from '../../../shared/menu-image.js';
 import type { ResolvedItem } from '../../../shared/menu-model.js';
 import styles from './MenuItemCard.module.css';
 
 function localized(map: { en: string; 'ar-EG'?: string }, locale: Locale): string {
   return (locale === 'ar-EG' && map['ar-EG']) || map.en;
-}
-
-function imageSource(imageUrl: string): string {
-  if (/^https?:\/\//.test(imageUrl)) return imageUrl;
-  return new URL(imageUrl, import.meta.env.VITE_API_BASE_URL ?? window.location.origin).toString();
 }
 
 interface MenuItemCardProps {
@@ -48,7 +44,7 @@ export function MenuItemCard({
       >
         <span className={styles.thumb}>
           {item.imageUrl ? (
-            <img src={imageSource(item.imageUrl)} alt="" loading="lazy" />
+            <img src={menuImageSource(item.imageUrl)} alt="" loading="lazy" />
           ) : (
             <Icon name="local-cafe" size={24} />
           )}

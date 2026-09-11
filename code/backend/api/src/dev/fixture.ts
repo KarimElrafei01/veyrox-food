@@ -374,12 +374,12 @@ async function main() {
     const bronze = await ensureCustomer(db, t, 'bronze', 'bronze', 120);
     const suspended = await ensureCustomer(db, t, 'suspended', 'bronze', 0);
 
-    // Only ONE customer has an order in progress (gold, below). Everyone else's
-    // history is terminal, so a re-entering fresh/bronze customer lands on the menu.
+    // Only ONE customer has an order in progress (gold, below) — everyone else's
+    // openOrder is null, so a re-entering fresh/bronze customer lands on the menu.
     await ensureOrder(db, t, bronze.id, 'A-101', 'collected', { collectedAt: now });
-    // gold has an accepted order still in progress -> re-entry redirects to its live
-    // status, and a new placement returns OPEN_ORDER_LIMIT.
-    await ensureOrder(db, t, gold.id, 'A-102', 'received', {
+    // gold's order is in the kitchen -> re-entry redirects to its live status, and a
+    // new placement returns OPEN_ORDER_LIMIT.
+    await ensureOrder(db, t, gold.id, 'A-102', 'preparing', {
       acceptedAt: now,
       promisedEtaLowerAt: new Date(now.getTime() + 8 * 60_000),
       promisedEtaUpperAt: new Date(now.getTime() + 12 * 60_000),

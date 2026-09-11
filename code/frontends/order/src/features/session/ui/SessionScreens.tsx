@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   EmptyState,
+  Icon,
   Screen,
   Spinner,
   Stack,
@@ -128,14 +129,29 @@ export function StoreClosedScreen({
   const opensMs = opensAt ? new Date(opensAt).getTime() : null;
 
   return (
-    <CenteredScreen>
-      <Stack gap="md">
-        <EmptyState
-          icon="wb-twilight"
-          title={t('store.closedTitle', { store: storeName })}
-          titleSecondary={otherLang(locale, 'store.closedTitle', { store: storeName })}
-          body={t('store.closedSubtitle')}
-        />
+    <Screen>
+      <div className={styles.terminal}>
+        <section className={styles.closedHero}>
+          <span className={styles.modePill}>
+            <Icon name="wb-twilight" size={16} />
+            {t('store.closedSubtitle')}
+          </span>
+          <span className={styles.storeArt} data-placeholder="store-closed-art" aria-hidden="true">
+            <Icon name="local-cafe" size={38} />
+          </span>
+          <h1 className={styles.terminalTitle}>{t('store.closedTitle', { store: storeName })}</h1>
+          <p className={styles.terminalSecondary}>
+            {otherLang(locale, 'store.closedTitle', { store: storeName })}
+          </p>
+          <Card tone="raised" pad="md">
+            <div className={styles.noticeRow}>
+              <span className={styles.noticeIcon}>
+                <Icon name="wb-twilight" size={20} />
+              </span>
+              <span>{t('store.closedSubtitle')}</span>
+            </div>
+          </Card>
+        </section>
         {opensAt ? (
           <Card tone="raised" pad="md">
             <div className={styles.countdownRow}>
@@ -152,6 +168,23 @@ export function StoreClosedScreen({
             </p>
           </Card>
         ) : null}
+        <Card tone="raised" pad="md">
+          <div className={styles.detailsHead}>
+            <Icon name="schedule" size={20} />
+            <span>{t('store.opensIn')}</span>
+          </div>
+          <span
+            className={styles.placeholderLine}
+            data-placeholder="branch-hours"
+            aria-label="Branch hours unavailable"
+          />
+          <span
+            className={styles.placeholderLine}
+            data-placeholder="branch-location"
+            aria-label="Branch location unavailable"
+          />
+        </Card>
+        <Alert tone="info">{t('store.browseOnly')}</Alert>
         {onBrowse ? (
           <Button
             variant="espresso"
@@ -163,8 +196,8 @@ export function StoreClosedScreen({
             {t('store.browseOnly')}
           </Button>
         ) : null}
-      </Stack>
-    </CenteredScreen>
+      </div>
+    </Screen>
   );
 }
 
@@ -177,19 +210,41 @@ export function OpenOrderBlockScreen({
 }): React.JSX.Element {
   const { t, locale } = useT();
   return (
-    <CenteredScreen>
-      <Stack gap="md">
-        <EmptyState
-          icon="shopping-bag"
-          title={t('openOrder.title')}
-          titleSecondary={otherLang(locale, 'openOrder.title')}
-          body={t('openOrder.body', { number: orderNumber })}
-        />
+    <Screen>
+      <div className={styles.terminal}>
+        <section className={styles.openHero}>
+          <span className={styles.orderIcon}>
+            <Icon name="shopping-bag" size={30} />
+          </span>
+          <h1 className={styles.terminalTitle}>{t('openOrder.title')}</h1>
+          <p className={styles.terminalSecondary}>{otherLang(locale, 'openOrder.title')}</p>
+        </section>
         <Alert tone="info">{t('openOrder.freshBrew')}</Alert>
-        <Button fullWidth size="lg" iconEnd="arrow-forward" onClick={onView}>
+        <Card tone="raised" pad="lg">
+          <div className={styles.ticketHead}>
+            <div>
+              <span className={styles.ticketLabel}>{t('status.pickupCode')}</span>
+              <strong className={styles.ticketNumber}>{orderNumber}</strong>
+            </div>
+            <span
+              className={styles.placeholderChip}
+              data-placeholder="branch"
+              aria-label="Branch unavailable"
+            />
+          </div>
+          <div
+            className={styles.ticketPlaceholder}
+            data-placeholder="open-order-summary"
+            aria-label="Order summary unavailable"
+          />
+        </Card>
+        <Card tone="flat" pad="md">
+          <p className={styles.terminalBody}>{t('openOrder.body', { number: orderNumber })}</p>
+        </Card>
+        <Button variant="primary" fullWidth size="lg" iconEnd="arrow-forward" onClick={onView}>
           {t('openOrder.view', { number: orderNumber })}
         </Button>
-      </Stack>
-    </CenteredScreen>
+      </div>
+    </Screen>
   );
 }

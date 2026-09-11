@@ -2,6 +2,7 @@ import { Badge, Button, Card, Icon, Price, Screen, Stack, StickyBar, useT } from
 import type { Locale } from '@veyroxai/i18n';
 import type { MenuItem } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
+import { menuImageSource } from '../../../shared/menu-image.js';
 import styles from './CrossSellScreen.module.css';
 
 /**
@@ -84,7 +85,7 @@ export function CrossSellScreen({
               <div className={styles.pair}>
                 <span className={styles.thumb}>
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt="" loading="lazy" />
+                    <img src={menuImageSource(item.imageUrl)} alt="" loading="lazy" />
                   ) : (
                     <Icon name="restaurant-menu" size={22} />
                   )}

@@ -1,6 +1,7 @@
 import { Button, Icon, Price, useT } from '@veyroxai/ui';
 import type { Locale } from '@veyroxai/i18n';
 import type { MenuItem } from '@veyroxai/contracts';
+import { menuImageSource } from '../../../shared/menu-image.js';
 import styles from './UpsellCard.module.css';
 
 /**
@@ -26,7 +27,7 @@ export function UpsellCard({
     <aside className={styles.panel} aria-label={t('cart.freshPairing')}>
       <span className={styles.thumb}>
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt="" loading="lazy" />
+          <img src={menuImageSource(item.imageUrl)} alt="" loading="lazy" />
         ) : (
           <Icon name="restaurant-menu" size={22} />
         )}
