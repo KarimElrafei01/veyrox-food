@@ -6,6 +6,7 @@ import { PriceChanged } from '../application/place-order.js';
 import { OpenOrderLimit } from '../infrastructure/order-placement-repository.js';
 import type { ResolveCustomerSession } from '../application/resolve-customer-session.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import type { EtaMetricSink } from '../application/eta-metrics.js';
 
 const KEY = 'test-session-key';
 const IDEMPOTENCY = '0192d425-9790-7dd9-8aa9-8cbd4c3844db';
@@ -59,6 +60,7 @@ function harness(placeImpl: PlaceOrder['execute'], emit = vi.fn(async () => {}))
     })),
   } as unknown as EtaQueueRepository;
   const metrics = { increment: vi.fn(), observe: vi.fn() };
+  const etaMetrics = { increment: vi.fn(), gauge: vi.fn() } as unknown as EtaMetricSink;
   return buildApp({
     pingPostgres: async () => true,
     pingRedis: async () => true,
@@ -67,8 +69,8 @@ function harness(placeImpl: PlaceOrder['execute'], emit = vi.fn(async () => {}))
       events: { insertIfAbsent: async () => false },
       queue: { enqueue: async () => {} },
     },
-    placeOrder: { place, resolver, keys: [KEY], etaQueue, metrics, emit },
-  }).then((app) => ({ app, place, emit, metrics }));
+    placeOrder: { place, resolver, keys: [KEY], etaQueue, etaMetrics, metrics, emit },
+  }).then((app) => ({ app, place, emit, metrics, etaMetrics }));
 }
 
 const payload = JSON.stringify({

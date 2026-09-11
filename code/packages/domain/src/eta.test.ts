@@ -19,7 +19,7 @@ describe('estimateEta', () => {
       0,
       now,
     );
-    expect(eta).toEqual({ lowerMinutes: 5, upperMinutes: 5, queueDepth: 1 });
+    expect(eta).toEqual({ lowerMinutes: 5, upperMinutes: 10, queueDepth: 1 });
   });
 
   it('does not make Gold wait behind lower-tier tickets', () => {
@@ -30,7 +30,14 @@ describe('estimateEta', () => {
       1,
       now,
     );
-    expect(eta).toEqual({ lowerMinutes: 5, upperMinutes: 5, queueDepth: 0 });
+    expect(eta).toEqual({ lowerMinutes: 5, upperMinutes: 10, queueDepth: 0 });
+  });
+
+  it('never collapses the range to a repeated number for short prep times (F1.4 §1)', () => {
+    for (let prepSeconds = 1; prepSeconds <= 300; prepSeconds += 1) {
+      const eta = estimateEta([{ prepSeconds }], [], null, 1, now);
+      expect(eta.upperMinutes).toBeGreaterThan(eta.lowerMinutes);
+    }
   });
 
   it('caps large-cart preparation at fifteen minutes', () => {
