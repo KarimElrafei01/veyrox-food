@@ -28,6 +28,7 @@ import styles from './Gallery.module.css';
 const SCREENS = [
   'menu',
   'menu-closed',
+  'menu-active-order',
   'item',
   'cart',
   'checkout',
@@ -203,6 +204,7 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
         />
       );
     case 'menu':
+    case 'menu-active-order':
       return (
         <SeedCart>
           {() => (
@@ -215,6 +217,7 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
               onQuickAdd={noop}
               onStepItem={noop}
               onViewCart={noop}
+              onViewActiveOrder={screen === 'menu-active-order' ? noop : undefined}
             />
           )}
         </SeedCart>
@@ -239,9 +242,15 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
 export function Gallery(): React.JSX.Element {
   const [screen, setScreen] = useState<ScreenKey>('menu');
   const closed = screen === 'menu-closed';
-  const session = closed
-    ? { ...sessionFixture, store: { ...sessionFixture.store, isOpen: false } }
-    : sessionFixture;
+  const session =
+    screen === 'menu-active-order'
+      ? {
+          ...sessionFixture,
+          openOrder: { orderId: 'order-1', orderNumber: 'A-27', status: 'preparing' as const },
+        }
+      : closed
+        ? { ...sessionFixture, store: { ...sessionFixture.store, isOpen: false } }
+        : sessionFixture;
 
   return (
     <ThemeProvider>

@@ -81,6 +81,19 @@ export function DevLoginScreen({
               ))}
             </Stack>
           </Card>
+
+          <Card tone="flat" pad="md">
+            <Stack gap="sm">
+              <strong>Preview a loyalty moment</strong>
+              <Button
+                variant="ghost"
+                fullWidth
+                onClick={() => window.location.assign('/dev/tier-up')}
+              >
+                Tier-up celebration
+              </Button>
+            </Stack>
+          </Card>
         </Stack>
       </div>
     </Screen>

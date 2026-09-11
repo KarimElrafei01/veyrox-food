@@ -18,6 +18,7 @@ import { useCart } from '../../../shared/cart-store.js';
 import type { ResolvedMenu } from '../../../shared/menu-model.js';
 import { MenuItemCard } from './MenuItemCard.js';
 import { ClosedBanner } from '../components/ClosedBanner.js';
+import { ActiveOrderBanner } from '../components/ActiveOrderBanner.js';
 import styles from './MenuScreen.module.css';
 
 interface MenuScreenProps {
@@ -29,6 +30,8 @@ interface MenuScreenProps {
   onQuickAdd: (itemId: string) => void;
   onStepItem: (itemId: string, qty: number) => void;
   onViewCart: () => void;
+  /** Present only while the customer has an order still in progress (FR-2.23). */
+  onViewActiveOrder?: () => void;
 }
 
 function localized(map: { en: string; 'ar-EG'?: string }, locale: Locale): string {
@@ -44,6 +47,7 @@ export function MenuScreen({
   onQuickAdd,
   onStepItem,
   onViewCart,
+  onViewActiveOrder,
 }: MenuScreenProps): React.JSX.Element {
   const { t } = useT();
   const session = useReadySession();
@@ -66,7 +70,18 @@ export function MenuScreen({
 
   return (
     <Screen
-      header={<WebviewHeader title={t('menu.heading')} subtitle={t('menu.subheading')} />}
+      header={
+        <>
+          <WebviewHeader title={t('menu.heading')} subtitle={t('menu.subheading')} />
+          {session.openOrder && onViewActiveOrder ? (
+            <ActiveOrderBanner
+              orderNumber={session.openOrder.orderNumber}
+              status={session.openOrder.status}
+              onClick={onViewActiveOrder}
+            />
+          ) : null}
+        </>
+      }
       footer={
         cart.count > 0 ? (
           <StickyBar>

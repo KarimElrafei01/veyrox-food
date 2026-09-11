@@ -6,12 +6,14 @@ import { CartProvider } from '../../../shared/cart-store.js';
 import { menuFixture, sessionFixture } from '../../../dev/fixtures.js';
 import { MenuScreen } from './MenuScreen.js';
 
-function renderMenu(locale: 'en' | 'ar-EG') {
+function renderMenu(
+  locale: 'en' | 'ar-EG',
+  options: { onViewActiveOrder?: () => void; openOrder?: typeof sessionFixture.openOrder } = {},
+) {
+  const session = { ...sessionFixture, openOrder: options.openOrder ?? sessionFixture.openOrder };
   return render(
     <LocaleProvider initialLocale={locale}>
-      <SessionProvider
-        initialState={{ status: 'ready', token: 'x', session: sessionFixture, error: null }}
-      >
+      <SessionProvider initialState={{ status: 'ready', token: 'x', session, error: null }}>
         <CartProvider menuVersion={sessionFixture.session.menuVersion}>
           <MenuScreen
             menu={menuFixture}
@@ -22,6 +24,7 @@ function renderMenu(locale: 'en' | 'ar-EG') {
             onQuickAdd={vi.fn()}
             onStepItem={vi.fn()}
             onViewCart={vi.fn()}
+            onViewActiveOrder={options.onViewActiveOrder}
           />
         </CartProvider>
       </SessionProvider>
@@ -47,5 +50,24 @@ describe('MenuScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cold brew' }));
     expect(screen.queryByText('Cardamom Baladi Latte')).not.toBeInTheDocument();
     expect(screen.getByText('Cold Brew Hibiscus')).toBeInTheDocument();
+  });
+
+  it('shows no active-order banner without an open order', () => {
+    renderMenu('en', { onViewActiveOrder: vi.fn(), openOrder: null });
+    expect(screen.queryByText('Order in progress')).not.toBeInTheDocument();
+  });
+
+  it('surfaces an active order via a banner that navigates back to its status', () => {
+    const onViewActiveOrder = vi.fn();
+    renderMenu('en', {
+      onViewActiveOrder,
+      openOrder: { orderId: 'order-1', orderNumber: 'A-27', status: 'preparing' },
+    });
+    const banner = screen.getByRole('button', { name: /order in progress/i });
+    expect(banner).toHaveTextContent('#A-27');
+    expect(banner).toHaveTextContent('Preparing');
+
+    fireEvent.click(banner);
+    expect(onViewActiveOrder).toHaveBeenCalledOnce();
   });
 });

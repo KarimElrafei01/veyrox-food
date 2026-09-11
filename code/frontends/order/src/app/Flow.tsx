@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useT } from '@veyroxai/ui';
-import type { MenuModifierGroup, QuotedLine } from '@veyroxai/contracts';
+import type { MenuModifierGroup, QuotedLine, SessionResolveResponse } from '@veyroxai/contracts';
 import { useSession } from '../shared/session-context.js';
 import { useCart, simpleCartLine, type CartLine } from '../shared/cart-store.js';
 import { useCrossSell, markCrossSellSeen } from '../features/cross-sell/hooks/useCrossSell.js';
@@ -25,10 +25,20 @@ import {
   readPlacedOrderSnapshot,
 } from '../shared/placed-order-snapshot.js';
 
+type OpenOrderStatus = NonNullable<SessionResolveResponse['openOrder']>['status'];
+// The subset of order statuses the server still counts against FR-2.23's open-order
+// cap — everything past `ready` (collected/rejected/voided/abandoned) is not "open".
+const OPEN_ORDER_STATUSES: readonly OpenOrderStatus[] = [
+  'placed',
+  'received',
+  'preparing',
+  'ready',
+];
+
 export function Flow(): React.JSX.Element {
   const route = useRoute();
   const { locale } = useT();
-  const { session: maybeSession, token, resolve } = useSession();
+  const { session: maybeSession, token, resolve, setOpenOrder } = useSession();
   const session = maybeSession!; // Flow only renders when the session is ready
   const cart = useCart();
   const menu = useMenu(session.links);
@@ -65,11 +75,19 @@ export function Flow(): React.JSX.Element {
   // Placement outcomes that change the route.
   useEffect(() => {
     if (place.outcome?.kind === 'placed') {
-      route.navigate(`/o/${place.outcome.order.orderId}`, { replace: true });
+      const { order } = place.outcome;
+      // Seeds the menu's active-order banner immediately, without waiting for a
+      // status fetch or a full session re-resolve.
+      setOpenOrder({
+        orderId: order.orderId,
+        orderNumber: order.orderNumber,
+        status: order.status,
+      });
+      route.navigate(`/o/${order.orderId}`, { replace: true });
     } else if (place.outcome?.kind === 'needs_review') {
       route.navigate('/cart', { replace: true });
     }
-  }, [place.outcome, route]);
+  }, [place.outcome, route, setOpenOrder]);
 
   const groupsFor: Map<string, MenuModifierGroup> = menu.menu?.groupsById ?? new Map();
 
@@ -297,6 +315,9 @@ export function Flow(): React.JSX.Element {
       onQuickAdd={quickAdd}
       onStepItem={stepItem}
       onViewCart={() => route.navigate('/cart')}
+      onViewActiveOrder={
+        session.openOrder ? () => route.navigate(`/o/${session.openOrder!.orderId}`) : undefined
+      }
     />
   );
 }
@@ -314,7 +335,29 @@ function StatusRoute({
 }): React.JSX.Element {
   const { locale } = useT();
   const route = useRoute();
+  const { setOpenOrder } = useSession();
   const status = useOrderStatus(orderId);
+
+  // Keeps the menu's active-order banner truthful as the order progresses (or
+  // stops being "open" — collected/rejected/voided/abandoned clear it) without
+  // waiting for the customer to re-enter and get a fresh session resolve.
+  useEffect(() => {
+    if (status.status !== 'ready') {
+      return;
+    }
+    const { order } = status;
+    const isOpen = (OPEN_ORDER_STATUSES as readonly string[]).includes(order.status);
+    setOpenOrder(
+      isOpen
+        ? {
+            orderId: order.orderId,
+            orderNumber: order.orderNumber,
+            status: order.status as OpenOrderStatus,
+          }
+        : null,
+    );
+  }, [status, setOpenOrder]);
+
   return (
     <>
       <OrderStatusScreen

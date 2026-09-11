@@ -92,6 +92,7 @@ export const en = {
   'menu.empty': 'The menu is being updated. Check back shortly.',
   'menu.viewCart': 'View cart',
   'menu.closedBannerTitle': '{store} is closed',
+  'menu.activeOrderTitle': 'Order in progress',
 
   'item.sectionSize': 'Size',
   'item.sectionMilk': 'Milk',
