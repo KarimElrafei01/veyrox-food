@@ -79,6 +79,11 @@ export const sessionResolveResponse = z.object({
     isOpen: z.boolean(),
     closesAt: z.string().datetime({ offset: true }).nullable(),
     opensAt: z.string().datetime({ offset: true }).nullable().optional(),
+    // The weekly-schedule row for today/tomorrow (F1.1 browse-only mode's "Hours &
+    // Location" card). Optional: older backends don't send it, and a café with no
+    // row for that weekday (closed all day) sends `null`, not a missing key.
+    today: z.object({ opens: z.string(), closes: z.string() }).nullable().optional(),
+    tomorrow: z.object({ opens: z.string(), closes: z.string() }).nullable().optional(),
   }),
   ordering: z.object({
     enabled: z.boolean(),
@@ -88,10 +93,12 @@ export const sessionResolveResponse = z.object({
   }),
   links: z.object({ menu: z.string(), availability: z.string() }),
   /**
-   * The customer's order still in progress, if any. One at a time (F1.6). The webview
-   * sends a re-entering customer straight to its live status instead of the menu.
-   * Optional: frontend and backend deploy independently here, so a backend that
-   * predates this field must not break session resolution — absent reads as `null`.
+   * The customer's order still in progress, if any. One at a time (F1.6). On
+   * re-entry (app/browser closed and reopened) the webview shows a block screen
+   * naming this order rather than the menu; the customer taps through to its live
+   * status. Optional: frontend and backend deploy independently here, so a backend
+   * that predates this field must not break session resolution — absent reads as
+   * `null`.
    */
   openOrder: z
     .object({

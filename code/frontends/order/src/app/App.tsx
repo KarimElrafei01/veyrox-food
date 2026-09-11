@@ -7,6 +7,7 @@ import { CartProvider } from '../shared/cart-store.js';
 import {
   GenericErrorScreen,
   LoadingScreen,
+  OpenOrderBlockScreen,
   OrderingSuspendedScreen,
   SessionExpiredScreen,
   StoreClosedScreen,
@@ -51,14 +52,6 @@ export function App(): React.JSX.Element {
       void resolve(sessionToken);
     }
   }, [sessionToken, status, resolve]);
-
-  // A re-entering customer with an order still in progress goes straight to its live
-  // status (F1.6 — one order at a time), not the menu.
-  useEffect(() => {
-    if (status === 'ready' && route.name === 'entry' && session?.openOrder) {
-      route.navigate(`/o/${session.openOrder.orderId}`, { replace: true });
-    }
-  }, [status, route, session]);
 
   if (route.name === 'dev' && import.meta.env.DEV) {
     return (
@@ -122,10 +115,17 @@ export function App(): React.JSX.Element {
   }
 
   if (status === 'ready' && session) {
-    // The redirect effect above hasn't committed the route change yet — render the
-    // loading state for this one tick rather than flashing the menu first.
+    // A re-entering customer (app/browser closed and reopened) with an order still
+    // in progress sees the block screen first, not the menu or the live status
+    // directly — they choose to view it, rather than being dropped onto it.
     if (route.name === 'entry' && session.openOrder) {
-      return <LoadingScreen />;
+      const openOrder = session.openOrder;
+      return (
+        <OpenOrderBlockScreen
+          orderNumber={openOrder.orderNumber}
+          onView={() => route.navigate(`/o/${openOrder.orderId}`, { replace: true })}
+        />
+      );
     }
     return (
       <CartProvider menuVersion={session.session.menuVersion}>

@@ -9,7 +9,7 @@ beforeEach(() => {
   window.history.pushState(null, '', '/s/test-token');
 });
 
-it('redirects a re-entering customer with an open order to its live status, without flashing the menu', async () => {
+it('blocks a re-entering customer with an open order instead of flashing the menu', async () => {
   const session = {
     ...sessionFixture,
     openOrder: { orderId: 'order-1', orderNumber: 'A-1', status: 'preparing' as const },
@@ -26,6 +26,13 @@ it('redirects a re-entering customer with an open order to its live status, with
       </LocaleProvider>
     </ThemeProvider>,
   );
+
+  await waitFor(() => {
+    expect(screen.getByText('A-1')).toBeInTheDocument();
+  });
+  expect(window.location.pathname).toBe('/s/test-token');
+
+  screen.getByRole('button', { name: /view/i }).click();
 
   await waitFor(() => {
     expect(window.location.pathname).toBe('/o/order-1');
