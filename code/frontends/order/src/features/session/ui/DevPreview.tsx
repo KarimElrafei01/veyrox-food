@@ -21,7 +21,11 @@ export function DevPreview({
         <StoreClosedScreen
           storeName="Brew & Baladi"
           opensAt={new Date(Date.now() + 2.5 * 3_600_000).toISOString()}
-          timezone="Africa/Cairo"
+          today={null}
+          tomorrow={{ opens: '08:00', closes: '23:00' }}
+          tier="silver"
+          pointsBalance={320}
+          whatsappUrl="https://wa.me/"
           onBrowse={onBack}
         />
       );
@@ -30,7 +34,14 @@ export function DevPreview({
     case 'expired':
       return <SessionExpiredScreen reopenUrl="https://wa.me/" />;
     case 'open-order':
-      return <OpenOrderBlockScreen orderNumber="A-27" onView={onBack} />;
+      return (
+        <OpenOrderBlockScreen
+          orderNumber="A-27"
+          order={null}
+          whatsappUrl="https://wa.me/"
+          onView={onBack}
+        />
+      );
     default:
       return <OrderingSuspendedScreen />;
   }

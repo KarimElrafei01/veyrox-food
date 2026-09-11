@@ -28,7 +28,7 @@ it('blocks a re-entering customer with an open order instead of flashing the men
   );
 
   await waitFor(() => {
-    expect(screen.getByText('A-1')).toBeInTheDocument();
+    expect(screen.getByText('#A-1')).toBeInTheDocument();
   });
   expect(window.location.pathname).toBe('/s/test-token');
 

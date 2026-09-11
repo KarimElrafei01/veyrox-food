@@ -70,6 +70,41 @@ describe('sessionResolveResponse', () => {
     });
     expect(parsed.openOrder).toBeUndefined();
   });
+
+  it('parses the browse-only shape — closed, with a schedule and no wall-clock promise', () => {
+    const parsed = sessionResolveResponse.parse({
+      tenant: {
+        id: TENANT,
+        name: 'Brew & Baladi',
+        defaultLocale: 'en',
+        supportedLocales: ['en', 'ar-EG'],
+        currency: 'EGP',
+        timezone: 'Africa/Cairo',
+      },
+      session: { menuVersion: MENU_V, expiresAt: '2026-09-06T15:45:00+03:00', locale: 'en' },
+      customer: {
+        displayName: 'Karim',
+        tier: 'silver',
+        pointsBalance: 312,
+        pointsToNextTier: 189,
+        perks: ['free_alt_milk'],
+      },
+      store: {
+        isOpen: false,
+        closesAt: null,
+        opensAt: '2026-09-07T07:00:00+03:00',
+        today: null,
+        tomorrow: { opens: '08:00', closes: '23:00' },
+      },
+      ordering: { enabled: true, askTableNumber: false, minOrderValueMinor: 0, payAt: 'counter' },
+      links: { menu: '/public/menu/8a2e', availability: '/public/availability' },
+      openOrder: null,
+      traceId: '0af7651916cd43dd',
+    });
+    expect(parsed.store.isOpen).toBe(false);
+    expect(parsed.store.today).toBeNull();
+    expect(parsed.store.tomorrow).toEqual({ opens: '08:00', closes: '23:00' });
+  });
 });
 
 describe('menuResponse + availabilityResponse', () => {

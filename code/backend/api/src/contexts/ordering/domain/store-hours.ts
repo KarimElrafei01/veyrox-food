@@ -30,6 +30,41 @@ function minutes(value: string): number {
   return (hour ?? 0) * 60 + (minute ?? 0);
 }
 
+function tenantLocalWeekday(now: Date, timezone: string): number {
+  const weekdayName = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+  }).format(now);
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekdayName);
+}
+
+/** The tenant-local weekday row for `now`, if any — a café closed that day has none. */
+function hoursForWeekday(hours: readonly StoreHour[], weekday: number): StoreHour | null {
+  return hours.find((hour) => hour.weekday === weekday) ?? null;
+}
+
+/**
+ * Today's and tomorrow's schedule rows, for the "Hours & Location" summary
+ * (F1.1 browse-only mode) — `null` on a day the café carries no row for at all
+ * (closed all day), distinct from a row that just isn't in effect right now.
+ */
+export function todayAndTomorrowHours(
+  hours: readonly StoreHour[],
+  now: Date,
+  timezone: string,
+): {
+  today: { opens: string; closes: string } | null;
+  tomorrow: { opens: string; closes: string } | null;
+} {
+  const weekday = tenantLocalWeekday(now, timezone);
+  const today = hoursForWeekday(hours, weekday);
+  const tomorrow = hoursForWeekday(hours, (weekday + 1) % 7);
+  return {
+    today: today ? { opens: today.opens, closes: today.closes } : null,
+    tomorrow: tomorrow ? { opens: tomorrow.opens, closes: tomorrow.closes } : null,
+  };
+}
+
 /** Evaluates the café-local schedule; closed time must gate placement as well as entry. */
 export function isStoreOpen(
   hours: readonly StoreHour[],

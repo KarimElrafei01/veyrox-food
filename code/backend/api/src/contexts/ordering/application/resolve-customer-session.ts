@@ -1,7 +1,7 @@
 import { SessionInvalid } from '../../identity/domain/index.js';
 import type { CustomerSession } from '../../identity/domain/index.js';
 import type { CustomerSessionRepository } from '../infrastructure/customer-session-repository.js';
-import { isStoreOpen, nextStoreOpening } from '../domain/store-hours.js';
+import { isStoreOpen, nextStoreOpening, todayAndTomorrowHours } from '../domain/store-hours.js';
 import { perksForTier, pointsToNextTier, type LoyaltyTier } from '@veyroxai/domain';
 
 export class StoreClosed extends Error {
@@ -31,6 +31,7 @@ export class ResolveCustomerSession {
   async execute(
     session: CustomerSession,
     now: Date,
+    options: { allowClosed?: boolean } = {},
   ): Promise<{
     tenantId: string;
     tenantName: string;
@@ -50,7 +51,13 @@ export class ResolveCustomerSession {
       pointsToNextTier: number | null;
       perks: readonly string[];
     };
-    store: { isOpen: true; closesAt: Date | null };
+    store: {
+      isOpen: boolean;
+      closesAt: Date | null;
+      opensAt: Date | null;
+      today: { opens: string; closes: string } | null;
+      tomorrow: { opens: string; closes: string } | null;
+    };
     ordering: {
       enabled: true;
       askTableNumber: boolean;
@@ -68,11 +75,14 @@ export class ResolveCustomerSession {
     if (loaded.orderingEnabled !== true)
       throw new WhatsAppOrderingDisabled(loaded.orderingDisabledReason);
     if (loaded.abandonedOrderCount >= 3) throw new OrderingSuspended();
-    if (!isStoreOpen(loaded.hours, loaded.closures, now, loaded.tenant.timezone)) {
-      throw new StoreClosed(
-        nextStoreOpening(loaded.hours, loaded.closures, now, loaded.tenant.timezone),
-      );
-    }
+    const open = isStoreOpen(loaded.hours, loaded.closures, now, loaded.tenant.timezone);
+    const opensAt = open
+      ? null
+      : nextStoreOpening(loaded.hours, loaded.closures, now, loaded.tenant.timezone);
+    // Entry (allowClosed) still shows the menu closed — F1.1's "a closed café can
+    // still show its menu." Placement (the default) keeps the hard 409 gate.
+    if (!open && !options.allowClosed) throw new StoreClosed(opensAt);
+    const schedule = todayAndTomorrowHours(loaded.hours, now, loaded.tenant.timezone);
     return {
       tenantId: loaded.tenant.id,
       tenantName: loaded.tenant.name,
@@ -92,7 +102,13 @@ export class ResolveCustomerSession {
         pointsToNextTier: pointsToNextTier(loaded.customer.pointsCache),
         perks: perksForTier(loaded.customer.tier as LoyaltyTier),
       },
-      store: { isOpen: true, closesAt: null },
+      store: {
+        isOpen: open,
+        closesAt: null,
+        opensAt,
+        today: schedule.today,
+        tomorrow: schedule.tomorrow,
+      },
       ordering: { enabled: true, askTableNumber: false, minOrderValueMinor: 0, payAt: 'counter' },
     };
   }

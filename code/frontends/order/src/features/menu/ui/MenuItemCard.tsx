@@ -12,6 +12,9 @@ interface MenuItemCardProps {
   item: ResolvedItem;
   locale: Locale;
   qtyInCart: number;
+  /** True while the café is closed (F1.1 browse-only mode) — the item is still
+   *  viewable, only adding is locked. */
+  orderingDisabled?: boolean;
   onOpen: () => void;
   onQuickAdd: () => void;
   onStep: (qty: number) => void;
@@ -21,6 +24,7 @@ export function MenuItemCard({
   item,
   locale,
   qtyInCart,
+  orderingDisabled = false,
   onOpen,
   onQuickAdd,
   onStep,
@@ -68,7 +72,7 @@ export function MenuItemCard({
           ) : null}
         </div>
 
-        {item.available ? (
+        {item.available && !orderingDisabled ? (
           qtyInCart > 0 ? (
             <Stepper
               value={qtyInCart}

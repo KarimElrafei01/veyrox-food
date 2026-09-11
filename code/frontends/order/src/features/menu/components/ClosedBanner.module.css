@@ -1,0 +1,37 @@
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-2xs);
+  padding: var(--vx-space-sm) var(--vx-space-md);
+  border-radius: var(--vx-radius-md);
+  background: var(--vx-secondary-fixed);
+  color: var(--vx-on-secondary-fixed-variant);
+  margin-block-end: var(--vx-space-sm);
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+  font-weight: 700;
+}
+.title {
+  font-size: var(--vx-text-body-md);
+}
+.countdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.countdownLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+  font-size: var(--vx-text-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.hint {
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-on-surface-variant);
+  margin: 0;
+}

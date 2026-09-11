@@ -25,7 +25,9 @@ describe('translate', () => {
 
   it('interpolates params', () => {
     expect(translate('en', 'common.items', { count: 3 })).toBe('3 items');
-    expect(translate('en', 'openOrder.view', { number: 'A-041' })).toBe('View order A-041');
+    expect(translate('en', 'openOrder.view', { number: 'A-041' })).toBe(
+      'View Active Order (A-041)',
+    );
   });
 
   it('falls back to English for a missing ar-EG key', () => {

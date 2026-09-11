@@ -31,12 +31,6 @@
   letter-spacing: 0.06em;
   color: var(--vx-on-surface-variant);
 }
-.countdown {
-  font-family: var(--vx-font-display);
-  font-size: var(--vx-text-headline-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--vx-primary-container);
-}
 .terminal {
   display: flex;
   flex-direction: column;
@@ -45,6 +39,9 @@
   max-inline-size: var(--vx-container-max);
   padding: var(--vx-space-lg) var(--vx-gutter) calc(var(--vx-space-2xl) + env(safe-area-inset-bottom, 0px));
 }
+
+/* — closed screen (design 2.8) — */
+
 .closedHero,
 .openHero {
   display: flex;
@@ -92,11 +89,10 @@
   color: var(--vx-on-surface-variant);
   font-size: var(--vx-text-body-md);
 }
-.noticeRow,
 .detailsHead {
   display: flex;
   align-items: center;
-  gap: var(--vx-space-sm);
+  gap: var(--vx-space-xs);
   font-weight: 600;
 }
 .noticeIcon,
@@ -107,30 +103,202 @@
   color: var(--vx-secondary);
 }
 .noticeIcon {
-  inline-size: 2.5rem;
-  block-size: 2.5rem;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
   border-radius: var(--vx-radius-pill);
   background: var(--vx-secondary-fixed);
 }
+.restingCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vx-space-sm);
+  text-align: start;
+  margin-block-start: var(--vx-space-xs);
+}
+.restingText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-3xs, 0.125rem);
+}
+.hoursHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: var(--vx-space-sm);
+}
+.tzChip {
+  padding: 0.125rem var(--vx-space-xs);
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-surface-container);
+  color: var(--vx-on-surface-variant);
+  font-size: var(--vx-text-label-sm);
+}
+.hoursRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-2xs);
+}
+.hoursRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--vx-space-xs) var(--vx-space-xs);
+  border-radius: var(--vx-radius);
+  font-size: var(--vx-text-body-md);
+}
+.hoursRowToday {
+  background: var(--vx-surface-low);
+  font-weight: 600;
+}
+.hoursDay {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+}
+.dayDot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-outline-variant);
+}
+.dayDotToday {
+  background: var(--vx-secondary);
+}
+.branchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+  margin-block-start: var(--vx-space-sm);
+  padding-block-start: var(--vx-space-sm);
+  border-block-start: 1px solid var(--vx-outline-variant);
+  color: var(--vx-secondary);
+}
+.browseNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-sm) var(--vx-space-md);
+  border-radius: var(--vx-radius-xl);
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface-variant);
+  font-size: var(--vx-text-body-sm);
+}
+.browseNotice p {
+  margin: 0;
+}
+.actionStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-xs);
+}
+.whatsappLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vx-space-xs);
+  min-block-size: var(--vx-tap-min);
+  border-radius: var(--vx-radius-xl);
+  background: var(--vx-surface-lowest);
+  color: var(--vx-primary);
+  font-weight: 600;
+  font-size: var(--vx-text-label-lg);
+  text-decoration: none;
+  box-shadow: var(--vx-elevation-low);
+}
+.loyaltyTeaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--vx-space-sm) var(--vx-space-md);
+  border-radius: var(--vx-radius-xl);
+  background: var(--vx-surface-low);
+  color: var(--vx-on-surface-variant);
+  font-size: var(--vx-text-label-sm);
+}
+.loyaltyTeaserLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+}
+.loyaltyTeaser strong {
+  color: var(--vx-primary-container);
+}
+
+/* — open-order screen (design 2.9) — */
+
+.orderIconRing {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 5.5rem;
+  block-size: 5.5rem;
+}
+.orderIconRing::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary-fixed);
+  opacity: 0.7;
+  animation: openOrderPing 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes openOrderPing {
+  75%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
 .orderIcon {
-  inline-size: 4.5rem;
-  block-size: 4.5rem;
-  border: 0.625rem solid var(--vx-secondary-fixed);
+  position: relative;
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
   border-radius: var(--vx-radius-pill);
   background: var(--vx-secondary);
   color: var(--vx-on-secondary);
   box-shadow: var(--vx-elevation-mid);
 }
-.placeholderLine,
-.placeholderChip,
-.ticketPlaceholder {
-  display: block;
-  background: var(--vx-surface-container);
+.orderIconBadge {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary-container);
+  color: var(--vx-on-secondary-container);
+  box-shadow: var(--vx-elevation-low);
 }
-.placeholderLine {
-  block-size: 2.5rem;
-  margin-block-start: var(--vx-space-sm);
-  border-radius: var(--vx-radius);
+.freshBrewBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-sm) var(--vx-space-md);
+  border-radius: var(--vx-radius-xl);
+  background: var(--vx-secondary-fixed);
+}
+.freshBrewIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-secondary);
+  color: var(--vx-on-secondary);
+}
+.freshBrewTitle {
+  margin: 0 0 0.125rem;
+  font-weight: 600;
+  color: var(--vx-on-secondary-fixed-variant);
+  font-size: var(--vx-text-label-md);
+}
+.spotlightCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-sm);
 }
 .ticketHead {
   display: flex;
@@ -152,13 +320,104 @@
   font-size: var(--vx-text-display);
   line-height: var(--vx-leading-tight);
 }
-.placeholderChip {
-  inline-size: 6rem;
-  block-size: 1.75rem;
-  border-radius: var(--vx-radius-pill);
+.branchInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+  font-size: var(--vx-text-body-sm);
 }
-.ticketPlaceholder {
-  block-size: 5.5rem;
-  margin-block-start: var(--vx-space-md);
+.branchAddress {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--vx-on-surface-variant);
+}
+.liveStatusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-sm);
   border-radius: var(--vx-radius);
+  background: var(--vx-surface-container);
+}
+.liveStatusLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vx-space-xs);
+  min-inline-size: 0;
+}
+.liveStatusTitle {
+  display: block;
+  color: var(--vx-primary);
+}
+.etaBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+  color: var(--vx-primary);
+}
+.itemPeek {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-xs);
+}
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-sm);
+}
+.itemThumb {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
+  border-radius: var(--vx-radius);
+  background: var(--vx-surface-container);
+  color: var(--vx-on-surface-variant);
+}
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  flex: 1;
+}
+.itemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vx-space-xs);
+  color: var(--vx-primary);
+  font-weight: 600;
+}
+.payRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--vx-space-xs);
+  border-radius: var(--vx-radius);
+  background: var(--vx-surface-low);
+}
+.payLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+  color: var(--vx-on-surface-variant);
+  font-weight: 600;
+}
+.footerCard {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-sm);
+  border-radius: var(--vx-radius);
+  background: var(--vx-surface-container);
+}
+.footerTitle {
+  display: block;
+  color: var(--vx-primary);
+  font-size: var(--vx-text-label-sm);
 }
