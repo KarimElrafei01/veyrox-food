@@ -37,7 +37,7 @@ interface CheckoutScreenProps {
   outcome: PlaceOutcome | null;
   onBack: () => void;
   onEditCart: () => void;
-  onPlace: (note: string | null, expectedTotalMinor: number, tableLabel: string | null) => void;
+  onPlace: (note: string | null, quote: QuoteResponse, tableLabel: string | null) => void;
   onDismissPriceChange: () => void;
 }
 
@@ -59,8 +59,7 @@ export function CheckoutScreen({
   const [note, setNote] = useState('');
   const [tableLabel, setTableLabel] = useState('');
   const table = askTableNumber && tableLabel.trim() ? tableLabel.trim() : null;
-  const place = (expectedTotalMinor: number) =>
-    onPlace(note.trim() || null, expectedTotalMinor, table);
+  const place = (nextQuote: QuoteResponse) => onPlace(note.trim() || null, nextQuote, table);
 
   const priceChanged = outcome?.kind === 'price_changed' ? outcome : null;
   const activeQuote = priceChanged?.quote ?? quote;
@@ -84,7 +83,7 @@ export function CheckoutScreen({
             spread
             loading={placing}
             iconStart="near-me"
-            onClick={() => place(activeQuote.totalMinor)}
+            onClick={() => place(activeQuote)}
           >
             <span className={styles.ctaText}>
               {placing ? t('checkout.placing') : t('checkout.placeOrder')}
@@ -204,7 +203,7 @@ export function CheckoutScreen({
         {errorCode ? (
           <ErrorAlert
             messageKey={errorCode}
-            onRetry={outcome?.kind === 'network' ? () => place(activeQuote.totalMinor) : undefined}
+            onRetry={outcome?.kind === 'network' ? () => place(activeQuote) : undefined}
           />
         ) : null}
       </Stack>
@@ -216,12 +215,7 @@ export function CheckoutScreen({
         onClose={onDismissPriceChange}
         footer={
           priceChanged ? (
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              onClick={() => place(priceChanged.quote.totalMinor)}
-            >
+            <Button variant="primary" size="lg" fullWidth onClick={() => place(priceChanged.quote)}>
               {translate(locale, 'checkout.priceChangedConfirm', {
                 total: fmt(priceChanged.quote.totalMinor, locale),
               })}

@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 import { useCart } from '../../../shared/cart-store.js';
+import {
+  savePlacedOrderSnapshot,
+  type PlacedOrderSnapshot,
+} from '../../../shared/placed-order-snapshot.js';
 import { isRetryable, placeOrder, type PlaceOutcome } from '../usecases/placeOrder.js';
 
 interface PlaceOpts {
@@ -20,7 +24,7 @@ export function usePlaceOrder() {
   const keyRef = useRef<string | null>(null);
 
   const submit = useCallback(
-    async (opts: PlaceOpts) => {
+    async (opts: PlaceOpts, displaySnapshot?: PlacedOrderSnapshot) => {
       if (placing) {
         return;
       }
@@ -29,6 +33,12 @@ export function usePlaceOrder() {
       const result = await placeOrder(cart.lines, opts, keyRef.current);
       setOutcome(result);
       if (result.kind === 'placed') {
+        if (displaySnapshot) {
+          savePlacedOrderSnapshot(result.order.orderId, {
+            ...displaySnapshot,
+            totalMinor: result.order.totalMinor,
+          });
+        }
         cart.clear();
       }
       if (!isRetryable(result)) {

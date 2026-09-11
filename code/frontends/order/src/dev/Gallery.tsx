@@ -15,7 +15,14 @@ import {
   StoreClosedScreen,
 } from '../features/session/ui/SessionScreens.js';
 import { TierUpCelebration } from '../features/loyalty/ui/TierUpCelebration.js';
-import { menuFixture, quoteFixture, sessionFixture, statusFixtures } from './fixtures.js';
+import { tierUpFixture } from './tier-up-fixture.js';
+import {
+  menuFixture,
+  placedOrderSnapshotFixture,
+  quoteFixture,
+  sessionFixture,
+  statusFixtures,
+} from './fixtures.js';
 import styles from './Gallery.module.css';
 
 const SCREENS = [
@@ -100,14 +107,25 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
         <StoreClosedScreen
           storeName="Brew & Baladi"
           opensAt={new Date(Date.now() + 2.7 * 3600000).toISOString()}
-          timezone="Africa/Cairo"
+          today={null}
+          tomorrow={{ opens: '08:00', closes: '23:00' }}
+          tier="silver"
+          pointsBalance={320}
+          whatsappUrl="https://wa.me/"
           onBrowse={noop}
         />
       );
     case 'open-order':
-      return <OpenOrderBlockScreen orderNumber="A-27" onView={noop} />;
+      return (
+        <OpenOrderBlockScreen
+          orderNumber="A-27"
+          order={null}
+          whatsappUrl="https://wa.me/"
+          onView={noop}
+        />
+      );
     case 'tier-up':
-      return <TierUpCelebration locale={locale} tier="gold" onDismiss={noop} />;
+      return <TierUpCelebration data={tierUpFixture} onDismiss={noop} />;
     case 'item':
       return (
         <ItemDetailScreen
@@ -178,6 +196,8 @@ function Body({ screen }: { screen: ScreenKey }): React.JSX.Element {
           notFound={false}
           order={statusFixtures[screen.replace('status-', '')]!}
           storeName="Brew & Baladi"
+          pointsBalance={320}
+          orderSnapshot={placedOrderSnapshotFixture}
           onRetry={noop}
           onBackToMenu={noop}
         />

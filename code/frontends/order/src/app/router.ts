@@ -9,6 +9,7 @@ export type RouteName =
   | 'checkout'
   | 'status'
   | 'dev'
+  | 'tierUpDev'
   | 'preview'
   | 'notFound';
 
@@ -27,6 +28,7 @@ const PATTERNS: { name: RouteName; re: RegExp; keys: string[] }[] = [
   { name: 'checkout', re: /^\/checkout$/, keys: [] },
   { name: 'status', re: /^\/o\/([^/]+)$/, keys: ['orderId'] },
   { name: 'dev', re: /^\/dev$/, keys: [] },
+  { name: 'tierUpDev', re: /^\/dev\/tier-up$/, keys: [] },
   { name: 'preview', re: /^\/preview\/([a-z-]+)$/, keys: ['state'] },
 ];
 

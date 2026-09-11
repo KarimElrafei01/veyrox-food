@@ -4,6 +4,7 @@ import type {
   SessionResolveResponse,
 } from '@veyroxai/contracts';
 import type { ResolvedMenu } from '../shared/menu-model.js';
+import type { PlacedOrderSnapshot } from '../shared/placed-order-snapshot.js';
 
 const ID = {
   tenant: '3f1c0a11-0000-4000-8000-000000000001',
@@ -257,6 +258,31 @@ export const quoteFixture: QuoteResponse = {
   unavailable: [],
   payAt: 'counter',
   traceId: 'dev-trace',
+};
+
+export const placedOrderSnapshotFixture: PlacedOrderSnapshot = {
+  lines: [
+    {
+      qty: 1,
+      nameEn: 'Cardamom Baladi Latte',
+      nameAr: 'لاتيه بلدي بالهيل',
+      modifierSummary: 'Large · House oat milk',
+      imageUrl: null,
+      lineTotalMinor: 8500,
+    },
+    {
+      qty: 1,
+      nameEn: 'Cold Brew Hibiscus',
+      nameAr: 'كركديه كولد برو',
+      modifierSummary: 'Regular · Touch of raw cane',
+      imageUrl: null,
+      lineTotalMinor: 6500,
+    },
+  ],
+  subtotalMinor: 15000,
+  discountMinor: 0,
+  totalMinor: 15000,
+  pointsToEarn: 18,
 };
 
 export const statusFixtures: Record<string, OrderStatusResponse> = {
