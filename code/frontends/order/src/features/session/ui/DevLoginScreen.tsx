@@ -1,5 +1,13 @@
 import { Badge, Button, Card, Screen, Stack } from '@veyroxai/ui';
 import type { DevSessionCafe } from '../datasource/devSessionsDatasource.js';
+import { PREVIEW_STATES } from './DevPreview.js';
+
+const PREVIEW_LABEL: Record<(typeof PREVIEW_STATES)[number], string> = {
+  closed: 'Store closed',
+  suspended: 'Ordering suspended',
+  expired: 'Session expired',
+  'open-order': 'Open-order block',
+};
 
 /**
  * Dev-only entry screen (shown instead of the generic error when the API exposes
@@ -50,6 +58,29 @@ export function DevLoginScreen({
               </Stack>
             </Card>
           ))}
+
+          <Card tone="flat" pad="md">
+            <Stack gap="sm">
+              <strong>Preview a terminal state</strong>
+              {PREVIEW_STATES.map((state) => (
+                <Button
+                  key={state}
+                  variant="ghost"
+                  fullWidth
+                  onClick={() => {
+                    try {
+                      sessionStorage.setItem('vx.dev', '1');
+                    } catch {
+                      /* private mode */
+                    }
+                    window.location.assign(`/preview/${state}`);
+                  }}
+                >
+                  {PREVIEW_LABEL[state]}
+                </Button>
+              ))}
+            </Stack>
+          </Card>
         </Stack>
       </div>
     </Screen>

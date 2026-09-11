@@ -68,6 +68,7 @@ export async function customerSessionController(
             menu: `/public/menu/${result.menuVersionId}`,
             availability: '/public/availability',
           },
+          openOrder: result.openOrder,
           traceId: request.id,
         };
       } catch (error) {

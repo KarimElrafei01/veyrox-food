@@ -12,6 +12,7 @@ import {
 } from '../features/session/ui/SessionScreens.js';
 import { LocaleSync } from '../shared/LocaleSync.js';
 import { DevLoginScreen } from '../features/session/ui/DevLoginScreen.js';
+import { DevPreview } from '../features/session/ui/DevPreview.js';
 import { DevSwitcher, isDevSession } from '../features/session/ui/DevSwitcher.js';
 import { useDevSessions } from '../features/session/hooks/useDevSessions.js';
 import { useRoute } from './router.js';
@@ -42,12 +43,25 @@ export function App(): React.JSX.Element {
     }
   }, [route.name, route.params.token, status, resolve]);
 
+  // A re-entering customer with an order still in progress goes straight to its live
+  // status (F1.6 — one order at a time), not the menu.
+  useEffect(() => {
+    if (status === 'ready' && route.name === 'entry' && session?.openOrder) {
+      route.navigate(`/o/${session.openOrder.orderId}`, { replace: true });
+    }
+  }, [status, route, session]);
+
   if (route.name === 'dev' && import.meta.env.DEV) {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <Gallery />
       </Suspense>
     );
+  }
+
+  // Static previews of the terminal states, reached from the dev picker.
+  if (route.name === 'preview' && (import.meta.env.DEV || isDevSession())) {
+    return <DevPreview state={route.params.state ?? ''} onBack={() => route.navigate('/')} />;
   }
 
   if (noToken) {

@@ -51,6 +51,7 @@ export const sessionFixture: SessionResolveResponse = {
   store: { isOpen: true, closesAt: new Date(Date.now() + 5 * 3600000).toISOString() },
   ordering: { enabled: true, askTableNumber: false, minOrderValueMinor: 0, payAt: 'counter' },
   links: { menu: `/public/menu/${ID.menuV}`, availability: '/public/availability' },
+  openOrder: null,
   traceId: 'dev-trace',
 };
 

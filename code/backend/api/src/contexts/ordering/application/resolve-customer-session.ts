@@ -38,6 +38,11 @@ export class ResolveCustomerSession {
     menuVersionId: string;
     expiresAt: Date;
     locale: string;
+    openOrder: {
+      orderId: string;
+      orderNumber: string;
+      status: 'placed' | 'received' | 'preparing' | 'ready';
+    } | null;
     customer: {
       displayName: string | null;
       tier: LoyaltyTier;
@@ -79,6 +84,7 @@ export class ResolveCustomerSession {
       menuVersionId: loaded.menuVersion.id,
       expiresAt: new Date(session.expiresAt * 1000),
       locale: session.locale,
+      openOrder: loaded.openOrder,
       customer: {
         displayName: loaded.customer.displayName,
         tier: loaded.customer.tier as LoyaltyTier,
