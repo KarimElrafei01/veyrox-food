@@ -75,8 +75,8 @@ export class OrderPlacementRepository {
     responseSeed: {
       payAt: 'counter';
       eta: {
-        lowerMinutes: null;
-        upperMinutes: null;
+        lowerMinutes: number;
+        upperMinutes: number;
         startsOnAccept: true;
         promisedLowerAt: null;
         promisedUpperAt: null;

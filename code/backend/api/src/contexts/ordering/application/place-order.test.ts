@@ -3,6 +3,7 @@ import { toMinor, type PricedCart } from '@veyroxai/domain';
 import { PlaceOrder, ItemUnavailable, MinimumOrderValue, PriceChanged } from './place-order.js';
 import type { QuoteOrder } from './quote-order.js';
 import type { OrderPlacementRepository } from '../infrastructure/order-placement-repository.js';
+import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 
 const ITEM = '11111111-1111-4111-8111-111111111111';
 
@@ -38,6 +39,14 @@ function subject(options: {
   const quote = {
     execute: vi.fn(options.quote ?? (async () => pricedCart())),
   } as unknown as QuoteOrder;
+  // An empty queue — no tickets ahead, one station — so the estimate is deterministic
+  // and comes only from the cart's own prep time.
+  const etaQueue = {
+    load: vi.fn(async () => ({
+      state: { activeStations: 1, tickets: [], updatedAt: '2026-09-07T00:00:00.000Z' },
+      source: 'postgres' as const,
+    })),
+  } as unknown as EtaQueueRepository;
   const place =
     options.place ??
     vi.fn(async () => ({
@@ -55,7 +64,11 @@ function subject(options: {
     findReplay: options.findReplay ?? vi.fn(async () => null),
     place,
   } as unknown as OrderPlacementRepository;
-  return { useCase: new PlaceOrder(quote, orders), place, findReplay: orders.findReplay };
+  return {
+    useCase: new PlaceOrder(quote, orders, etaQueue),
+    place,
+    findReplay: orders.findReplay,
+  };
 }
 
 const input = {
@@ -130,6 +143,21 @@ describe('PlaceOrder', () => {
     await expect(useCase.execute({ ...input, minOrderValueMinor: 10000 })).rejects.toBeInstanceOf(
       MinimumOrderValue,
     );
+  });
+
+  it('estimates the ETA at placement — only the wall-clock promise waits on Accept', async () => {
+    const { useCase, place } = subject({});
+    await useCase.execute(input);
+    const call = (place as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+    // 120s prep, empty queue, one station -> the same numbers estimateEta gives a
+    // quote right now (F1.6 §2's worked example: a populated range, not nulls).
+    expect(call.responseSeed.eta).toEqual({
+      lowerMinutes: 5,
+      upperMinutes: 10,
+      startsOnAccept: true,
+      promisedLowerAt: null,
+      promisedUpperAt: null,
+    });
   });
 
   it('does not accrue loyalty — placement writes no loyalty fact', async () => {

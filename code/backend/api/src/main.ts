@@ -136,7 +136,7 @@ async function main(): Promise<void> {
       },
     },
     placeOrder: {
-      place: new PlaceOrder(quoteOrder, new OrderPlacementRepository(database)),
+      place: new PlaceOrder(quoteOrder, new OrderPlacementRepository(database), etaQueue),
       resolver: new ResolveCustomerSession(new CustomerSessionRepository(database)),
       keys: sessionKeys,
       etaQueue,

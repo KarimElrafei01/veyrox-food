@@ -1,9 +1,10 @@
-import { previewPoints, toMinor, type LoyaltyTier } from '@veyroxai/domain';
+import { estimateEta, previewPoints, toMinor, type LoyaltyTier } from '@veyroxai/domain';
 import type { PlaceOrderRequest } from '@veyroxai/contracts';
 import type {
   OrderPlacementRepository,
   PlacedOrder,
 } from '../infrastructure/order-placement-repository.js';
+import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import type { QuoteOrder } from './quote-order.js';
 import type { PricedForQuote } from '../interface/quote-body.js';
 
@@ -29,20 +30,11 @@ export class MinimumOrderValue extends Error {
   }
 }
 
-/** F1.6 §2: the ETA clock does not start until a barista accepts, so placement
- *  always returns an empty range. Frozen here so the stored replay body is stable. */
-const ETA_AT_PLACEMENT = {
-  lowerMinutes: null,
-  upperMinutes: null,
-  startsOnAccept: true,
-  promisedLowerAt: null,
-  promisedUpperAt: null,
-} as const;
-
 export class PlaceOrder {
   constructor(
     private readonly quote: QuoteOrder,
     private readonly orders: OrderPlacementRepository,
+    private readonly etaQueue: EtaQueueRepository,
   ) {}
 
   async execute(input: {
@@ -75,6 +67,21 @@ export class PlaceOrder {
       throw new MinimumOrderValue(input.minOrderValueMinor);
 
     const pointsToEarn = previewPoints(toMinor(priced.totalMinor), input.tier).pointsToEarn;
+
+    // F1.6 §2: the *estimate* is populated at placement (same numbers a quote would
+    // show right now) so the customer sees "~8-12 min" immediately — only the
+    // wall-clock promise waits for a barista to accept. Same queue snapshot the
+    // quote endpoint uses, so a customer never sees quote and placement disagree.
+    const queue = await this.etaQueue.load(input.tenantId);
+    const estimate = estimateEta(
+      priced.etaItems,
+      queue.state.tickets,
+      input.tier,
+      queue.state.activeStations,
+      new Date(),
+      queue.source === 'degraded' ? 1.5 : 1.25,
+    );
+
     const { order, response } = await this.orders.place({
       tenantId: input.tenantId,
       customerId: input.customerId,
@@ -85,7 +92,13 @@ export class PlaceOrder {
       customerNote: input.request.customerNote ?? null,
       responseSeed: {
         payAt: 'counter',
-        eta: ETA_AT_PLACEMENT,
+        eta: {
+          lowerMinutes: estimate.lowerMinutes,
+          upperMinutes: estimate.upperMinutes,
+          startsOnAccept: true,
+          promisedLowerAt: null,
+          promisedUpperAt: null,
+        },
         loyalty: { pointsToEarn },
         traceId: input.traceId,
       },
