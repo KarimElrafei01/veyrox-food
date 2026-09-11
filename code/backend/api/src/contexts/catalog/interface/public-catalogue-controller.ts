@@ -68,10 +68,15 @@ export async function publicCatalogueController(
       const item = menu?.items.find((candidate) => candidate.id === menuItemId);
       if (!item?.imageObjectKey) return reply.status(404).send();
       const image = await options.imageStore.get(item.imageObjectKey);
-      return reply
-        .header('Cache-Control', 'public, max-age=31536000, immutable')
-        .type(image.contentType)
-        .send(image.body);
+      return (
+        reply
+          .header('Cache-Control', 'public, max-age=31536000, immutable')
+          // Helmet correctly defaults to same-origin. Menu images are the explicit
+          // public exception: the customer SPA is intentionally on another origin.
+          .header('Cross-Origin-Resource-Policy', 'cross-origin')
+          .type(image.contentType)
+          .send(image.body)
+      );
     },
   );
 
