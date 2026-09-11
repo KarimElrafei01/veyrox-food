@@ -58,9 +58,18 @@ export function estimateEta(
     relevantTickets.reduce((total, ticket) => total + remainingTicketSeconds(ticket, now), 0) /
     Math.max(1, activeStations);
   const etaSeconds = cartPrepSeconds(items) + queueSeconds;
+  const lowerMinutes = roundUpToFiveMinutes(etaSeconds * 0.9);
+  let upperMinutes = roundUpToFiveMinutes(etaSeconds * upperMultiplier);
+  // The ×0.9/×upperMultiplier bounds can round into the same 5-minute bucket for
+  // short prep times, collapsing the promised range into a repeated number — which
+  // F1.4 §1 forbids ("a range, never a point"). Widen by one bucket rather than let
+  // it collapse; an all-zero cart (nothing to prepare) is left at 0–0 on purpose.
+  if (lowerMinutes > 0 && upperMinutes <= lowerMinutes) {
+    upperMinutes = lowerMinutes + 5;
+  }
   return {
-    lowerMinutes: roundUpToFiveMinutes(etaSeconds * 0.9),
-    upperMinutes: roundUpToFiveMinutes(etaSeconds * upperMultiplier),
+    lowerMinutes,
+    upperMinutes,
     queueDepth: relevantTickets.length,
   };
 }
