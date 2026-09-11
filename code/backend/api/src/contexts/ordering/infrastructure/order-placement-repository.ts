@@ -84,10 +84,14 @@ export class OrderPlacementRepository {
       loyalty: { pointsToEarn: number };
       traceId: string;
     };
-  }): Promise<{ order: PlacedOrder; response: unknown }> {
+  }): Promise<{ order: PlacedOrder; response: unknown; replayed: boolean }> {
     return withTenant(this.db, input.tenantId, async (tx) => {
       // Serialising this customer's placement prevents two devices bypassing the
-      // open-order cap by racing between the SELECT and the INSERT.
+      // open-order cap by racing between the SELECT and the INSERT. It also means
+      // concurrent identical requests queue up on this lock instead of racing the
+      // INSERT itself — the first one through creates the order, everyone behind it
+      // lands on the `replay` branch below and must be told so (`replayed: true`),
+      // or the caller has no way to tell it apart from a fresh placement.
       await tx.execute(
         sql`select pg_advisory_xact_lock(hashtext(${`${input.tenantId}:${input.customerId}`}))`,
       );
@@ -108,6 +112,7 @@ export class OrderPlacementRepository {
             placedAt: replay.createdAt.toISOString(),
           },
           response: replay.placementResponse,
+          replayed: true,
         };
       }
 
@@ -346,6 +351,7 @@ export class OrderPlacementRepository {
           placedAt: order.createdAt.toISOString(),
         },
         response,
+        replayed: false,
       };
     });
   }

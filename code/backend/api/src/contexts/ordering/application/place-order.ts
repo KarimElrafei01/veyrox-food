@@ -88,7 +88,7 @@ export class PlaceOrder {
       queue.source === 'degraded' ? 1.5 : 1.25,
     );
 
-    const { order, response } = await this.orders.place({
+    const { order, response, replayed } = await this.orders.place({
       tenantId: input.tenantId,
       customerId: input.customerId,
       menuVersionId: input.menuVersionId,
@@ -109,6 +109,6 @@ export class PlaceOrder {
         traceId: input.traceId,
       },
     });
-    return { order, response, replayed: false };
+    return { order, response, replayed };
   }
 }

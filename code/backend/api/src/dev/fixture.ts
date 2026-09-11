@@ -3,6 +3,7 @@
  *
  *   pnpm db:seed                        # the Brew & Baladi catalogue (idempotent)
  *   SESSION_KEY=dev pnpm --filter @veyroxai/api fixture
+ *   SESSION_KEY=dev pnpm --filter @veyroxai/api fixture -- --load-customers=40
  *
  * Extends the seed with store hours, modifiers, an 86'd item, a published menu
  * version, four customers in different states, and a few pre-made orders — then
@@ -26,6 +27,16 @@ import { mintCustomerSession } from '../contexts/identity/domain/index.js';
 const SLUG = 'brew-and-baladi';
 const now = new Date();
 const day = now.toISOString().slice(0, 10);
+
+function loadCustomerCount(args: readonly string[]): number {
+  const value = args.find((arg) => arg.startsWith('--load-customers='));
+  if (!value) return 0;
+  const count = Number(value.slice('--load-customers='.length));
+  if (!Number.isInteger(count) || count < 1 || count > 100) {
+    throw new Error('--load-customers must be an integer between 1 and 100.');
+  }
+  return count;
+}
 
 async function selectOne<T>(rows: Promise<T[]>): Promise<T | undefined> {
   return (await rows)[0];
@@ -326,6 +337,7 @@ async function main() {
   const adminUrl = process.env.DATABASE_ADMIN_URL;
   if (!adminUrl) throw new Error('DATABASE_ADMIN_URL is not set');
   const sessionKey = process.env.SESSION_KEY ?? 'dev-session-key';
+  const requestedLoadCustomers = loadCustomerCount(process.argv.slice(2));
   const pool = createPool(adminUrl);
   const db = createDatabase(pool);
 
@@ -434,6 +446,14 @@ async function main() {
     const goldFree = await ensureCustomer(db, t, 'gold-free', 'gold', 900);
     const justAccepted = await ensureCustomer(db, t, 'just-accepted', 'bronze', 60);
     const readyForPickup = await ensureCustomer(db, t, 'ready-for-pickup', 'bronze', 200);
+    // Stable load handles make a rerun idempotent, while their lack of fixture
+    // orders keeps each session usable for a concurrent placement test.
+    const loadCustomers = await Promise.all(
+      Array.from({ length: requestedLoadCustomers }, (_, index) => {
+        const handle = `load-${String(index + 1).padStart(2, '0')}`;
+        return ensureCustomer(db, t, handle, 'bronze', 0);
+      }),
+    );
 
     // Only ONE customer has an order in progress (gold, below) — everyone else's
     // openOrder is null, so a re-entering fresh/bronze customer lands on the menu.
@@ -468,7 +488,11 @@ async function main() {
       promisedEtaUpperAt: new Date(now.getTime() + 3 * 60_000),
     });
 
-    await closeStrayOpenOrders(db, t, new Set([goldPreparing.id, received.id, ready.id]));
+    // A load seeding run must leave prior test orders untouched so its added
+    // customers are the only variable in the following stress run.
+    if (requestedLoadCustomers === 0) {
+      await closeStrayOpenOrders(db, t, new Set([goldPreparing.id, received.id, ready.id]));
+    }
 
     const iat = Math.floor(now.getTime() / 1000);
     const exp = iat + 24 * 3600;
@@ -531,6 +555,7 @@ async function main() {
           tier: 'bronze',
           token: token(readyForPickup.id, '201000008', 'bronze'),
         },
+        load: loadCustomers.map((customer) => ({ id: customer.id, tier: 'bronze' as const })),
       },
       orders: {
         placed: bronzeOpen!.id,

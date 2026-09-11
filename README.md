@@ -61,6 +61,8 @@ Either way, recreate the database with `pnpm db:migrate && pnpm db:seed`, then:
 ```bash
 pnpm --filter @veyroxai/api fixture   # modifiers, an 86'd item, a published menu,
                                       # four customers, orders — prints a curl kit
+pnpm --filter @veyroxai/api fixture -- --load-customers=40
+                                      # adds 40 idempotent, orderable load-* customers
 pnpm --filter @veyroxai/api tokens    # reprint fresh 24h session tokens later
 ```
 

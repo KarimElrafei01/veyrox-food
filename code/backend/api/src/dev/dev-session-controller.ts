@@ -69,7 +69,9 @@ export async function devSessionController(
           .select()
           .from(tables.customers)
           .where(eq(tables.customers.tenantId, tenant.id))
-          .limit(20);
+          // Enough distinct sessions for a bounded concurrency test, while this
+          // DEV_LOGIN-only endpoint remains capped instead of enumerating forever.
+          .limit(100);
 
         return {
           tenantId: tenant.id,
