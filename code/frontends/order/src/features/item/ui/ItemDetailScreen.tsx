@@ -24,6 +24,17 @@ function localized(map: { en: string; 'ar-EG'?: string }, locale: Locale): strin
   return (locale === 'ar-EG' && map['ar-EG']) || map.en;
 }
 
+function preparationIcon(optionName: string): 'local-cafe' | 'ac-unit' | 'blender' {
+  const name = optionName.toLowerCase();
+  if (name.includes('blend') || name.includes('crushed')) {
+    return 'blender';
+  }
+  if (name.includes('ice') || name.includes('iced')) {
+    return 'ac-unit';
+  }
+  return 'local-cafe';
+}
+
 interface ItemDetailScreenProps {
   item: ResolvedItem;
   groups: MenuModifierGroup[];
@@ -179,6 +190,9 @@ export function ItemDetailScreen({
                 return {
                   value: o.id,
                   label: localized(o.name, locale),
+                  icon: isPrepStyle ? (
+                    <Icon name={preparationIcon(o.name.en)} size={22} />
+                  ) : undefined,
                   disabled: !optionAvailable(o.id),
                   trailing: isPrepStyle ? undefined : o.priceDeltaMinor === 0 ? (
                     <span className={styles.base}>{t('item.base')}</span>
