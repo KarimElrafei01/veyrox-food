@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../../../app.js';
 import { mintCustomerSession } from '../../identity/domain/index.js';
 import type { OrderStatusRepository } from '../infrastructure/order-status-repository.js';
+import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import type { EtaMetricSink } from '../application/eta-metrics.js';
 
 const KEY = 'status-key';
 const ORDER_ID = '0192d425-9790-7dd9-8aa9-8cbd4c3844db';
@@ -24,10 +26,17 @@ function token(customerId = 'c1') {
 
 function harness(findOwnedOrder: OrderStatusRepository['findOwnedOrder']) {
   const orders = { findOwnedOrder: vi.fn(findOwnedOrder) } as unknown as OrderStatusRepository;
+  const etaQueue = {
+    load: vi.fn(async () => ({
+      state: { activeStations: 1, tickets: [], updatedAt: '' },
+      source: 'postgres' as const,
+    })),
+  } as unknown as EtaQueueRepository;
+  const etaMetrics = { increment: vi.fn(), gauge: vi.fn() } as unknown as EtaMetricSink;
   return buildApp({
     pingPostgres: async () => true,
     pingRedis: async () => true,
-    orderStatus: { orders, keys: [KEY] },
+    orderStatus: { orders, keys: [KEY], etaQueue, etaMetrics },
   }).then((app) => ({ app, orders }));
 }
 
@@ -46,6 +55,7 @@ describe('GET /public/orders/:orderId/status', () => {
       collectedAt: null,
       rejectionReason: null,
       rejectedAt: null,
+      etaItems: [{ prepSeconds: 120 }],
     }));
     const res = await app.inject({
       method: 'GET',

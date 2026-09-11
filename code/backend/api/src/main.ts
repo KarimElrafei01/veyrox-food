@@ -158,6 +158,8 @@ async function main(): Promise<void> {
     orderStatus: {
       orders: new OrderStatusRepository(database),
       keys: sessionKeys,
+      etaQueue,
+      etaMetrics,
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }

@@ -65,7 +65,12 @@ export interface AppDeps {
     repository: CustomerLocaleRepository;
     keys: readonly [string, ...string[]];
   };
-  orderStatus?: { orders: OrderStatusRepository; keys: readonly [string, ...string[]] };
+  orderStatus?: {
+    orders: OrderStatusRepository;
+    keys: readonly [string, ...string[]];
+    etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
+  };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
 }

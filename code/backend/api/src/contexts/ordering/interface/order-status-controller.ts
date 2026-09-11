@@ -7,12 +7,19 @@ import {
 } from '../../identity/domain/index.js';
 import { describeOrderStatus, OrderNotFound } from '../application/order-status.js';
 import type { OrderStatusRepository } from '../infrastructure/order-status-repository.js';
+import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import { recordEtaRead, type EtaMetricSink } from '../application/eta-metrics.js';
 
 const params = z.object({ orderId: z.uuid() });
 
 export async function orderStatusController(
   app: FastifyInstance,
-  options: { orders: OrderStatusRepository; keys: readonly [string, ...string[]] },
+  options: {
+    orders: OrderStatusRepository;
+    keys: readonly [string, ...string[]];
+    etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
+  },
 ): Promise<void> {
   app.get('/public/orders/:orderId/status', { schema: { params } }, async (request, reply) => {
     const authorization = request.headers.authorization;
@@ -39,8 +46,15 @@ export async function orderStatusController(
         orderId,
       );
       if (!row) throw new OrderNotFound();
+      const queue = await options.etaQueue.load(session.tenantId);
+      recordEtaRead(options.etaMetrics, queue.source, queue.state.tickets.length);
       return {
-        ...describeOrderStatus(row, { tier: session.tier, now: new Date() }),
+        ...describeOrderStatus(row, {
+          tier: session.tier,
+          now: new Date(),
+          queue: queue.state,
+          upperMultiplier: queue.source === 'degraded' ? 1.5 : 1.25,
+        }),
         traceId: request.id,
       };
     } catch (error) {

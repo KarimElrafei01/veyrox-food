@@ -13,6 +13,10 @@ export interface OwnedOrderRow {
   collectedAt: Date | null;
   rejectionReason: string | null;
   rejectedAt: Date | null;
+  // Prep time per line, read live off the menu item (same source the queue rebuild
+  // uses) — order_items has no prep-time snapshot column, so a later menu edit can
+  // nudge this, same as it already can for an order still sitting in the queue.
+  etaItems: { prepSeconds: number }[];
 }
 
 /** F1.7 §5: one primary-key lookup with the ownership predicate from the token.
@@ -34,6 +38,13 @@ export class OrderStatusRepository {
         ),
       });
       if (!row) return null;
+      const items = await tx
+        .select({ prepSeconds: tables.menuItems.basePrepSeconds })
+        .from(tables.orderItems)
+        .innerJoin(tables.menuItems, eq(tables.menuItems.id, tables.orderItems.menuItemId))
+        .where(
+          and(eq(tables.orderItems.orderId, row.id), eq(tables.orderItems.tenantId, tenantId)),
+        );
       return {
         orderId: row.id,
         orderNumber: row.orderNumber,
@@ -47,6 +58,7 @@ export class OrderStatusRepository {
         collectedAt: row.collectedAt,
         rejectionReason: row.rejectionReason,
         rejectedAt: row.rejectedAt,
+        etaItems: items,
       };
     });
   }
