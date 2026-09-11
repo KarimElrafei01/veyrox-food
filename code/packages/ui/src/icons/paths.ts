@@ -49,7 +49,9 @@ export const ICON_PATHS = {
   'shopping-bag':
     'M6 22q-.83 0-1.41-.59A1.93 1.93 0 0 1 4 20V8q0-.83.59-1.41A1.93 1.93 0 0 1 6 6h2a4 4 0 0 1 8 0h2q.83 0 1.41.59Q20 7.17 20 8v12q0 .83-.59 1.41-.58.59-1.41.59Zm4-16h4a2 2 0 0 0-4 0Z',
   'restaurant-menu':
-    'M8.1 13.34 3.9 9.17a3 3 0 0 1 0-4.24l6.72 6.72Zm5.66-2.83 5.66-5.66 1.42 1.42-5.66 5.65ZM17 22l-6-6-4.24 4.24-1.42-1.41L13.6 9.6a4 4 0 1 1 5.66 5.66l-1.4-1.42a2 2 0 1 0-2.84-2.83Z',
+    // A plain fork + knife — legible at 20px, unlike the fork/spoon crossing this
+    // replaced, whose thin diagonals collapsed into an unreadable bowtie that small.
+    'M8.5 2v7.5a2.5 2.5 0 0 1-2 2.45V22H4.5v-10.05a2.5 2.5 0 0 1-2-2.45V2H4v6.5h.75V2h1.5v6.5H7V2Zm7.5 0a3.5 3.5 0 0 0-3.5 3.5V11q0 1.5 1.5 2v9h2v-9q1.5-.5 1.5-2V2Z',
   schedule: 'M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20Zm3.3-5.3 1.4-1.4-3.7-3.7V7h-2v5.4Z',
   eco: 'M21 3c-7 0-13 2-13 9a7 7 0 0 0 .9 3.4L5 18.4 6.6 20l3.9-3.9A7 7 0 0 0 13 17c7 0 8-7 8-14ZM11 15a5 5 0 0 1-2-4c0-3 2-5 8-6-1 6-3 9-6 10Z',
   'more-vert':
