@@ -43,6 +43,33 @@ describe('sessionResolveResponse', () => {
     });
     expect(parsed.customer.tier).toBe('silver');
   });
+
+  it('parses a response from a backend older than the openOrder field', () => {
+    const parsed = sessionResolveResponse.parse({
+      tenant: {
+        id: TENANT,
+        name: 'Brew & Baladi',
+        defaultLocale: 'en',
+        supportedLocales: ['en', 'ar-EG'],
+        currency: 'EGP',
+        timezone: 'Africa/Cairo',
+      },
+      session: { menuVersion: MENU_V, expiresAt: '2026-09-06T15:45:00+03:00', locale: 'en' },
+      customer: {
+        displayName: 'Karim',
+        tier: 'silver',
+        pointsBalance: 312,
+        pointsToNextTier: 189,
+        perks: ['free_alt_milk'],
+      },
+      store: { isOpen: true, closesAt: '2026-09-07T01:00:00+03:00' },
+      ordering: { enabled: true, askTableNumber: false, minOrderValueMinor: 0, payAt: 'counter' },
+      links: { menu: '/public/menu/8a2e', availability: '/public/availability' },
+      // openOrder omitted deliberately — frontend/backend deploy independently here.
+      traceId: '0af7651916cd43dd',
+    });
+    expect(parsed.openOrder).toBeUndefined();
+  });
 });
 
 describe('menuResponse + availabilityResponse', () => {
