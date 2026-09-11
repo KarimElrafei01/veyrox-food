@@ -9,7 +9,8 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
     "fixture": "tsx --env-file-if-exists=../../.env src/dev/fixture.ts",
     "upload:menu-images": "tsx --env-file-if-exists=../../.env src/dev/upload-menu-images.ts",
     "publish:menu": "tsx --env-file-if-exists=../../.env src/dev/publish-menu.ts",
@@ -32,6 +33,8 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
+    "@types/pg": "8.23.1",
+    "@veyroxai/testkit": "workspace:*",
     "tsx": "4.23.13",
     "vitest": "5.0.0"
   }

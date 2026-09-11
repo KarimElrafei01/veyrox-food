@@ -62,6 +62,7 @@ function subject(options: {
         placedAt: '2026-09-07T00:00:00.000Z',
       },
       response: { orderId: 'o1', orderNumber: 'A-001', totalMinor: 9000 },
+      replayed: false,
     }));
   const orders = {
     findReplay: options.findReplay ?? vi.fn(async () => null),
@@ -92,6 +93,31 @@ describe('PlaceOrder', () => {
     const result = await useCase.execute(input);
     expect(result.replayed).toBe(false);
     expect(result.order.orderNumber).toBe('A-001');
+  });
+
+  it('propagates replayed:true when the repository detects the replay inside its lock', async () => {
+    // The race findReplay() (checked before the lock) can't catch: two concurrent
+    // requests both see no row, both call place(), and the repository itself finds
+    // the other one's insert once it gets the advisory lock. PlaceOrder must not
+    // silently turn that into "replayed: false" — that was the bug (a 201 issued,
+    // OrderPlaced emitted, for a request that was actually a replay).
+    const { useCase, place } = subject({
+      place: vi.fn(async () => ({
+        order: {
+          orderId: 'o1',
+          orderNumber: 'A-001',
+          status: 'placed' as const,
+          totalMinor: 9000,
+          subtotalMinor: 9000,
+          placedAt: '2026-09-07T00:00:00.000Z',
+        },
+        response: { orderId: 'o1', orderNumber: 'A-001', totalMinor: 9000 },
+        replayed: true,
+      })),
+    });
+    const result = await useCase.execute(input);
+    expect(place).toHaveBeenCalledOnce();
+    expect(result.replayed).toBe(true);
   });
 
   it('returns the stored response without re-persisting on replay (PROP-5)', async () => {
