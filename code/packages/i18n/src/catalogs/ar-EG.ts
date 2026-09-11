@@ -85,6 +85,7 @@ export const arEG: Partial<Record<MessageKey, string>> = {
   'item.tempHot': 'ساخن',
   'item.tempIced': 'مثلج',
   'item.unavailable': 'هذا الصنف غير متاح حاليًا.',
+  'item.confirmNote': 'يُحضّر ويُؤكَّد مباشرة عبر واتساب',
 
   'cart.title': 'سلتك',
   'cart.empty': 'سلتك فارغة',

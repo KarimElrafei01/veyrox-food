@@ -1,13 +1,16 @@
 import {
   Button,
+  Field,
+  Icon,
   IconButton,
   Price,
   Screen,
   SelectionCardGroup,
   StickyBar,
+  TextInput,
   useT,
 } from '@veyroxai/ui';
-import type { Locale } from '@veyroxai/i18n';
+import { translate, type Locale } from '@veyroxai/i18n';
 import type { LoyaltyTier, MenuModifierGroup } from '@veyroxai/contracts';
 import { WebviewHeader } from '../../../shared/ui/WebviewHeader.js';
 import type { NewCartLine } from '../../../shared/cart-store.js';
@@ -46,15 +49,19 @@ export function ItemDetailScreen({
   const { t } = useT();
   const cfg = useItemConfigurator(item, groups, tier, initial);
   const name = localized(item.name, locale);
+  // The other language's name, shown small under the title (design 2.2).
+  const secondaryName = (locale === 'ar-EG' ? item.name.en : item.name['ar-EG']) ?? null;
 
   const summaryFor = (): string =>
-    groups
-      .flatMap((g) =>
-        (cfg.selection.byGroup[g.id] ?? []).map((id) => g.options.find((o) => o.id === id)),
-      )
-      .filter((o): o is NonNullable<typeof o> => o != null)
-      .map((o) => localized(o.name, locale))
-      .join(' · ');
+    [
+      ...groups
+        .flatMap((g) =>
+          (cfg.selection.byGroup[g.id] ?? []).map((id) => g.options.find((o) => o.id === id)),
+        )
+        .filter((o): o is NonNullable<typeof o> => o != null)
+        .map((o) => localized(o.name, locale)),
+      ...(cfg.selection.note.trim() ? [cfg.selection.note.trim()] : []),
+    ].join(' · ');
 
   const submit = (): void => {
     const line = cfg.commit({ en: item.name.en, ar: item.name['ar-EG'] }, summaryFor());
@@ -100,19 +107,29 @@ export function ItemDetailScreen({
               <Price minor={cfg.estimateMinor} />
             </Button>
           </div>
+          <p className={styles.confirmNote}>
+            <Icon name="chat" size={14} />
+            {t('item.confirmNote')}
+          </p>
         </StickyBar>
       }
     >
       {item.imageUrl ? (
         <div className={styles.hero} style={{ backgroundImage: `url(${item.imageUrl})` }}>
           <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>{name}</h1>
+            <span className={styles.heroText}>
+              <h1 className={styles.heroTitle}>{name}</h1>
+              {secondaryName ? <span className={styles.heroSecondary}>{secondaryName}</span> : null}
+            </span>
             <Price minor={item.basePriceMinor} tone="accent" size="lg" />
           </div>
         </div>
       ) : (
         <div className={styles.plainHeader}>
-          <h1 className={styles.heroTitle}>{name}</h1>
+          <span className={styles.heroText}>
+            <h1 className={styles.heroTitle}>{name}</h1>
+            {secondaryName ? <span className={styles.heroSecondary}>{secondaryName}</span> : null}
+          </span>
           <Price minor={item.basePriceMinor} tone="accent" size="lg" />
         </div>
       )}
@@ -124,12 +141,19 @@ export function ItemDetailScreen({
       <div className={styles.groups}>
         {groups.map((group) => {
           const err = cfg.validation.find((v) => v.groupId === group.id)?.error;
+          // A single-choice group where no option changes the price reads as a
+          // preparation style (design 2.2's Ice/Temperature) — compact tiles suit it
+          // better than a price list. Any café's group of this shape gets the same
+          // treatment; nothing here is specific to one item.
+          const isPrepStyle =
+            group.selection === 'single' && group.options.every((o) => o.priceDeltaMinor === 0);
           return (
             <SelectionCardGroup
               key={group.id}
               name={group.id}
               mode={group.selection}
               legend={localized(group.name, locale)}
+              layout={isPrepStyle ? 'grid' : 'stack'}
               hint={
                 group.selection === 'single'
                   ? t('item.selectOne')
@@ -152,23 +176,40 @@ export function ItemDetailScreen({
                   value: o.id,
                   label: localized(o.name, locale),
                   disabled: !optionAvailable(o.id),
-                  trailing:
-                    o.priceDeltaMinor === 0 ? (
-                      <span className={styles.base}>{t('item.base')}</span>
-                    ) : waived ? (
-                      <span className={styles.waived}>
-                        <Price minor={o.priceDeltaMinor} tone="muted" size="sm" strikethrough />
-                        <span className={styles.free}>{t('common.free')}</span>
+                  trailing: isPrepStyle ? undefined : o.priceDeltaMinor === 0 ? (
+                    <span className={styles.base}>{t('item.base')}</span>
+                  ) : waived ? (
+                    <span className={styles.waived}>
+                      <Price minor={o.priceDeltaMinor} tone="muted" size="sm" strikethrough />
+                      <span className={styles.free}>
+                        {tier
+                          ? t('item.freeForTier', {
+                              tier: translate(locale, `loyalty.tier.${tier}`),
+                            })
+                          : t('common.free')}
                       </span>
-                    ) : (
-                      <Price minor={o.priceDeltaMinor} tone="accent" size="sm" />
-                    ),
+                    </span>
+                  ) : (
+                    <Price minor={o.priceDeltaMinor} tone="accent" size="sm" />
+                  ),
                 };
               })}
             />
           );
         })}
       </div>
+
+      <Field label={t('item.baristaNote')} hint={t('common.optional')}>
+        {(id) => (
+          <TextInput
+            id={id}
+            maxLength={140}
+            placeholder={t('item.baristaNotePlaceholder')}
+            value={cfg.selection.note}
+            onChange={(e) => cfg.setNote(e.target.value)}
+          />
+        )}
+      </Field>
     </Screen>
   );
 }

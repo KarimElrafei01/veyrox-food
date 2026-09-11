@@ -86,6 +86,7 @@ export const en = {
   'item.tempHot': 'Hot',
   'item.tempIced': 'Iced',
   'item.unavailable': 'This item is unavailable right now.',
+  'item.confirmNote': 'Directly prepped & confirmed via WhatsApp',
 
   'cart.title': 'Your cart',
   'cart.empty': 'Your cart is empty',
