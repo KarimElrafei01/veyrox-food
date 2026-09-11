@@ -16,7 +16,9 @@ import { usePlaceOrder } from '../features/checkout/hooks/usePlaceOrder.js';
 import { CheckoutScreen } from '../features/checkout/ui/CheckoutScreen.js';
 import { useOrderStatus } from '../features/order-status/hooks/useOrderStatus.js';
 import { OrderStatusScreen } from '../features/order-status/ui/OrderStatusScreen.js';
+import { DevKitchenControls } from '../features/order-status/components/DevKitchenControls.js';
 import { LoadingScreen, OpenOrderBlockScreen } from '../features/session/ui/SessionScreens.js';
+import { isDevSession } from '../features/session/ui/DevSwitcher.js';
 import { buildCartLine } from '../features/item/usecases/configureItem.js';
 
 export function Flow(): React.JSX.Element {
@@ -121,7 +123,13 @@ export function Flow(): React.JSX.Element {
   // — route → screen —
 
   if (route.name === 'status' && route.params.orderId) {
-    return <StatusRoute orderId={route.params.orderId} storeName={session.tenant.name} />;
+    return (
+      <StatusRoute
+        orderId={route.params.orderId}
+        tenantId={session.tenant.id}
+        storeName={session.tenant.name}
+      />
+    );
   }
 
   if (place.outcome?.kind === 'open_order') {
@@ -274,23 +282,35 @@ export function Flow(): React.JSX.Element {
 
 function StatusRoute({
   orderId,
+  tenantId,
   storeName,
 }: {
   orderId: string;
+  tenantId: string;
   storeName: string;
 }): React.JSX.Element {
   const { locale } = useT();
   const route = useRoute();
   const status = useOrderStatus(orderId);
   return (
-    <OrderStatusScreen
-      locale={locale}
-      state={status.status}
-      notFound={status.notFound}
-      order={status.order}
-      storeName={storeName}
-      onRetry={status.refresh}
-      onBackToMenu={() => route.navigate('/menu')}
-    />
+    <>
+      <OrderStatusScreen
+        locale={locale}
+        state={status.status}
+        notFound={status.notFound}
+        order={status.order}
+        storeName={storeName}
+        onRetry={status.refresh}
+        onBackToMenu={() => route.navigate('/menu')}
+      />
+      {isDevSession() && status.status === 'ready' ? (
+        <DevKitchenControls
+          orderId={orderId}
+          tenantId={tenantId}
+          status={status.order.status}
+          onAdvanced={status.refresh}
+        />
+      ) : null}
+    </>
   );
 }

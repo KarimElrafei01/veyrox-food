@@ -164,6 +164,9 @@ async function main(): Promise<void> {
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }
       : undefined,
+    // Regular (RLS-scoped) database — this always knows the caller's tenantId, so
+    // it doesn't need the BYPASSRLS admin connection devSessions does.
+    devKitchen: devLogin ? { db: database, etaQueue } : undefined,
   });
 
   const port = Number(process.env.API_PORT ?? 3001);
