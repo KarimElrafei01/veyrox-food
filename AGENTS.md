@@ -93,6 +93,16 @@ shape every feature — a feature with nothing to translate has a one-line pass-
 No global `components/`, `hooks/`, or `utils/` folders; no cross-feature imports (lint zone).
 Promote to app-level `shared/` on the second use inside an app, to a package on the second app.
 
+### Design fidelity for any UI/UX or frontend task
+
+Any screen or frontend task follows `.codex/skills/pixel-perfect-frontend/SKILL.md` before
+implementation: open every design source (images *and* generated code, not just the file
+named in the prompt), derive/reconcile a design system against `code/packages/ui/src/tokens`,
+research current component libraries before hand-rolling primitives, run a real-screenshot
+compare-iterate loop per screen, and flag missing assets as named placeholders. A screen isn't
+done until that loop has converged. (Claude's equivalent lives at
+`.claude/skills/pixel-perfect-frontend/SKILL.md` — same content, kept in sync.)
+
 ### Simplicity rules
 
 - Write the simplest thing that satisfies the requirement. The uniform layer skeletons (four

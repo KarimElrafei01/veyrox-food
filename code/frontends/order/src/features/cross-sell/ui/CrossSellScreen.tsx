@@ -47,7 +47,7 @@ export function CrossSellScreen({
             onClick={onContinue}
           >
             <span>{t('crossSell.continue')}</span>
-            {totalMinor != null ? <Price minor={totalMinor} /> : null}
+            {totalMinor != null ? <Price minor={totalMinor} tone="inherit" /> : null}
           </Button>
           <button type="button" className={styles.keep} onClick={onSkip}>
             {t('crossSell.keepOriginal')}

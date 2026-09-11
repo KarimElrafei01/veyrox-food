@@ -17,9 +17,19 @@
   gap: var(--vx-space-xs);
   background: linear-gradient(to top, rgba(7, 1, 0, 0.8), rgba(7, 1, 0, 0.05));
 }
+.heroText {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
 .heroTitle {
   font-size: var(--vx-text-headline-lg);
   color: var(--vx-on-primary);
+}
+.heroSecondary {
+  font-size: var(--vx-text-body-sm);
+  color: var(--vx-inverse-on-surface);
+  opacity: 0.85;
 }
 .plainHeader {
   display: flex;
@@ -67,6 +77,15 @@
 .cta {
   flex: 1;
   text-align: start;
+}
+.confirmNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin: var(--vx-space-2xs) 0 0;
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-on-surface-variant);
 }
 .base {
   font-size: var(--vx-text-label-md);

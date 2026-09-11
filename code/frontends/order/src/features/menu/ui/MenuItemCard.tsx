@@ -73,7 +73,7 @@ export function MenuItemCard({
         </div>
 
         {item.available ? (
-          qtyInCart > 0 && !hasModifiers ? (
+          qtyInCart > 0 ? (
             <Stepper
               value={qtyInCart}
               min={0}

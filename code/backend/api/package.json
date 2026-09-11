@@ -12,6 +12,7 @@
     "test": "vitest run",
     "fixture": "tsx --env-file-if-exists=../../.env src/dev/fixture.ts",
     "upload:menu-images": "tsx --env-file-if-exists=../../.env src/dev/upload-menu-images.ts",
+    "publish:menu": "tsx --env-file-if-exists=../../.env src/dev/publish-menu.ts",
     "tokens": "tsx --env-file-if-exists=../../.env src/dev/session-tokens.ts"
   },
   "dependencies": {

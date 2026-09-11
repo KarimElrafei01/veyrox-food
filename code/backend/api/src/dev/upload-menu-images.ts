@@ -4,8 +4,13 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const images = [
+  ['Americano', 'americano.png'],
+  ['Baladi Date Bread Pudding', 'baladi-date-bread-pudding.png'],
   ['Cardamom Baladi Latte', 'cardamom-baladi-latte.png'],
   ['Cold Brew Hibiscus (Karkadeh)', 'cold-brew-hibiscus.png'],
+  ['Flat White', 'flat-white.png'],
+  ['Iced Honey Latte', 'iced-honey-latte.png'],
+  ['Pistachio Baklava Bite', 'pistachio-baklava-bite.png'],
   ['Tahina Sea Salt Cookie', 'tahina-sea-salt-cookie.png'],
   ['Butter Croissant', 'butter-croissant.png'],
 ] as const;
@@ -38,6 +43,7 @@ async function main(): Promise<void> {
         .where(eq(tables.menuItems.nameEn, nameEn));
       if (!item) throw new Error(`Seed item not found: ${nameEn}`);
       const objectKey = `tenants/${tenant.id}/menu/${filename}`;
+      if (item.imageObjectKey === objectKey) continue;
       const source = path.resolve(
         import.meta.dirname,
         '../../../../frontends/order/src/assets/menu',

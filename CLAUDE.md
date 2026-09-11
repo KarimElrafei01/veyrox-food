@@ -13,6 +13,7 @@ WhatsApp-native operating layer for independent Egyptian cafés: ordering, KDS, 
 5. **State schedule impact explicitly.** Scope changes come with a milestone delta and what they displace. Never absorb scope silently.
 6. **Never weaken a non-negotiable** (below). Propose an alternative instead.
 7. **Branch discipline.** An agent never commits to `main` and never `git push`. All work happens on a short-lived branch off `main`; commit there and stop — a human runs the merge and the push. Parallel agents work in the **one checkout** and coordinate on branches — no `git worktree`, no second working directory (ADR-0019).
+8. **Design fidelity for UI/UX work.** Any screen or frontend task follows `.claude/skills/pixel-perfect-frontend/SKILL.md` — invoke it via the Skill tool. (Codex uses the identical `.codex/skills/pixel-perfect-frontend/SKILL.md` — keep both copies in sync.) Open every design source (images *and* generated code) before coding, derive/reconcile a design system against `code/packages/ui/src/tokens`, research current component libraries before hand-rolling primitives, run a real-screenshot compare-iterate loop per screen, and flag missing assets as named placeholders. A screen isn't done until that loop has converged.
 
 ## Non-negotiables
 

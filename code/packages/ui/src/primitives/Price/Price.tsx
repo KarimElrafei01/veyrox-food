@@ -5,7 +5,7 @@ import styles from './Price.module.css';
 interface PriceProps {
   minor: number;
   compact?: boolean;
-  tone?: 'default' | 'accent' | 'muted';
+  tone?: 'default' | 'accent' | 'muted' | 'inherit';
   size?: 'sm' | 'md' | 'lg';
   strikethrough?: boolean;
 }

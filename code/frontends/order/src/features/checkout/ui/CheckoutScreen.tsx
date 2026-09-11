@@ -89,7 +89,7 @@ export function CheckoutScreen({
             <span className={styles.ctaText}>
               {placing ? t('checkout.placing') : t('checkout.placeOrder')}
             </span>
-            <Price minor={activeQuote.totalMinor} />
+            <Price minor={activeQuote.totalMinor} tone="inherit" />
           </Button>
           <p className={styles.confirmNote}>
             <Icon name="chat" size={14} />
