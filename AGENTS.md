@@ -95,33 +95,13 @@ Promote to app-level `shared/` on the second use inside an app, to a package on 
 
 ### Design fidelity for any UI/UX or frontend task
 
-Full process: `.claude/skills/pixel-perfect-frontend/SKILL.md` (written for Claude's Skill
-tool, but the process applies regardless of which agent is doing the work — read it before
-any screen-level frontend task). Condensed, mandatory for Codex too:
-
-1. **Open every design source before coding** — not just the file named in the prompt. For
-   ordering/menu/cart/checkout/status screens that includes `stitch_whatsapp_caf_ordering_app.zip`
-   at the repo root (unzip to scratch, never commit it) and `docs/14-stitch-design-prompts.md`.
-   A Stitch-style export ships both rendered images (pixel/layout source of truth) and
-   generated code (exact color/type/spacing values) — read both.
-2. **Derive the design system from what you found, then reconcile against
-   `code/packages/ui/src/tokens/*.css` and existing primitives** — extend/correct tokens,
-   don't invent a parallel styling system or inline the values on one screen. A global-looking
-   mismatch (whole palette, a type-scale step) is a token-file change, stated explicitly, not a
-   local hack. A material conflict between the design and existing docs/behavior stops
-   implementation per the observable-behavior-conflict rule above.
-3. **Research current component libraries** (shadcn/ui, Radix Primitives, Base UI, React Aria,
-   Ariakit, etc.) before hand-rolling a non-trivial interactive primitive — verify freshness,
-   don't rely on stale memory. Adopting a new library is a material decision: write the ADR.
-   Respect the CSS Modules styling approach and the `frontends/order` 150 KB gz budget.
-4. **Compare-iterate loop, mandatory per screen**: implement → real screenshot of the running
-   app at target viewport → element-by-element diff against the design image (every card,
-   input, icon, image, spacing, color, text) → fix → re-screenshot → repeat until it matches or
-   the only gap is a missing asset or a flagged conflict. Do not call a screen done from reading
-   the JSX alone.
-5. **Missing assets**: never substitute unrelated stock art. Place a clearly-marked, correctly
-   sized placeholder and name it explicitly to the user — an unflagged placeholder is not done.
-6. Check RTL (`ar-EG`) before calling any screen done, not only the English layout.
+Any screen or frontend task follows `.codex/skills/pixel-perfect-frontend/SKILL.md` before
+implementation: open every design source (images *and* generated code, not just the file
+named in the prompt), derive/reconcile a design system against `code/packages/ui/src/tokens`,
+research current component libraries before hand-rolling primitives, run a real-screenshot
+compare-iterate loop per screen, and flag missing assets as named placeholders. A screen isn't
+done until that loop has converged. (Claude's equivalent lives at
+`.claude/skills/pixel-perfect-frontend/SKILL.md` — same content, kept in sync.)
 
 ### Simplicity rules
 
