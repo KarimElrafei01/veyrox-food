@@ -3,6 +3,8 @@ import styles from './SelectionCardGroup.module.css';
 export interface SelectionCardOption {
   value: string;
   label: string;
+  /** Visual cue for compact preparation-choice tiles. */
+  icon?: React.ReactNode;
   description?: string;
   /** Right-aligned adornment (price delta, "Base", a badge). */
   trailing?: React.ReactNode;
@@ -66,6 +68,7 @@ export function SelectionCardGroup({
                 onChange={() => onToggle(opt.value)}
                 className={styles.input}
               />
+              {opt.icon ? <span className={styles.optionIcon}>{opt.icon}</span> : null}
               <span className={styles.body}>
                 <span className={styles.label}>{opt.label}</span>
                 {opt.description ? (

@@ -59,6 +59,14 @@
   text-align: center;
   gap: 0.25rem;
 }
+.optionIcon {
+  display: grid;
+  place-items: center;
+  color: var(--vx-secondary);
+}
+.grid .optionIcon {
+  margin-block: 0.125rem;
+}
 .disabled {
   opacity: 0.5;
   cursor: not-allowed;

@@ -16,29 +16,43 @@ function row(overrides: Partial<OwnedOrderRow> = {}): OwnedOrderRow {
     collectedAt: null,
     rejectionReason: null,
     rejectedAt: null,
+    etaItems: [{ prepSeconds: 120 }],
     ...overrides,
   };
 }
 
 const now = new Date('2026-09-07T12:05:00Z');
+// An empty queue, one station — so the pre-Accept estimate comes only from the
+// order's own prep time, same as the PlaceOrder tests.
+const queue = { tickets: [], activeStations: 1 };
+const input = (overrides: { tier: 'bronze' | 'gold' }) => ({
+  ...overrides,
+  now,
+  queue,
+  upperMultiplier: 1.25,
+});
 
 describe('describeOrderStatus', () => {
-  it('labels a placed order in both locales without starting the clock', () => {
-    const view = describeOrderStatus(row(), { tier: 'bronze', now });
+  it('labels a placed order in both locales with a live pre-Accept estimate', () => {
+    const view = describeOrderStatus(row(), input({ tier: 'bronze' }));
     expect(view.statusLabel).toEqual({
       en: 'Sent to the kitchen',
       'ar-EG': 'تم الإرسال للمطبخ',
     });
-    expect(view.eta).toMatchObject({
+    // F1.7 §2's own worked example: a populated range before Accept, not a blank
+    // promise — only promisedLowerAt/UpperAt wait on Accept.
+    expect(view.eta).toEqual({
       startsOnAccept: true,
-      lowerMinutes: null,
-      upperMinutes: null,
+      lowerMinutes: 5,
+      upperMinutes: 10,
+      promisedLowerAt: null,
+      promisedUpperAt: null,
     });
   });
 
   it('collapses received and preparing to the same customer label', () => {
-    const received = describeOrderStatus(row({ status: 'received' }), { tier: 'bronze', now });
-    const preparing = describeOrderStatus(row({ status: 'preparing' }), { tier: 'bronze', now });
+    const received = describeOrderStatus(row({ status: 'received' }), input({ tier: 'bronze' }));
+    const preparing = describeOrderStatus(row({ status: 'preparing' }), input({ tier: 'bronze' }));
     expect(received.statusLabel.en).toBe('Being prepared');
     expect(preparing.statusLabel.en).toBe('Being prepared');
   });
@@ -50,7 +64,7 @@ describe('describeOrderStatus', () => {
         promisedEtaLowerAt: new Date('2026-09-07T12:11:00Z'),
         promisedEtaUpperAt: new Date('2026-09-07T12:15:00Z'),
       }),
-      { tier: 'bronze', now },
+      input({ tier: 'bronze' }),
     );
     expect(view.eta.lowerMinutes).toBe(6);
     expect(view.eta.upperMinutes).toBe(10);
@@ -65,29 +79,37 @@ describe('describeOrderStatus', () => {
         promisedEtaLowerAt: new Date('2026-09-07T12:01:00Z'),
         promisedEtaUpperAt: new Date('2026-09-07T12:03:00Z'),
       }),
-      { tier: 'bronze', now },
+      input({ tier: 'bronze' }),
     );
     expect(view.eta.lowerMinutes).toBe(0);
     expect(view.eta.upperMinutes).toBe(0);
   });
 
+  it('still returns a populated estimate when an accepted order is missing its promise', () => {
+    // Defensive: this shouldn't happen once Accept always writes both columns, but
+    // a blank eta would fail the contract just as badly as it did pre-Accept.
+    const view = describeOrderStatus(row({ status: 'received' }), input({ tier: 'bronze' }));
+    expect(view.eta.lowerMinutes).toBeGreaterThan(0);
+    expect(view.eta.upperMinutes).toBeGreaterThan(0);
+  });
+
   it('passes through a known rejection reason and drops an unknown one', () => {
     expect(
-      describeOrderStatus(row({ status: 'rejected', rejectionReason: 'item_unavailable' }), {
-        tier: 'bronze',
-        now,
-      }).rejectionReason,
+      describeOrderStatus(
+        row({ status: 'rejected', rejectionReason: 'item_unavailable' }),
+        input({ tier: 'bronze' }),
+      ).rejectionReason,
     ).toBe('item_unavailable');
     expect(
-      describeOrderStatus(row({ status: 'rejected', rejectionReason: 'staff typed something' }), {
-        tier: 'bronze',
-        now,
-      }).rejectionReason,
+      describeOrderStatus(
+        row({ status: 'rejected', rejectionReason: 'staff typed something' }),
+        input({ tier: 'bronze' }),
+      ).rejectionReason,
     ).toBeNull();
   });
 
   it('previews loyalty points against the order total and the token tier', () => {
-    expect(describeOrderStatus(row(), { tier: 'gold', now }).loyalty.pointsToEarn).toBe(
+    expect(describeOrderStatus(row(), input({ tier: 'gold' })).loyalty.pointsToEarn).toBe(
       Math.floor(27 * 1.5),
     );
   });

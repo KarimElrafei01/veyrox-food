@@ -30,6 +30,7 @@ import type { OrderPlacementMetricSink } from './contexts/ordering/application/o
 import { orderStatusController } from './contexts/ordering/interface/order-status-controller.js';
 import type { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
 import { devSessionController } from './dev/dev-session-controller.js';
+import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
 
 export interface AppDeps {
@@ -65,9 +66,16 @@ export interface AppDeps {
     repository: CustomerLocaleRepository;
     keys: readonly [string, ...string[]];
   };
-  orderStatus?: { orders: OrderStatusRepository; keys: readonly [string, ...string[]] };
+  orderStatus?: {
+    orders: OrderStatusRepository;
+    keys: readonly [string, ...string[]];
+    etaQueue: EtaQueueRepository;
+    etaMetrics: EtaMetricSink;
+  };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
+  /** Dev-only kitchen-action simulator (DEV_LOGIN). Off in production. */
+  devKitchen?: { db: Database; etaQueue: EtaQueueRepository };
 }
 
 declare module 'fastify' {
@@ -145,6 +153,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.placeOrder) await app.register(placeOrderController, deps.placeOrder);
   if (deps.orderStatus) await app.register(orderStatusController, deps.orderStatus);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
+  if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 
   return app;
 }

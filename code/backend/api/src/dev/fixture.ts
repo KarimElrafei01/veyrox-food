@@ -10,7 +10,16 @@
  *
  * Never run against a real tenant's database.
  */
-import { and, createDatabase, createPool, eq, isNull, tables, type Database } from '@veyroxai/db';
+import {
+  and,
+  createDatabase,
+  createPool,
+  eq,
+  inArray,
+  isNull,
+  tables,
+  type Database,
+} from '@veyroxai/db';
 import { CatalogueRepository } from '../contexts/catalog/infrastructure/catalogue-repository.js';
 import { mintCustomerSession } from '../contexts/identity/domain/index.js';
 
@@ -273,6 +282,46 @@ async function ensureOrder(
   return row!;
 }
 
+/**
+ * There's no KDS yet to Accept an order, so any order a tester places by hand
+ * through the webview (not through `ensureOrder` above) sits at 'placed' forever —
+ * silently breaking the "only one customer has an open order" invariant the whole
+ * fixture is built to demonstrate, and permanently blocking that customer's
+ * re-entry redirect. Converge every open order this run didn't just create/touch
+ * to 'collected' so a stray hand-placed order never lingers past the next run.
+ */
+async function closeStrayOpenOrders(db: Database, t: string, keepOpen: ReadonlySet<string>) {
+  const open = await db
+    .select({
+      id: tables.orders.id,
+      status: tables.orders.status,
+      customerId: tables.orders.customerId,
+    })
+    .from(tables.orders)
+    .where(
+      and(
+        eq(tables.orders.tenantId, t),
+        inArray(tables.orders.status, ['placed', 'received', 'preparing', 'ready']),
+      ),
+    );
+  for (const order of open) {
+    if (keepOpen.has(order.id)) continue;
+    await db
+      .update(tables.orders)
+      .set({ status: 'collected', collectedAt: now })
+      .where(eq(tables.orders.id, order.id));
+    await db.insert(tables.orderEvents).values({
+      tenantId: t,
+      orderId: order.id,
+      fromStatus: order.status,
+      toStatus: 'collected',
+      actorType: 'system',
+      source: 'job',
+      reason: 'dev-fixture: closed a stray hand-placed order',
+    });
+  }
+}
+
 async function main() {
   const adminUrl = process.env.DATABASE_ADMIN_URL;
   if (!adminUrl) throw new Error('DATABASE_ADMIN_URL is not set');
@@ -374,12 +423,24 @@ async function main() {
     const bronze = await ensureCustomer(db, t, 'bronze', 'bronze', 120);
     const suspended = await ensureCustomer(db, t, 'suspended', 'bronze', 0);
 
+    // Four more, filling gaps the original four never covered:
+    //  - no one was tier 'silver', so the oat-milk waiver (`freeForTier: 'silver'`
+    //    on the Milk Choice group above) had no customer to demonstrate it against.
+    //  - 'gold' always carries the deliberately-open A-102, so there was no way to
+    //    place a *successful* gold order and see its tier pricing/loyalty rate.
+    //  - no fixture order ever sat at 'received' (accepted, not yet preparing) or
+    //    'ready' (accepted, done) — two of the four live order-status screens.
+    const silver = await ensureCustomer(db, t, 'silver', 'silver', 320);
+    const goldFree = await ensureCustomer(db, t, 'gold-free', 'gold', 900);
+    const justAccepted = await ensureCustomer(db, t, 'just-accepted', 'bronze', 60);
+    const readyForPickup = await ensureCustomer(db, t, 'ready-for-pickup', 'bronze', 200);
+
     // Only ONE customer has an order in progress (gold, below) — everyone else's
     // openOrder is null, so a re-entering fresh/bronze customer lands on the menu.
     await ensureOrder(db, t, bronze.id, 'A-101', 'collected', { collectedAt: now });
     // gold's order is in the kitchen -> re-entry redirects to its live status, and a
     // new placement returns OPEN_ORDER_LIMIT.
-    await ensureOrder(db, t, gold.id, 'A-102', 'preparing', {
+    const goldPreparing = await ensureOrder(db, t, gold.id, 'A-102', 'preparing', {
       acceptedAt: now,
       promisedEtaLowerAt: new Date(now.getTime() + 8 * 60_000),
       promisedEtaUpperAt: new Date(now.getTime() + 12 * 60_000),
@@ -393,6 +454,21 @@ async function main() {
     for (const n of [1, 2, 3]) {
       await ensureOrder(db, t, suspended.id, `A-09${n}`, 'abandoned');
     }
+    // accepted, clock running, barista hasn't started yet
+    const received = await ensureOrder(db, t, justAccepted.id, 'A-104', 'received', {
+      acceptedAt: now,
+      promisedEtaLowerAt: new Date(now.getTime() + 10 * 60_000),
+      promisedEtaUpperAt: new Date(now.getTime() + 14 * 60_000),
+    });
+    // accepted and done — "come collect it"
+    const ready = await ensureOrder(db, t, readyForPickup.id, 'A-105', 'ready', {
+      acceptedAt: new Date(now.getTime() - 9 * 60_000),
+      readyAt: now,
+      promisedEtaLowerAt: new Date(now.getTime() - 1 * 60_000),
+      promisedEtaUpperAt: new Date(now.getTime() + 3 * 60_000),
+    });
+
+    await closeStrayOpenOrders(db, t, new Set([goldPreparing.id, received.id, ready.id]));
 
     const iat = Math.floor(now.getTime() / 1000);
     const exp = iat + 24 * 3600;
@@ -439,8 +515,29 @@ async function main() {
           tier: 'bronze',
           token: token(suspended.id, '201000004', 'bronze'),
         },
+        silver: { id: silver.id, tier: 'silver', token: token(silver.id, '201000005', 'silver') },
+        goldFree: {
+          id: goldFree.id,
+          tier: 'gold',
+          token: token(goldFree.id, '201000006', 'gold'),
+        },
+        justAccepted: {
+          id: justAccepted.id,
+          tier: 'bronze',
+          token: token(justAccepted.id, '201000007', 'bronze'),
+        },
+        readyForPickup: {
+          id: readyForPickup.id,
+          tier: 'bronze',
+          token: token(readyForPickup.id, '201000008', 'bronze'),
+        },
       },
-      orders: { placed: bronzeOpen!.id, accepted: goldAccepted!.id },
+      orders: {
+        placed: bronzeOpen!.id,
+        accepted: goldAccepted!.id,
+        received: received.id,
+        ready: ready.id,
+      },
     };
     console.log(JSON.stringify(out, null, 2));
     console.log(`\n--- curl kit (API on http://localhost:3001) ---`);
