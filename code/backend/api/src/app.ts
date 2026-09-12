@@ -39,6 +39,8 @@ import { revertOrderController } from './contexts/ordering/interface/revert-orde
 import type { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { tickItemController } from './contexts/ordering/interface/tick-item-controller.js';
 import type { TickItem } from './contexts/ordering/application/tick-item.js';
+import { boardSnapshotController } from './contexts/ordering/interface/board-snapshot-controller.js';
+import type { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
 import { devSessionController } from './dev/dev-session-controller.js';
 import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
@@ -111,6 +113,11 @@ export interface AppDeps {
     deviceKeys: readonly [string, ...string[]];
     pinKeys: readonly [string, ...string[]];
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  boardSnapshot?: {
+    board: LoadBoardSnapshot;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
   };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
@@ -197,6 +204,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.advanceOrder) await app.register(advanceOrderController, deps.advanceOrder);
   if (deps.revertOrder) await app.register(revertOrderController, deps.revertOrder);
   if (deps.tickItem) await app.register(tickItemController, deps.tickItem);
+  if (deps.boardSnapshot) await app.register(boardSnapshotController, deps.boardSnapshot);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 

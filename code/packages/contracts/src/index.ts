@@ -75,4 +75,6 @@ export {
   type KitchenOrderErrorCode,
   invalidTransitionProblem,
   type InvalidTransitionProblem,
+  boardSnapshotResponse,
+  type BoardSnapshotResponse,
 } from './staff-ordering.js';

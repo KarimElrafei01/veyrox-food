@@ -3,11 +3,17 @@ import type { OrderTicket } from '@veyroxai/contracts';
 import { REVERT_WINDOW_SECONDS, type EtaCartItem, type LoyaltyTier } from '@veyroxai/domain';
 import {
   canTransition,
+  isNewTicket,
   isRevertEligible,
   legalNextStatuses,
   type OrderStatus,
 } from '../domain/order-state-machine.js';
 import { buildOrderTicket, type OrderTicketSource } from '../application/order-ticket-view.js';
+
+// The exact set the live-order partial index covers (04-data-model.md §16,
+// fixed to include 'placed' per the docs/adr correction) - New/Received/
+// Preparing/Ready, the board's four columns.
+const LIVE_TICKET_STATUSES = ['placed', 'pending', 'received', 'preparing', 'ready'] as const;
 
 export class OrderNotFound extends Error {
   constructor() {
@@ -575,6 +581,260 @@ export class KitchenOrderRepository {
 
       return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: false };
     });
+  }
+
+  /** GET /staff/board (backend doc §1) - used on first load and gap-cap resync,
+   *  never polled. Batches items/modifiers/customers/events by order_id IN (...)
+   *  rather than one query per order - a 16-slot rail is at most ~16 orders, but
+   *  the shape is specified so it is never accidentally written as a loop. */
+  async loadBoardSnapshot(input: { tenantId: string; now: Date }): Promise<{
+    asOfEventId: number;
+    columns: {
+      new: OrderTicket[];
+      received: OrderTicket[];
+      preparing: OrderTicket[];
+      ready: OrderTicket[];
+    };
+    metrics: {
+      activeTicketCount: number;
+      delayedOver15mCount: number;
+      avgTurnaroundSeconds: number;
+      railCapacity: { used: number; slots: number };
+      peakVelocityPerHour: number;
+    };
+  }> {
+    return withTenant(this.db, input.tenantId, async (tx) => {
+      const railCapacitySlots = 16; // "a 16-slot rail" (backend doc §4.3)
+      const [liveOrders, maxEventRow, turnaround] = await Promise.all([
+        tx
+          .select()
+          .from(tables.orders)
+          .where(
+            and(
+              eq(tables.orders.tenantId, input.tenantId),
+              inArray(tables.orders.status, LIVE_TICKET_STATUSES),
+            ),
+          )
+          .orderBy(tables.orders.createdAt),
+        tx
+          .select({ maxId: sql<number | null>`max(${tables.orderEvents.id})` })
+          .from(tables.orderEvents)
+          .where(eq(tables.orderEvents.tenantId, input.tenantId)),
+        this.loadTurnaroundMetrics(tx, input.tenantId),
+      ]);
+      const asOfEventId = maxEventRow[0]?.maxId ?? 0;
+
+      if (!liveOrders.length) {
+        return {
+          asOfEventId,
+          columns: { new: [], received: [], preparing: [], ready: [] },
+          metrics: {
+            activeTicketCount: 0,
+            delayedOver15mCount: 0,
+            avgTurnaroundSeconds: turnaround.avgTurnaroundSeconds,
+            railCapacity: { used: 0, slots: railCapacitySlots },
+            peakVelocityPerHour: turnaround.peakVelocityPerHour,
+          },
+        };
+      }
+
+      const orderIds = liveOrders.map((order) => order.id);
+      const customerIds = [
+        ...new Set(
+          liveOrders.map((order) => order.customerId).filter((id): id is string => id !== null),
+        ),
+      ];
+
+      const [items, customers, staffEvents, tickEvents] = await Promise.all([
+        tx
+          .select()
+          .from(tables.orderItems)
+          .where(
+            and(
+              eq(tables.orderItems.tenantId, input.tenantId),
+              inArray(tables.orderItems.orderId, orderIds),
+            ),
+          ),
+        customerIds.length
+          ? tx
+              .select()
+              .from(tables.customers)
+              .where(
+                and(
+                  eq(tables.customers.tenantId, input.tenantId),
+                  inArray(tables.customers.id, customerIds),
+                ),
+              )
+          : Promise.resolve([]),
+        // Batched equivalent of loadTicket's lastStaffEvent lookup - same
+        // item_tick exclusion, same reasoning (see revert()'s comment).
+        tx
+          .select({
+            orderId: tables.orderEvents.orderId,
+            toStatus: tables.orderEvents.toStatus,
+            createdAt: tables.orderEvents.createdAt,
+          })
+          .from(tables.orderEvents)
+          .where(
+            and(
+              eq(tables.orderEvents.tenantId, input.tenantId),
+              inArray(tables.orderEvents.orderId, orderIds),
+              eq(tables.orderEvents.actorType, 'staff'),
+              sql`coalesce(${tables.orderEvents.metadata} ->> 'action', '') != 'item_tick'`,
+            ),
+          )
+          .orderBy(tables.orderEvents.id),
+        tx
+          .select({
+            orderItemId: sql<string>`${tables.orderEvents.metadata} ->> 'orderItemId'`,
+            ticked: sql<boolean>`(${tables.orderEvents.metadata} ->> 'ticked')::boolean`,
+          })
+          .from(tables.orderEvents)
+          .where(
+            and(
+              eq(tables.orderEvents.tenantId, input.tenantId),
+              inArray(tables.orderEvents.orderId, orderIds),
+              sql`${tables.orderEvents.metadata} ->> 'action' = 'item_tick'`,
+            ),
+          )
+          .orderBy(tables.orderEvents.id),
+      ]);
+
+      const itemIds = items.map((item) => item.id);
+      const modifiers = itemIds.length
+        ? await tx
+            .select()
+            .from(tables.orderItemModifiers)
+            .where(inArray(tables.orderItemModifiers.orderItemId, itemIds))
+        : [];
+
+      const itemsByOrder = new Map<string, typeof items>();
+      for (const item of items) {
+        const existing = itemsByOrder.get(item.orderId) ?? [];
+        existing.push(item);
+        itemsByOrder.set(item.orderId, existing);
+      }
+      const modifiersByItem = new Map<string, typeof modifiers>();
+      for (const modifier of modifiers) {
+        const existing = modifiersByItem.get(modifier.orderItemId) ?? [];
+        existing.push(modifier);
+        modifiersByItem.set(modifier.orderItemId, existing);
+      }
+      const customerById = new Map(customers.map((customer) => [customer.id, customer]));
+      const tickedByItem = new Map<string, boolean>();
+      for (const event of tickEvents) tickedByItem.set(event.orderItemId, event.ticked);
+      const staffEventsByOrder = new Map<string, typeof staffEvents>();
+      for (const event of staffEvents) {
+        const existing = staffEventsByOrder.get(event.orderId) ?? [];
+        existing.push(event);
+        staffEventsByOrder.set(event.orderId, existing);
+      }
+
+      const columns: {
+        new: OrderTicket[];
+        received: OrderTicket[];
+        preparing: OrderTicket[];
+        ready: OrderTicket[];
+      } = { new: [], received: [], preparing: [], ready: [] };
+      let delayedOver15mCount = 0;
+
+      for (const order of liveOrders) {
+        const status = order.status as OrderStatus;
+        const eventsForOrder = staffEventsByOrder.get(order.id) ?? [];
+        // Ascending order, so the *last* event whose to_status matches this
+        // order's own current status wins (mirrors loadTicket exactly).
+        const lastStaffTransitionAt =
+          [...eventsForOrder].reverse().find((event) => event.toStatus === status)?.createdAt ??
+          null;
+        const customer = order.customerId ? (customerById.get(order.customerId) ?? null) : null;
+
+        const source: OrderTicketSource = {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          channel: order.channel as 'whatsapp' | 'cashier',
+          status,
+          tableLabel: order.tableLabel,
+          customerNote: order.customerNote,
+          placedAt: order.createdAt,
+          acceptedAt: order.acceptedAt,
+          promisedEtaUpperAt: order.promisedEtaUpperAt,
+          customer: customer
+            ? {
+                displayName: customer.displayName,
+                tier: customer.tier as 'bronze' | 'silver' | 'gold',
+              }
+            : null,
+          items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
+            orderItemId: item.id,
+            qty: item.qty,
+            nameSnapshotEn: item.nameSnapshotEn,
+            nameSnapshotAr: item.nameSnapshotAr,
+            modifiers: (modifiersByItem.get(item.id) ?? []).map((modifier) => ({
+              nameSnapshotEn: modifier.nameSnapshotEn,
+              nameSnapshotAr: modifier.nameSnapshotAr,
+            })),
+            ticked: tickedByItem.get(item.id) ?? false,
+          })),
+          lastStaffTransitionAt,
+        };
+        const ticket = buildOrderTicket(source, input.now);
+
+        if (isNewTicket(status)) columns.new.push(ticket);
+        else if (status === 'received') columns.received.push(ticket);
+        else if (status === 'preparing') columns.preparing.push(ticket);
+        else if (status === 'ready') columns.ready.push(ticket);
+
+        if (ticket.ageSeconds > 15 * 60) delayedOver15mCount += 1;
+      }
+
+      return {
+        asOfEventId,
+        columns,
+        metrics: {
+          activeTicketCount: liveOrders.length,
+          delayedOver15mCount,
+          avgTurnaroundSeconds: turnaround.avgTurnaroundSeconds,
+          railCapacity: { used: liveOrders.length, slots: railCapacitySlots },
+          peakVelocityPerHour: turnaround.peakVelocityPerHour,
+        },
+      };
+    });
+  }
+
+  /** Neither figure is precisely specified by either F2 doc (backend doc §1
+   *  only names them in the metrics example) - defined here explicitly so the
+   *  interpretation is visible and reviewable, not silently baked into a query:
+   *  turnaround = accept-to-ready duration for today's (Cairo business_date)
+   *  orders that have reached Ready or later; velocity = the busiest single
+   *  clock hour of Accepts today. Both scoped by `business_date`, the same
+   *  authoritative "which Cairo day" column placement already computes, rather
+   *  than re-deriving a day boundary from accepted_at. */
+  private async loadTurnaroundMetrics(
+    tx: Parameters<Parameters<Database['transaction']>[0]>[0],
+    tenantId: string,
+  ): Promise<{ avgTurnaroundSeconds: number; peakVelocityPerHour: number }> {
+    const result = await tx.execute<{
+      avg_seconds: string | null;
+      peak_per_hour: string | null;
+    }>(sql`
+      WITH today AS (
+        SELECT accepted_at, ready_at
+        FROM orders
+        WHERE tenant_id = ${tenantId}
+          AND business_date = (now() AT TIME ZONE 'Africa/Cairo')::date
+          AND accepted_at IS NOT NULL
+      )
+      SELECT
+        (SELECT avg(extract(epoch FROM (ready_at - accepted_at))) FROM today WHERE ready_at IS NOT NULL) AS avg_seconds,
+        (SELECT max(hourly.bucket_count) FROM (
+          SELECT count(*) AS bucket_count FROM today GROUP BY date_trunc('hour', accepted_at)
+        ) AS hourly) AS peak_per_hour
+    `);
+    const row = result.rows[0];
+    return {
+      avgTurnaroundSeconds: row?.avg_seconds ? Math.round(Number(row.avg_seconds)) : 0,
+      peakVelocityPerHour: row?.peak_per_hour ? Number(row.peak_per_hour) : 0,
+    };
   }
 
   private async loadTicket(

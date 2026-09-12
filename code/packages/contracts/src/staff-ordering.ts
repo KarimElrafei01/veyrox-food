@@ -103,3 +103,28 @@ export const invalidTransitionProblem = z.object({
   traceId: z.string(),
 });
 export type InvalidTransitionProblem = z.infer<typeof invalidTransitionProblem>;
+
+/** GET /staff/board (backend doc §1) - full snapshot, used on first load and
+ *  gap-cap resync, never polled. */
+export const boardSnapshotResponse = z.object({
+  asOfEventId: z.number().int().nonnegative(),
+  activeStations: z.number().int().positive(),
+  columns: z.object({
+    new: z.array(orderTicket),
+    received: z.array(orderTicket),
+    preparing: z.array(orderTicket),
+    ready: z.array(orderTicket),
+  }),
+  metrics: z.object({
+    activeTicketCount: z.number().int().nonnegative(),
+    delayedOver15mCount: z.number().int().nonnegative(),
+    avgTurnaroundSeconds: z.number().int().nonnegative(),
+    railCapacity: z.object({
+      used: z.number().int().nonnegative(),
+      slots: z.number().int().positive(),
+    }),
+    peakVelocityPerHour: z.number().int().nonnegative(),
+  }),
+  traceId: z.string(),
+});
+export type BoardSnapshotResponse = z.infer<typeof boardSnapshotResponse>;

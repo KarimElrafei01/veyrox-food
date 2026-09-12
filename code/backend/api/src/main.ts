@@ -29,6 +29,7 @@ import { RejectOrder } from './contexts/ordering/application/reject-order.js';
 import { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
 import { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { TickItem } from './contexts/ordering/application/tick-item.js';
+import { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
 import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
 
 const log = createLogger({ service: 'api' });
@@ -225,6 +226,11 @@ async function main(): Promise<void> {
       emit: async (event) => {
         log.info('OrderItemTicked', event);
       },
+    },
+    boardSnapshot: {
+      board: new LoadBoardSnapshot(kitchenOrders, etaQueue),
+      deviceKeys,
+      pinKeys,
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }
