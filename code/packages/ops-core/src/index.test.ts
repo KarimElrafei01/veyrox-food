@@ -1,6 +1,16 @@
-import { expect, it } from 'vitest';
-import { OPS_CORE_PLACEHOLDER } from './index.js';
+import { describe, expect, it } from 'vitest';
+import {
+  connectStaffStream,
+  clearStoredStaffSession,
+  readStoredStaffSession,
+  storeStaffSession,
+} from './index.js';
 
-it('is wired into the workspace', () => {
-  expect(OPS_CORE_PLACEHOLDER).toBe(true);
+describe('workspace wiring', () => {
+  it('exports the SSE client and staff-session helpers', () => {
+    expect(typeof connectStaffStream).toBe('function');
+    expect(typeof readStoredStaffSession).toBe('function');
+    expect(typeof storeStaffSession).toBe('function');
+    expect(typeof clearStoredStaffSession).toBe('function');
+  });
 });

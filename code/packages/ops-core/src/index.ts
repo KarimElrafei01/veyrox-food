@@ -1,9 +1,21 @@
 /**
- * Shared by apps/kds and apps/till: offline outbox, service worker, device
- * enrollment, staff PIN flow, SSE client, staleness banner.
+ * Shared by code/frontends/kds and code/frontends/till: offline outbox, service
+ * worker, device enrollment, staff PIN flow, SSE client, staleness banner.
  *
- * These land in Sprint 3 (SSE client, device/PIN) and Sprint 4 (outbox, service
- * worker). This package exists now so both apps depend on it from the start and
- * nothing device-shaped is written twice (docs/14 §1, ADR-0009 amendment).
+ * Sprint 3 (SSE client, device/PIN) lands here first; the offline outbox and
+ * service worker are Sprint 4 (Till) scope and remain unbuilt (docs/06 -
+ * F2 frontend-implementation.md's 2026-09-12 scope-correction note).
  */
-export const OPS_CORE_PLACEHOLDER = true;
+export {
+  connectStaffStream,
+  type SseFrame,
+  type StaffStream,
+  type StaffStreamOptions,
+} from './sse-client.js';
+export {
+  bootstrapStaffSessionFromUrl,
+  clearStoredStaffSession,
+  readStoredStaffSession,
+  storeStaffSession,
+  type StaffSession,
+} from './staff-session.js';

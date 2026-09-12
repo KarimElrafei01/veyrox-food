@@ -52,4 +52,37 @@ describe('createHttpClient', () => {
     });
     await expect(client.get('/x', schema)).resolves.toEqual({ value: 42 });
   });
+
+  it('attaches extra headers alongside the bearer token (staff realm PIN header)', async () => {
+    const fetchImpl = vi.fn((_url: string, _init?: RequestInit) =>
+      Promise.resolve(res(200, { value: 1 })),
+    );
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/',
+      getToken: () => 'device-jwt',
+      getExtraHeaders: () => ({ 'x-staff-pin-token': 'pin-tok' }),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.get('/x', schema);
+    const init = fetchImpl.mock.calls[0]?.[1] ?? {};
+    const headers = init.headers as Record<string, string>;
+    expect(headers.authorization).toBe('Bearer device-jwt');
+    expect(headers['x-staff-pin-token']).toBe('pin-tok');
+  });
+
+  it('put attaches the idempotency key and parses with the caller schema', async () => {
+    const fetchImpl = vi.fn((_url: string, _init?: RequestInit) =>
+      Promise.resolve(res(200, { value: 3 })),
+    );
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await expect(
+      client.put('/x', { body: { a: 1 }, schema, idempotencyKey: 'key-2' }),
+    ).resolves.toEqual({ value: 3 });
+    const init = fetchImpl.mock.calls[0]?.[1] ?? {};
+    expect(init.method).toBe('PUT');
+    expect((init.headers as Record<string, string>)['idempotency-key']).toBe('key-2');
+  });
 });

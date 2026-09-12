@@ -5,6 +5,10 @@ export interface HttpClientOptions {
   baseUrl: string;
   /** Bearer token for the request (customer session token in F1). */
   getToken?: () => string | null;
+  /** Extra static headers evaluated per request - the staff realm's
+   *  `X-Staff-PIN-Token`, which rides alongside the device JWT bearer token
+   *  rather than replacing it (05-api-and-integration-contracts.md §1). */
+  getExtraHeaders?: () => Record<string, string>;
   /** BCP-47 tag for `Accept-Language`. */
   getLocale?: () => string;
   /** Injectable for tests. */
@@ -20,6 +24,11 @@ export interface HttpClient {
     opts: { body?: unknown; schema: ZodType<T>; idempotencyKey?: string },
   ): Promise<T>;
   post(path: string, opts: { body?: unknown; idempotencyKey?: string }): Promise<unknown>;
+  put<T>(
+    path: string,
+    opts: { body?: unknown; schema: ZodType<T>; idempotencyKey?: string },
+  ): Promise<T>;
+  put(path: string, opts: { body?: unknown; idempotencyKey?: string }): Promise<unknown>;
 }
 
 /**
@@ -28,10 +37,14 @@ export interface HttpClient {
  * the body with the caller's contract schema. A repo layer wraps one call each.
  */
 export function createHttpClient(options: HttpClientOptions): HttpClient {
-  const { baseUrl, getToken, getLocale, fetchImpl = fetch } = options;
+  const { baseUrl, getToken, getExtraHeaders, getLocale, fetchImpl = fetch } = options;
 
   function headers(extra?: Record<string, string>): HeadersInit {
-    const h: Record<string, string> = { accept: 'application/json', ...extra };
+    const h: Record<string, string> = {
+      accept: 'application/json',
+      ...getExtraHeaders?.(),
+      ...extra,
+    };
     const token = getToken?.();
     if (token) {
       h.authorization = `Bearer ${token}`;
@@ -68,6 +81,24 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     ) {
       const raw = await send(path, {
         method: 'POST',
+        headers: headers({
+          'content-type': 'application/json',
+          ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
+        }),
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      return schema ? schema.parse(raw) : raw;
+    },
+    async put(
+      path: string,
+      {
+        body,
+        schema,
+        idempotencyKey,
+      }: { body?: unknown; schema?: ZodType; idempotencyKey?: string },
+    ) {
+      const raw = await send(path, {
+        method: 'PUT',
         headers: headers({
           'content-type': 'application/json',
           ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
