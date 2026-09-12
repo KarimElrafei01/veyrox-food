@@ -28,3 +28,4 @@ export {
 } from './pricing.js';
 export { type EtaCartItem, type EtaRange, type QueueTicket, estimateEta } from './eta.js';
 export { perksForTier, pointsToNextTier, previewPoints, tierForPoints } from './loyalty.js';
+export { type AgeBand, type TicketAgeInput, ageBand, REVERT_WINDOW_SECONDS } from './ticket-age.js';
