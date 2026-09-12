@@ -466,13 +466,20 @@ export class KitchenOrderRepository {
       if (!isRevertEligible(status)) throw new InvalidTransition(legalNextStatuses(status));
 
       // Step 1: the event that produced the current status, staff-actored only -
-      // a customer- or system-caused status is not staff's to undo.
+      // a customer- or system-caused status is not staff's to undo. Excludes
+      // item_tick events explicitly: those are also actor_type='staff' with
+      // to_status left unchanged (§2.6), so without this filter a tick fired
+      // after the real transition would be mistaken for "the event that
+      // produced the current status" and both reset the 60s window and make
+      // fromStatus equal the current status (a no-op revert with a nonsense
+      // audit row).
       const lastStaffEvent = await tx.query.orderEvents.findFirst({
         where: and(
           eq(tables.orderEvents.tenantId, input.tenantId),
           eq(tables.orderEvents.orderId, order.id),
           eq(tables.orderEvents.toStatus, status),
           eq(tables.orderEvents.actorType, 'staff'),
+          sql`coalesce(${tables.orderEvents.metadata} ->> 'action', '') != 'item_tick'`,
         ),
         orderBy: (events, { desc }) => [desc(events.id)],
       });
@@ -589,11 +596,13 @@ export class KitchenOrderRepository {
           and(eq(tables.orderItems.tenantId, tenantId), eq(tables.orderItems.orderId, orderId)),
         ),
       tx.query.orderEvents.findFirst({
+        // Excludes item_tick events - see the identical filter in revert() for why.
         where: and(
           eq(tables.orderEvents.tenantId, tenantId),
           eq(tables.orderEvents.orderId, orderId),
           eq(tables.orderEvents.toStatus, order.status),
           eq(tables.orderEvents.actorType, 'staff'),
+          sql`coalesce(${tables.orderEvents.metadata} ->> 'action', '') != 'item_tick'`,
         ),
         orderBy: (events, { desc }) => [desc(events.id)],
       }),
