@@ -106,6 +106,18 @@ export type InvalidTransitionProblem = z.infer<typeof invalidTransitionProblem>;
 
 /** GET /staff/board (backend doc §1) - full snapshot, used on first load and
  *  gap-cap resync, never polled. */
+export const setActiveStationsRequest = z.object({
+  activeStations: z.number().int().min(1).max(12), // kitchen_state's own CHECK range
+  idempotencyKey: z.uuid(),
+});
+export type SetActiveStationsRequest = z.infer<typeof setActiveStationsRequest>;
+
+export const setActiveStationsResponse = z.object({
+  activeStations: z.number().int().min(1).max(12),
+  updatedAt: z.string().datetime({ offset: true }),
+});
+export type SetActiveStationsResponse = z.infer<typeof setActiveStationsResponse>;
+
 export const boardSnapshotResponse = z.object({
   // order_events.id is a uuid v7 PK (04-data-model.md §2), not the plain
   // integer the backend doc's own illustrative example shows - uuid v7 sorts

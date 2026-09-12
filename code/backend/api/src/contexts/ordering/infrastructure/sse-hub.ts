@@ -4,8 +4,13 @@ export interface SseSubscriber {
 
 export interface SsePublishedEvent {
   /** Echoed as the SSE frame's `id:` line - exactly what a reconnecting client
-   *  sends back as `Last-Event-ID`. A uuid v7 (order_events.id), not an int. */
-  id: string;
+   *  sends back as `Last-Event-ID`. A uuid v7 (order_events.id), not an int.
+   *  Omit for an event with no order_events row of its own (kitchen_state.changed
+   *  - operational metadata, not an order fact, so it has nothing to attach an
+   *  id to): it is then live-only, never part of Last-Event-ID replay, which is
+   *  fine because GET /staff/board's own snapshot already carries the current
+   *  authoritative value as the correction mechanism after any gap. */
+  id?: string;
   event: string;
   data: unknown;
 }
@@ -70,5 +75,6 @@ export class SseHub {
 }
 
 export function formatSseEvent(event: SsePublishedEvent): string {
-  return `id: ${event.id}\nevent: ${event.event}\ndata: ${JSON.stringify(event.data)}\n\n`;
+  const idLine = event.id !== undefined ? `id: ${event.id}\n` : '';
+  return `${idLine}event: ${event.event}\ndata: ${JSON.stringify(event.data)}\n\n`;
 }

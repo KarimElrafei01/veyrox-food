@@ -43,6 +43,8 @@ import { boardSnapshotController } from './contexts/ordering/interface/board-sna
 import type { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
 import { staffStreamController } from './contexts/ordering/interface/staff-stream-controller.js';
 import type { StreamBoardEvents } from './contexts/ordering/application/stream-board.js';
+import { setActiveStationsController } from './contexts/ordering/interface/set-active-stations-controller.js';
+import type { SetActiveStations } from './contexts/ordering/application/set-active-stations.js';
 import { devSessionController } from './dev/dev-session-controller.js';
 import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
@@ -124,6 +126,11 @@ export interface AppDeps {
   staffStream?: {
     stream: StreamBoardEvents;
     deviceKeys: readonly [string, ...string[]];
+  };
+  setActiveStations?: {
+    setActiveStations: SetActiveStations;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
   };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
@@ -212,6 +219,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.tickItem) await app.register(tickItemController, deps.tickItem);
   if (deps.boardSnapshot) await app.register(boardSnapshotController, deps.boardSnapshot);
   if (deps.staffStream) await app.register(staffStreamController, deps.staffStream);
+  if (deps.setActiveStations)
+    await app.register(setActiveStationsController, deps.setActiveStations);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 

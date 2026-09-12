@@ -31,7 +31,9 @@ import { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { TickItem } from './contexts/ordering/application/tick-item.js';
 import { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
 import { StreamBoardEvents } from './contexts/ordering/application/stream-board.js';
+import { SetActiveStations } from './contexts/ordering/application/set-active-stations.js';
 import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
+import { KitchenStateRepository } from './contexts/ordering/infrastructure/kitchen-state-repository.js';
 import { SseHub } from './contexts/ordering/infrastructure/sse-hub.js';
 
 const log = createLogger({ service: 'api' });
@@ -239,6 +241,15 @@ async function main(): Promise<void> {
     staffStream: {
       stream: new StreamBoardEvents(kitchenOrders, boardSnapshot, sseHub),
       deviceKeys,
+    },
+    setActiveStations: {
+      setActiveStations: new SetActiveStations(
+        new KitchenStateRepository(database),
+        etaQueue,
+        sseHub,
+      ),
+      deviceKeys,
+      pinKeys,
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }

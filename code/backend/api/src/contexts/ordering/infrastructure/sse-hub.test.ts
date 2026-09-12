@@ -7,6 +7,12 @@ describe('formatSseEvent', () => {
       'id: e1\nevent: order.transitioned\ndata: {"a":1}\n\n',
     );
   });
+
+  it('omits the id line for an event with no order_events row (kitchen_state.changed)', () => {
+    expect(formatSseEvent({ event: 'kitchen_state.changed', data: { activeStations: 3 } })).toBe(
+      'event: kitchen_state.changed\ndata: {"activeStations":3}\n\n',
+    );
+  });
 });
 
 describe('SseHub', () => {

@@ -34,6 +34,9 @@ describe('EtaQueueRepository', () => {
           execute: async () => undefined,
           select: () => ({
             from: () => ({
+              // The orders/menu_items join query (two innerJoins) and the
+              // kitchen_state query (a plain where()) share this same mock -
+              // both chain shapes need to resolve for rebuild() to succeed.
               innerJoin: () => ({
                 innerJoin: () => ({
                   where: async () => {
@@ -42,6 +45,7 @@ describe('EtaQueueRepository', () => {
                   },
                 }),
               }),
+              where: async () => [],
             }),
           }),
         };
@@ -63,6 +67,56 @@ describe('EtaQueueRepository', () => {
       repository.load('tenant'),
     ]);
     expect(transactions).toBe(1);
+  });
+
+  it('rebuilds activeStations from kitchen_state, not a hardcoded default', async () => {
+    const db = {
+      transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+        const tx = {
+          execute: async () => undefined,
+          select: () => ({
+            from: () => ({
+              innerJoin: () => ({ innerJoin: () => ({ where: async () => [] }) }),
+              where: async () => [{ activeStations: 4 }],
+            }),
+          }),
+        };
+        return fn(tx);
+      },
+    };
+    const redis = {
+      get: async () => null,
+      set: async () => undefined,
+      del: async () => undefined,
+    };
+    const repository = new EtaQueueRepository(db as never, redis);
+    const { state } = await repository.load('tenant');
+    expect(state.activeStations).toBe(4);
+  });
+
+  it('defaults to 1 station when a tenant has never set kitchen_state', async () => {
+    const db = {
+      transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+        const tx = {
+          execute: async () => undefined,
+          select: () => ({
+            from: () => ({
+              innerJoin: () => ({ innerJoin: () => ({ where: async () => [] }) }),
+              where: async () => [],
+            }),
+          }),
+        };
+        return fn(tx);
+      },
+    };
+    const redis = {
+      get: async () => null,
+      set: async () => undefined,
+      del: async () => undefined,
+    };
+    const repository = new EtaQueueRepository(db as never, redis);
+    const { state } = await repository.load('tenant');
+    expect(state.activeStations).toBe(1);
   });
 
   it('keeps the projection aligned with accepted, preparing, and removed tickets', () => {
