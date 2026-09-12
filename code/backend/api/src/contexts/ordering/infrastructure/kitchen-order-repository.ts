@@ -50,6 +50,33 @@ export class OrderItemNotFound extends Error {
   }
 }
 
+/** The inserted order_events row's identifying fields, threaded back out of
+ *  every mutation so the SSE commit hook (task #8) can publish without a
+ *  second query - the transaction already knows this, no need to re-derive it. */
+export interface KitchenEvent {
+  id: string; // uuid v7 - what the SSE frame's `id:` line and Last-Event-ID replay use
+  fromStatus: string | null;
+  toStatus: string;
+  actorType: string;
+  createdAt: Date;
+}
+
+function toKitchenEvent(row: {
+  id: string;
+  fromStatus: string | null;
+  toStatus: string;
+  actorType: string;
+  createdAt: Date;
+}): KitchenEvent {
+  return {
+    id: row.id,
+    fromStatus: row.fromStatus,
+    toStatus: row.toStatus,
+    actorType: row.actorType,
+    createdAt: row.createdAt,
+  };
+}
+
 /** Converts a NUMERIC(14,6) recipe-line quantity, scaled by an integer order
  *  quantity, to a NUMERIC(14,6)-safe string - no floats (ADR-0007). */
 function scaleMaterialQty(recipeLineQty: string, orderQty: number): bigint {
@@ -108,7 +135,7 @@ export class KitchenOrderRepository {
     staffId: string;
     now: Date;
     etaMinutes: { lowerMinutes: number; upperMinutes: number };
-  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+  }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
     return withTenant(this.db, input.tenantId, async (tx) => {
       // §2.2: a concurrent duplicate of this exact key must not re-run step 3
       // (ledger inserts) — checked before touching anything else.
@@ -293,21 +320,25 @@ export class KitchenOrderRepository {
       // §2.2: this insert is the actual dedup mechanism. A concurrent duplicate
       // racing to this point hits the unique (tenant_id, idempotency_key) index
       // and rolls back its whole transaction, ledger writes included.
-      await tx.insert(tables.orderEvents).values({
-        tenantId: input.tenantId,
-        orderId: order.id,
-        fromStatus: status,
-        toStatus: 'received',
-        actorType: 'staff',
-        actorId: input.staffId,
-        source: 'kds',
-        idempotencyKey: input.idempotencyKey,
-        createdAt: input.now,
-      });
+      const [event] = await tx
+        .insert(tables.orderEvents)
+        .values({
+          tenantId: input.tenantId,
+          orderId: order.id,
+          fromStatus: status,
+          toStatus: 'received',
+          actorType: 'staff',
+          actorId: input.staffId,
+          source: 'kds',
+          idempotencyKey: input.idempotencyKey,
+          createdAt: input.now,
+        })
+        .returning();
+      if (!event) throw new Error('Order event insert returned no row.');
 
       const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
       if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false };
+      return { ticket, replayed: false, event: toKitchenEvent(event) };
     });
   }
 
@@ -322,7 +353,7 @@ export class KitchenOrderRepository {
     idempotencyKey: string;
     staffId: string;
     now: Date;
-  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+  }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
     return withTenant(this.db, input.tenantId, async (tx) => {
       const existingEvent = await tx.query.orderEvents.findFirst({
         where: and(
@@ -355,22 +386,26 @@ export class KitchenOrderRepository {
         .set({ status: 'rejected', rejectionReason: input.reasonCode, rejectedAt: input.now })
         .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
 
-      await tx.insert(tables.orderEvents).values({
-        tenantId: input.tenantId,
-        orderId: order.id,
-        fromStatus: status,
-        toStatus: 'rejected',
-        actorType: 'staff',
-        actorId: input.staffId,
-        reason: input.reasonCode,
-        source: 'kds',
-        idempotencyKey: input.idempotencyKey,
-        createdAt: input.now,
-      });
+      const [event] = await tx
+        .insert(tables.orderEvents)
+        .values({
+          tenantId: input.tenantId,
+          orderId: order.id,
+          fromStatus: status,
+          toStatus: 'rejected',
+          actorType: 'staff',
+          actorId: input.staffId,
+          reason: input.reasonCode,
+          source: 'kds',
+          idempotencyKey: input.idempotencyKey,
+          createdAt: input.now,
+        })
+        .returning();
+      if (!event) throw new Error('Order event insert returned no row.');
 
       const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
       if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false };
+      return { ticket, replayed: false, event: toKitchenEvent(event) };
     });
   }
 
@@ -384,7 +419,7 @@ export class KitchenOrderRepository {
     idempotencyKey: string;
     staffId: string;
     now: Date;
-  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+  }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
     return withTenant(this.db, input.tenantId, async (tx) => {
       const existingEvent = await tx.query.orderEvents.findFirst({
         where: and(
@@ -421,21 +456,25 @@ export class KitchenOrderRepository {
         )
         .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
 
-      await tx.insert(tables.orderEvents).values({
-        tenantId: input.tenantId,
-        orderId: order.id,
-        fromStatus: status,
-        toStatus: input.toStatus,
-        actorType: 'staff',
-        actorId: input.staffId,
-        source: 'kds',
-        idempotencyKey: input.idempotencyKey,
-        createdAt: input.now,
-      });
+      const [event] = await tx
+        .insert(tables.orderEvents)
+        .values({
+          tenantId: input.tenantId,
+          orderId: order.id,
+          fromStatus: status,
+          toStatus: input.toStatus,
+          actorType: 'staff',
+          actorId: input.staffId,
+          source: 'kds',
+          idempotencyKey: input.idempotencyKey,
+          createdAt: input.now,
+        })
+        .returning();
+      if (!event) throw new Error('Order event insert returned no row.');
 
       const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
       if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false };
+      return { ticket, replayed: false, event: toKitchenEvent(event) };
     });
   }
 
@@ -447,7 +486,7 @@ export class KitchenOrderRepository {
     idempotencyKey: string;
     staffId: string;
     now: Date;
-  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+  }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
     return withTenant(this.db, input.tenantId, async (tx) => {
       const existingEvent = await tx.query.orderEvents.findFirst({
         where: and(
@@ -507,23 +546,27 @@ export class KitchenOrderRepository {
 
       // A new, additive event - append-only for the same reason the ledger is:
       // an auditor needs to see a revert happened, not just its net effect.
-      await tx.insert(tables.orderEvents).values({
-        tenantId: input.tenantId,
-        orderId: order.id,
-        fromStatus: status,
-        toStatus: fromStatus,
-        actorType: 'staff',
-        actorId: input.staffId,
-        reason: 'undo',
-        metadata: { revertsEventId: lastStaffEvent.id },
-        source: 'kds',
-        idempotencyKey: input.idempotencyKey,
-        createdAt: input.now,
-      });
+      const [event] = await tx
+        .insert(tables.orderEvents)
+        .values({
+          tenantId: input.tenantId,
+          orderId: order.id,
+          fromStatus: status,
+          toStatus: fromStatus,
+          actorType: 'staff',
+          actorId: input.staffId,
+          reason: 'undo',
+          metadata: { revertsEventId: lastStaffEvent.id },
+          source: 'kds',
+          idempotencyKey: input.idempotencyKey,
+          createdAt: input.now,
+        })
+        .returning();
+      if (!event) throw new Error('Order event insert returned no row.');
 
       const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
       if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false };
+      return { ticket, replayed: false, event: toKitchenEvent(event) };
     });
   }
 
@@ -538,7 +581,12 @@ export class KitchenOrderRepository {
     idempotencyKey: string;
     staffId: string;
     now: Date;
-  }): Promise<{ orderItemId: string; ticked: boolean; replayed: boolean }> {
+  }): Promise<{
+    orderItemId: string;
+    ticked: boolean;
+    replayed: boolean;
+    event?: KitchenEvent;
+  }> {
     return withTenant(this.db, input.tenantId, async (tx) => {
       const existingEvent = await tx.query.orderEvents.findFirst({
         where: and(
@@ -566,20 +614,29 @@ export class KitchenOrderRepository {
       });
       if (!item) throw new OrderItemNotFound();
 
-      await tx.insert(tables.orderEvents).values({
-        tenantId: input.tenantId,
-        orderId: order.id,
-        fromStatus: status,
-        toStatus: status,
-        actorType: 'staff',
-        actorId: input.staffId,
-        source: 'kds',
-        metadata: { action: 'item_tick', orderItemId: input.orderItemId, ticked: input.ticked },
-        idempotencyKey: input.idempotencyKey,
-        createdAt: input.now,
-      });
+      const [event] = await tx
+        .insert(tables.orderEvents)
+        .values({
+          tenantId: input.tenantId,
+          orderId: order.id,
+          fromStatus: status,
+          toStatus: status,
+          actorType: 'staff',
+          actorId: input.staffId,
+          source: 'kds',
+          metadata: { action: 'item_tick', orderItemId: input.orderItemId, ticked: input.ticked },
+          idempotencyKey: input.idempotencyKey,
+          createdAt: input.now,
+        })
+        .returning();
+      if (!event) throw new Error('Order event insert returned no row.');
 
-      return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: false };
+      return {
+        orderItemId: input.orderItemId,
+        ticked: input.ticked,
+        replayed: false,
+        event: toKitchenEvent(event),
+      };
     });
   }
 
@@ -588,7 +645,7 @@ export class KitchenOrderRepository {
    *  rather than one query per order - a 16-slot rail is at most ~16 orders, but
    *  the shape is specified so it is never accidentally written as a loop. */
   async loadBoardSnapshot(input: { tenantId: string; now: Date }): Promise<{
-    asOfEventId: number;
+    asOfEventId: string | null;
     columns: {
       new: OrderTicket[];
       received: OrderTicket[];
@@ -617,12 +674,12 @@ export class KitchenOrderRepository {
           )
           .orderBy(tables.orders.createdAt),
         tx
-          .select({ maxId: sql<number | null>`max(${tables.orderEvents.id})` })
+          .select({ maxId: sql<string | null>`max(${tables.orderEvents.id})` })
           .from(tables.orderEvents)
           .where(eq(tables.orderEvents.tenantId, input.tenantId)),
         this.loadTurnaroundMetrics(tx, input.tenantId),
       ]);
-      const asOfEventId = maxEventRow[0]?.maxId ?? 0;
+      const asOfEventId = maxEventRow[0]?.maxId ?? null;
 
       if (!liveOrders.length) {
         return {

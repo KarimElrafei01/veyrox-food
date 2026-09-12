@@ -107,7 +107,11 @@ export type InvalidTransitionProblem = z.infer<typeof invalidTransitionProblem>;
 /** GET /staff/board (backend doc §1) - full snapshot, used on first load and
  *  gap-cap resync, never polled. */
 export const boardSnapshotResponse = z.object({
-  asOfEventId: z.number().int().nonnegative(),
+  // order_events.id is a uuid v7 PK (04-data-model.md §2), not the plain
+  // integer the backend doc's own illustrative example shows - uuid v7 sorts
+  // chronologically, so Last-Event-ID replay's `id > lastSeen` still works
+  // correctly as a byte comparison. Null only for a tenant with zero events ever.
+  asOfEventId: z.uuid().nullable(),
   activeStations: z.number().int().positive(),
   columns: z.object({
     new: z.array(orderTicket),
