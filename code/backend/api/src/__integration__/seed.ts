@@ -15,6 +15,7 @@ export async function seedOrderableTenant(
   customerId: string;
   menuVersionId: string;
   itemId: string;
+  recipeId: string;
   priceMinor: number;
   prepSeconds: number;
 }> {
@@ -94,6 +95,7 @@ export async function seedOrderableTenant(
     customerId: customer!.id,
     menuVersionId: mv,
     itemId: item!.id,
+    recipeId: recipe!.id,
     priceMinor,
     prepSeconds,
   };

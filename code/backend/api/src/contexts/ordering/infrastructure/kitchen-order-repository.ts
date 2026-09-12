@@ -91,6 +91,23 @@ function numericStringFromScaled(scaledBy1e6: bigint): string {
   return `${negative ? '-' : ''}${abs / 1_000_000n}.${(abs % 1_000_000n).toString().padStart(6, '0')}`;
 }
 
+/** §2.2's actual race: two requests both pass the pre-check SELECT before
+ *  either commits, so the unique-violation only surfaces at INSERT time, as
+ *  a rolled-back transaction thrown out of `withTenant`. drizzle-orm wraps
+ *  the real `pg` error as `.cause` - that's where the SQLSTATE and
+ *  constraint name actually live. */
+function isIdempotencyKeyConflict(error: unknown): boolean {
+  const cause = error instanceof Error ? error.cause : undefined;
+  return (
+    !!cause &&
+    typeof cause === 'object' &&
+    'code' in cause &&
+    cause.code === '23505' &&
+    'constraint' in cause &&
+    cause.constraint === 'order_events_tenant_idempotency_idx'
+  );
+}
+
 export class KitchenOrderRepository {
   constructor(private readonly db: Database) {}
 
@@ -136,210 +153,229 @@ export class KitchenOrderRepository {
     now: Date;
     etaMinutes: { lowerMinutes: number; upperMinutes: number };
   }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
-    return withTenant(this.db, input.tenantId, async (tx) => {
-      // §2.2: a concurrent duplicate of this exact key must not re-run step 3
-      // (ledger inserts) — checked before touching anything else.
-      const existingEvent = await tx.query.orderEvents.findFirst({
-        where: and(
-          eq(tables.orderEvents.tenantId, input.tenantId),
-          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
-        ),
-      });
-      if (existingEvent) {
-        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
-        if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
-
-      const order = await tx.query.orders.findFirst({
-        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
-      });
-      if (!order) throw new OrderNotFound();
-      const status = order.status as OrderStatus;
-
-      // 01-system-design.md §4.3: re-entering the current state is a no-op, not
-      // an error - a barista's Accept tap racing a slow first response, or a
-      // fresh idempotency key from a client retry that never saw the first 200.
-      if (status === 'received') {
-        const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
-        if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
-      if (!canTransition(status, 'received'))
-        throw new InvalidTransition(legalNextStatuses(status));
-
-      const items = await tx
-        .select()
-        .from(tables.orderItems)
-        .where(
-          and(
-            eq(tables.orderItems.tenantId, input.tenantId),
-            eq(tables.orderItems.orderId, order.id),
+    try {
+      return await withTenant(this.db, input.tenantId, async (tx) => {
+        // §2.2: a concurrent duplicate of this exact key must not re-run step 3
+        // (ledger inserts) — checked before touching anything else.
+        const existingEvent = await tx.query.orderEvents.findFirst({
+          where: and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
           ),
+        });
+        if (existingEvent) {
+          const ticket = await this.loadTicket(
+            tx,
+            input.tenantId,
+            existingEvent.orderId,
+            input.now,
+          );
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
+
+        const order = await tx.query.orders.findFirst({
+          where: and(
+            eq(tables.orders.tenantId, input.tenantId),
+            eq(tables.orders.id, input.orderId),
+          ),
+        });
+        if (!order) throw new OrderNotFound();
+        const status = order.status as OrderStatus;
+
+        // 01-system-design.md §4.3: re-entering the current state is a no-op, not
+        // an error - a barista's Accept tap racing a slow first response, or a
+        // fresh idempotency key from a client retry that never saw the first 200.
+        if (status === 'received') {
+          const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
+        if (!canTransition(status, 'received'))
+          throw new InvalidTransition(legalNextStatuses(status));
+
+        const items = await tx
+          .select()
+          .from(tables.orderItems)
+          .where(
+            and(
+              eq(tables.orderItems.tenantId, input.tenantId),
+              eq(tables.orderItems.orderId, order.id),
+            ),
+          );
+        const modifiers = items.length
+          ? await tx
+              .select()
+              .from(tables.orderItemModifiers)
+              .where(
+                inArray(
+                  tables.orderItemModifiers.orderItemId,
+                  items.map((item) => item.id),
+                ),
+              )
+          : [];
+
+        // Step 2: re-check availability against *current* state - an item can have
+        // been 86'd in the minutes between placement and Accept (backend doc §2.1).
+        const menuItemIds = [...new Set(items.map((item) => item.menuItemId))];
+        const modifierOptionIds = [
+          ...new Set(modifiers.map((modifier) => modifier.modifierOptionId)),
+        ];
+        const [unavailableItems, unavailableOptions] = await Promise.all([
+          menuItemIds.length
+            ? tx
+                .select({ id: tables.menuItems.id })
+                .from(tables.menuItems)
+                .where(
+                  and(
+                    eq(tables.menuItems.tenantId, input.tenantId),
+                    inArray(tables.menuItems.id, menuItemIds),
+                    eq(tables.menuItems.isAvailable, false),
+                  ),
+                )
+            : Promise.resolve([]),
+          modifierOptionIds.length
+            ? tx
+                .select({ id: tables.modifierOptions.id })
+                .from(tables.modifierOptions)
+                .where(
+                  and(
+                    eq(tables.modifierOptions.tenantId, input.tenantId),
+                    inArray(tables.modifierOptions.id, modifierOptionIds),
+                    eq(tables.modifierOptions.isAvailable, false),
+                  ),
+                )
+            : Promise.resolve([]),
+        ]);
+        const unavailableItemIds = new Set(unavailableItems.map((row) => row.id));
+        const unavailableOptionIds = new Set(unavailableOptions.map((row) => row.id));
+        const unavailable = [
+          ...items
+            .filter((item) => unavailableItemIds.has(item.menuItemId))
+            .map((item) => ({ menuItemId: item.menuItemId })),
+          ...modifiers
+            .filter((modifier) => unavailableOptionIds.has(modifier.modifierOptionId))
+            .flatMap((modifier) => {
+              const item = items.find((candidate) => candidate.id === modifier.orderItemId);
+              return item
+                ? [{ menuItemId: item.menuItemId, modifierOptionId: modifier.modifierOptionId }]
+                : [];
+            }),
+        ];
+        if (unavailable.length) throw new ItemNoLongerAvailable(unavailable);
+
+        // Step 3: one material_ledger row per (order_item, recipe_line). Never
+        // recomputes order_items.cost_snapshot_minor - F1 already set that at
+        // placement (verified against order-placement-repository.ts); re-snapshotting
+        // it here would violate the "computed once" spirit of the snapshot columns.
+        const recipeVersionIds = [...new Set(items.map((item) => item.recipeVersionId))];
+        const recipeLineRows = recipeVersionIds.length
+          ? await tx
+              .select()
+              .from(tables.recipeLines)
+              .where(inArray(tables.recipeLines.recipeId, recipeVersionIds))
+          : [];
+        const materialIds = [...new Set(recipeLineRows.map((line) => line.materialId))];
+        // "unit_cost_snapshot ... cost at movement time, for COGS" (04-data-model.md
+        // §7) - a fresh lookup at Accept, deliberately independent of order_items'
+        // own placement-time cost_snapshot_minor.
+        const currentCosts = materialIds.length
+          ? await tx
+              .select()
+              .from(tables.materialCosts)
+              .where(
+                and(
+                  eq(tables.materialCosts.tenantId, input.tenantId),
+                  inArray(tables.materialCosts.materialId, materialIds),
+                  isNull(tables.materialCosts.validTo),
+                ),
+              )
+          : [];
+        const costByMaterial = new Map(
+          currentCosts.map((cost) => [cost.materialId, cost.costPerUnit]),
         );
-      const modifiers = items.length
-        ? await tx
-            .select()
-            .from(tables.orderItemModifiers)
-            .where(
-              inArray(
-                tables.orderItemModifiers.orderItemId,
-                items.map((item) => item.id),
-              ),
+        const modifiersByOrderItem = new Map<string, string[]>();
+        for (const modifier of modifiers) {
+          const existing = modifiersByOrderItem.get(modifier.orderItemId) ?? [];
+          existing.push(modifier.modifierOptionId);
+          modifiersByOrderItem.set(modifier.orderItemId, existing);
+        }
+
+        const ledgerRows = items.flatMap((item) => {
+          const selectedModifiers = new Set(modifiersByOrderItem.get(item.id) ?? []);
+          return recipeLineRows
+            .filter(
+              (line) =>
+                line.recipeId === item.recipeVersionId &&
+                (!line.modifierOptionId || selectedModifiers.has(line.modifierOptionId)),
             )
-        : [];
+            .map((line) => ({
+              tenantId: input.tenantId,
+              materialId: line.materialId,
+              qtyDelta: numericStringFromScaled(-scaleMaterialQty(line.qty, item.qty)),
+              reason: 'sale_deduction',
+              orderId: order.id,
+              orderItemId: item.id,
+              recipeVersionId: item.recipeVersionId,
+              unitCostSnapshot: costByMaterial.get(line.materialId) ?? null,
+              actorType: 'staff',
+              actorId: input.staffId,
+            }));
+        });
+        if (ledgerRows.length) await tx.insert(tables.materialLedger).values(ledgerRows);
 
-      // Step 2: re-check availability against *current* state - an item can have
-      // been 86'd in the minutes between placement and Accept (backend doc §2.1).
-      const menuItemIds = [...new Set(items.map((item) => item.menuItemId))];
-      const modifierOptionIds = [
-        ...new Set(modifiers.map((modifier) => modifier.modifierOptionId)),
-      ];
-      const [unavailableItems, unavailableOptions] = await Promise.all([
-        menuItemIds.length
-          ? tx
-              .select({ id: tables.menuItems.id })
-              .from(tables.menuItems)
-              .where(
-                and(
-                  eq(tables.menuItems.tenantId, input.tenantId),
-                  inArray(tables.menuItems.id, menuItemIds),
-                  eq(tables.menuItems.isAvailable, false),
-                ),
-              )
-          : Promise.resolve([]),
-        modifierOptionIds.length
-          ? tx
-              .select({ id: tables.modifierOptions.id })
-              .from(tables.modifierOptions)
-              .where(
-                and(
-                  eq(tables.modifierOptions.tenantId, input.tenantId),
-                  inArray(tables.modifierOptions.id, modifierOptionIds),
-                  eq(tables.modifierOptions.isAvailable, false),
-                ),
-              )
-          : Promise.resolve([]),
-      ]);
-      const unavailableItemIds = new Set(unavailableItems.map((row) => row.id));
-      const unavailableOptionIds = new Set(unavailableOptions.map((row) => row.id));
-      const unavailable = [
-        ...items
-          .filter((item) => unavailableItemIds.has(item.menuItemId))
-          .map((item) => ({ menuItemId: item.menuItemId })),
-        ...modifiers
-          .filter((modifier) => unavailableOptionIds.has(modifier.modifierOptionId))
-          .flatMap((modifier) => {
-            const item = items.find((candidate) => candidate.id === modifier.orderItemId);
-            return item
-              ? [{ menuItemId: item.menuItemId, modifierOptionId: modifier.modifierOptionId }]
-              : [];
-          }),
-      ];
-      if (unavailable.length) throw new ItemNoLongerAvailable(unavailable);
+        // Step 4: promised ETA evaluated fresh at Accept (F1.7 §1: "the confirmation
+        // fires on Accept, not on placement").
+        const promisedEtaLowerAt = new Date(
+          input.now.getTime() + input.etaMinutes.lowerMinutes * 60_000,
+        );
+        const promisedEtaUpperAt = new Date(
+          input.now.getTime() + input.etaMinutes.upperMinutes * 60_000,
+        );
 
-      // Step 3: one material_ledger row per (order_item, recipe_line). Never
-      // recomputes order_items.cost_snapshot_minor - F1 already set that at
-      // placement (verified against order-placement-repository.ts); re-snapshotting
-      // it here would violate the "computed once" spirit of the snapshot columns.
-      const recipeVersionIds = [...new Set(items.map((item) => item.recipeVersionId))];
-      const recipeLineRows = recipeVersionIds.length
-        ? await tx
-            .select()
-            .from(tables.recipeLines)
-            .where(inArray(tables.recipeLines.recipeId, recipeVersionIds))
-        : [];
-      const materialIds = [...new Set(recipeLineRows.map((line) => line.materialId))];
-      // "unit_cost_snapshot ... cost at movement time, for COGS" (04-data-model.md
-      // §7) - a fresh lookup at Accept, deliberately independent of order_items'
-      // own placement-time cost_snapshot_minor.
-      const currentCosts = materialIds.length
-        ? await tx
-            .select()
-            .from(tables.materialCosts)
-            .where(
-              and(
-                eq(tables.materialCosts.tenantId, input.tenantId),
-                inArray(tables.materialCosts.materialId, materialIds),
-                isNull(tables.materialCosts.validTo),
-              ),
-            )
-        : [];
-      const costByMaterial = new Map(
-        currentCosts.map((cost) => [cost.materialId, cost.costPerUnit]),
-      );
-      const modifiersByOrderItem = new Map<string, string[]>();
-      for (const modifier of modifiers) {
-        const existing = modifiersByOrderItem.get(modifier.orderItemId) ?? [];
-        existing.push(modifier.modifierOptionId);
-        modifiersByOrderItem.set(modifier.orderItemId, existing);
-      }
+        await tx
+          .update(tables.orders)
+          .set({
+            status: 'received',
+            acceptedAt: input.now,
+            promisedEtaLowerAt,
+            promisedEtaUpperAt,
+          })
+          .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
 
-      const ledgerRows = items.flatMap((item) => {
-        const selectedModifiers = new Set(modifiersByOrderItem.get(item.id) ?? []);
-        return recipeLineRows
-          .filter(
-            (line) =>
-              line.recipeId === item.recipeVersionId &&
-              (!line.modifierOptionId || selectedModifiers.has(line.modifierOptionId)),
-          )
-          .map((line) => ({
+        // §2.2: this insert is the actual dedup mechanism. A concurrent duplicate
+        // racing to this point hits the unique (tenant_id, idempotency_key) index
+        // and rolls back its whole transaction, ledger writes included - caught
+        // below and turned into a replay of the winner's committed result.
+        const [event] = await tx
+          .insert(tables.orderEvents)
+          .values({
             tenantId: input.tenantId,
-            materialId: line.materialId,
-            qtyDelta: numericStringFromScaled(-scaleMaterialQty(line.qty, item.qty)),
-            reason: 'sale_deduction',
             orderId: order.id,
-            orderItemId: item.id,
-            recipeVersionId: item.recipeVersionId,
-            unitCostSnapshot: costByMaterial.get(line.materialId) ?? null,
+            fromStatus: status,
+            toStatus: 'received',
             actorType: 'staff',
             actorId: input.staffId,
-          }));
+            source: 'kds',
+            idempotencyKey: input.idempotencyKey,
+            createdAt: input.now,
+          })
+          .returning();
+        if (!event) throw new Error('Order event insert returned no row.');
+
+        const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+        if (!ticket) throw new OrderNotFound();
+        return { ticket, replayed: false, event: toKitchenEvent(event) };
       });
-      if (ledgerRows.length) await tx.insert(tables.materialLedger).values(ledgerRows);
-
-      // Step 4: promised ETA evaluated fresh at Accept (F1.7 §1: "the confirmation
-      // fires on Accept, not on placement").
-      const promisedEtaLowerAt = new Date(
-        input.now.getTime() + input.etaMinutes.lowerMinutes * 60_000,
+    } catch (error) {
+      if (!isIdempotencyKeyConflict(error)) throw error;
+      const ticket = await this.loadTicketByIdempotencyKey(
+        input.tenantId,
+        input.idempotencyKey,
+        input.now,
       );
-      const promisedEtaUpperAt = new Date(
-        input.now.getTime() + input.etaMinutes.upperMinutes * 60_000,
-      );
-
-      await tx
-        .update(tables.orders)
-        .set({
-          status: 'received',
-          acceptedAt: input.now,
-          promisedEtaLowerAt,
-          promisedEtaUpperAt,
-        })
-        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
-
-      // §2.2: this insert is the actual dedup mechanism. A concurrent duplicate
-      // racing to this point hits the unique (tenant_id, idempotency_key) index
-      // and rolls back its whole transaction, ledger writes included.
-      const [event] = await tx
-        .insert(tables.orderEvents)
-        .values({
-          tenantId: input.tenantId,
-          orderId: order.id,
-          fromStatus: status,
-          toStatus: 'received',
-          actorType: 'staff',
-          actorId: input.staffId,
-          source: 'kds',
-          idempotencyKey: input.idempotencyKey,
-          createdAt: input.now,
-        })
-        .returning();
-      if (!event) throw new Error('Order event insert returned no row.');
-
-      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
-      if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false, event: toKitchenEvent(event) };
-    });
+      return { ticket, replayed: true };
+    }
   }
 
   /** New-column only (backend doc §2.3): a ticket already Accepted must go through
@@ -354,59 +390,77 @@ export class KitchenOrderRepository {
     staffId: string;
     now: Date;
   }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
-    return withTenant(this.db, input.tenantId, async (tx) => {
-      const existingEvent = await tx.query.orderEvents.findFirst({
-        where: and(
-          eq(tables.orderEvents.tenantId, input.tenantId),
-          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
-        ),
-      });
-      if (existingEvent) {
-        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
-        if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
+    try {
+      return await withTenant(this.db, input.tenantId, async (tx) => {
+        const existingEvent = await tx.query.orderEvents.findFirst({
+          where: and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+          ),
+        });
+        if (existingEvent) {
+          const ticket = await this.loadTicket(
+            tx,
+            input.tenantId,
+            existingEvent.orderId,
+            input.now,
+          );
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
 
-      const order = await tx.query.orders.findFirst({
-        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
-      });
-      if (!order) throw new OrderNotFound();
-      const status = order.status as OrderStatus;
+        const order = await tx.query.orders.findFirst({
+          where: and(
+            eq(tables.orders.tenantId, input.tenantId),
+            eq(tables.orders.id, input.orderId),
+          ),
+        });
+        if (!order) throw new OrderNotFound();
+        const status = order.status as OrderStatus;
 
-      if (status === 'rejected') {
+        if (status === 'rejected') {
+          const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
+        if (!canTransition(status, 'rejected'))
+          throw new InvalidTransition(legalNextStatuses(status));
+
+        await tx
+          .update(tables.orders)
+          .set({ status: 'rejected', rejectionReason: input.reasonCode, rejectedAt: input.now })
+          .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
+
+        const [event] = await tx
+          .insert(tables.orderEvents)
+          .values({
+            tenantId: input.tenantId,
+            orderId: order.id,
+            fromStatus: status,
+            toStatus: 'rejected',
+            actorType: 'staff',
+            actorId: input.staffId,
+            reason: input.reasonCode,
+            source: 'kds',
+            idempotencyKey: input.idempotencyKey,
+            createdAt: input.now,
+          })
+          .returning();
+        if (!event) throw new Error('Order event insert returned no row.');
+
         const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
         if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
-      if (!canTransition(status, 'rejected'))
-        throw new InvalidTransition(legalNextStatuses(status));
-
-      await tx
-        .update(tables.orders)
-        .set({ status: 'rejected', rejectionReason: input.reasonCode, rejectedAt: input.now })
-        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
-
-      const [event] = await tx
-        .insert(tables.orderEvents)
-        .values({
-          tenantId: input.tenantId,
-          orderId: order.id,
-          fromStatus: status,
-          toStatus: 'rejected',
-          actorType: 'staff',
-          actorId: input.staffId,
-          reason: input.reasonCode,
-          source: 'kds',
-          idempotencyKey: input.idempotencyKey,
-          createdAt: input.now,
-        })
-        .returning();
-      if (!event) throw new Error('Order event insert returned no row.');
-
-      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
-      if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false, event: toKitchenEvent(event) };
-    });
+        return { ticket, replayed: false, event: toKitchenEvent(event) };
+      });
+    } catch (error) {
+      if (!isIdempotencyKeyConflict(error)) throw error;
+      const ticket = await this.loadTicketByIdempotencyKey(
+        input.tenantId,
+        input.idempotencyKey,
+        input.now,
+      );
+      return { ticket, replayed: true };
+    }
   }
 
   /** Received->Preparing, Preparing->Ready - board taps and tap-to-advance
@@ -420,62 +474,80 @@ export class KitchenOrderRepository {
     staffId: string;
     now: Date;
   }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
-    return withTenant(this.db, input.tenantId, async (tx) => {
-      const existingEvent = await tx.query.orderEvents.findFirst({
-        where: and(
-          eq(tables.orderEvents.tenantId, input.tenantId),
-          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
-        ),
-      });
-      if (existingEvent) {
-        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
-        if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
+    try {
+      return await withTenant(this.db, input.tenantId, async (tx) => {
+        const existingEvent = await tx.query.orderEvents.findFirst({
+          where: and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+          ),
+        });
+        if (existingEvent) {
+          const ticket = await this.loadTicket(
+            tx,
+            input.tenantId,
+            existingEvent.orderId,
+            input.now,
+          );
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
 
-      const order = await tx.query.orders.findFirst({
-        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
-      });
-      if (!order) throw new OrderNotFound();
-      const status = order.status as OrderStatus;
+        const order = await tx.query.orders.findFirst({
+          where: and(
+            eq(tables.orders.tenantId, input.tenantId),
+            eq(tables.orders.id, input.orderId),
+          ),
+        });
+        if (!order) throw new OrderNotFound();
+        const status = order.status as OrderStatus;
 
-      if (status === input.toStatus) {
+        if (status === input.toStatus) {
+          const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
+        if (!canTransition(status, input.toStatus))
+          throw new InvalidTransition(legalNextStatuses(status));
+
+        await tx
+          .update(tables.orders)
+          .set(
+            input.toStatus === 'ready'
+              ? { status: 'ready', readyAt: input.now }
+              : { status: 'preparing' },
+          )
+          .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
+
+        const [event] = await tx
+          .insert(tables.orderEvents)
+          .values({
+            tenantId: input.tenantId,
+            orderId: order.id,
+            fromStatus: status,
+            toStatus: input.toStatus,
+            actorType: 'staff',
+            actorId: input.staffId,
+            source: 'kds',
+            idempotencyKey: input.idempotencyKey,
+            createdAt: input.now,
+          })
+          .returning();
+        if (!event) throw new Error('Order event insert returned no row.');
+
         const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
         if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
-      if (!canTransition(status, input.toStatus))
-        throw new InvalidTransition(legalNextStatuses(status));
-
-      await tx
-        .update(tables.orders)
-        .set(
-          input.toStatus === 'ready'
-            ? { status: 'ready', readyAt: input.now }
-            : { status: 'preparing' },
-        )
-        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
-
-      const [event] = await tx
-        .insert(tables.orderEvents)
-        .values({
-          tenantId: input.tenantId,
-          orderId: order.id,
-          fromStatus: status,
-          toStatus: input.toStatus,
-          actorType: 'staff',
-          actorId: input.staffId,
-          source: 'kds',
-          idempotencyKey: input.idempotencyKey,
-          createdAt: input.now,
-        })
-        .returning();
-      if (!event) throw new Error('Order event insert returned no row.');
-
-      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
-      if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false, event: toKitchenEvent(event) };
-    });
+        return { ticket, replayed: false, event: toKitchenEvent(event) };
+      });
+    } catch (error) {
+      if (!isIdempotencyKeyConflict(error)) throw error;
+      const ticket = await this.loadTicketByIdempotencyKey(
+        input.tenantId,
+        input.idempotencyKey,
+        input.now,
+      );
+      return { ticket, replayed: true };
+    }
   }
 
   /** Undo one status transition within 60s (FR-3.7, backend doc §2.5). Never a
@@ -487,87 +559,105 @@ export class KitchenOrderRepository {
     staffId: string;
     now: Date;
   }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
-    return withTenant(this.db, input.tenantId, async (tx) => {
-      const existingEvent = await tx.query.orderEvents.findFirst({
-        where: and(
-          eq(tables.orderEvents.tenantId, input.tenantId),
-          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
-        ),
-      });
-      if (existingEvent) {
-        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
+    try {
+      return await withTenant(this.db, input.tenantId, async (tx) => {
+        const existingEvent = await tx.query.orderEvents.findFirst({
+          where: and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+          ),
+        });
+        if (existingEvent) {
+          const ticket = await this.loadTicket(
+            tx,
+            input.tenantId,
+            existingEvent.orderId,
+            input.now,
+          );
+          if (!ticket) throw new OrderNotFound();
+          return { ticket, replayed: true };
+        }
+
+        const order = await tx.query.orders.findFirst({
+          where: and(
+            eq(tables.orders.tenantId, input.tenantId),
+            eq(tables.orders.id, input.orderId),
+          ),
+        });
+        if (!order) throw new OrderNotFound();
+        const status = order.status as OrderStatus;
+        // `voided`/`abandoned`/`collected` already moved money or materials for
+        // real - their own dedicated path is the only legal way back, never this
+        // generic undo (order-state-machine.ts's isRevertEligible doc comment).
+        if (!isRevertEligible(status)) throw new InvalidTransition(legalNextStatuses(status));
+
+        // Step 1: the event that produced the current status, staff-actored only -
+        // a customer- or system-caused status is not staff's to undo. Excludes
+        // item_tick events explicitly: those are also actor_type='staff' with
+        // to_status left unchanged (§2.6), so without this filter a tick fired
+        // after the real transition would be mistaken for "the event that
+        // produced the current status" and both reset the 60s window and make
+        // fromStatus equal the current status (a no-op revert with a nonsense
+        // audit row).
+        const lastStaffEvent = await tx.query.orderEvents.findFirst({
+          where: and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            eq(tables.orderEvents.orderId, order.id),
+            eq(tables.orderEvents.toStatus, status),
+            eq(tables.orderEvents.actorType, 'staff'),
+            sql`coalesce(${tables.orderEvents.metadata} ->> 'action', '') != 'item_tick'`,
+          ),
+          orderBy: (events, { desc }) => [desc(events.id)],
+        });
+        if (!lastStaffEvent?.fromStatus) throw new InvalidTransition(legalNextStatuses(status));
+
+        // Step 2: server clock, not client - the frontend's countdown is a UX
+        // affordance only, never the source of truth for whether undo is allowed.
+        const elapsedSeconds = (input.now.getTime() - lastStaffEvent.createdAt.getTime()) / 1000;
+        if (elapsedSeconds >= REVERT_WINDOW_SECONDS) throw new RevertWindowExpired();
+
+        const fromStatus = lastStaffEvent.fromStatus as OrderStatus;
+
+        // Pure status rollback - never touches accepted_at/ready_at/ledger/loyalty
+        // (FR-3.7/INV-7: "the reversal is logged, but... not un-sent/un-deducted").
+        await tx
+          .update(tables.orders)
+          .set({ status: fromStatus })
+          .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
+
+        // A new, additive event - append-only for the same reason the ledger is:
+        // an auditor needs to see a revert happened, not just its net effect.
+        const [event] = await tx
+          .insert(tables.orderEvents)
+          .values({
+            tenantId: input.tenantId,
+            orderId: order.id,
+            fromStatus: status,
+            toStatus: fromStatus,
+            actorType: 'staff',
+            actorId: input.staffId,
+            reason: 'undo',
+            metadata: { revertsEventId: lastStaffEvent.id },
+            source: 'kds',
+            idempotencyKey: input.idempotencyKey,
+            createdAt: input.now,
+          })
+          .returning();
+        if (!event) throw new Error('Order event insert returned no row.');
+
+        const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
         if (!ticket) throw new OrderNotFound();
-        return { ticket, replayed: true };
-      }
-
-      const order = await tx.query.orders.findFirst({
-        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
+        return { ticket, replayed: false, event: toKitchenEvent(event) };
       });
-      if (!order) throw new OrderNotFound();
-      const status = order.status as OrderStatus;
-      // `voided`/`abandoned`/`collected` already moved money or materials for
-      // real - their own dedicated path is the only legal way back, never this
-      // generic undo (order-state-machine.ts's isRevertEligible doc comment).
-      if (!isRevertEligible(status)) throw new InvalidTransition(legalNextStatuses(status));
-
-      // Step 1: the event that produced the current status, staff-actored only -
-      // a customer- or system-caused status is not staff's to undo. Excludes
-      // item_tick events explicitly: those are also actor_type='staff' with
-      // to_status left unchanged (§2.6), so without this filter a tick fired
-      // after the real transition would be mistaken for "the event that
-      // produced the current status" and both reset the 60s window and make
-      // fromStatus equal the current status (a no-op revert with a nonsense
-      // audit row).
-      const lastStaffEvent = await tx.query.orderEvents.findFirst({
-        where: and(
-          eq(tables.orderEvents.tenantId, input.tenantId),
-          eq(tables.orderEvents.orderId, order.id),
-          eq(tables.orderEvents.toStatus, status),
-          eq(tables.orderEvents.actorType, 'staff'),
-          sql`coalesce(${tables.orderEvents.metadata} ->> 'action', '') != 'item_tick'`,
-        ),
-        orderBy: (events, { desc }) => [desc(events.id)],
-      });
-      if (!lastStaffEvent?.fromStatus) throw new InvalidTransition(legalNextStatuses(status));
-
-      // Step 2: server clock, not client - the frontend's countdown is a UX
-      // affordance only, never the source of truth for whether undo is allowed.
-      const elapsedSeconds = (input.now.getTime() - lastStaffEvent.createdAt.getTime()) / 1000;
-      if (elapsedSeconds >= REVERT_WINDOW_SECONDS) throw new RevertWindowExpired();
-
-      const fromStatus = lastStaffEvent.fromStatus as OrderStatus;
-
-      // Pure status rollback - never touches accepted_at/ready_at/ledger/loyalty
-      // (FR-3.7/INV-7: "the reversal is logged, but... not un-sent/un-deducted").
-      await tx
-        .update(tables.orders)
-        .set({ status: fromStatus })
-        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
-
-      // A new, additive event - append-only for the same reason the ledger is:
-      // an auditor needs to see a revert happened, not just its net effect.
-      const [event] = await tx
-        .insert(tables.orderEvents)
-        .values({
-          tenantId: input.tenantId,
-          orderId: order.id,
-          fromStatus: status,
-          toStatus: fromStatus,
-          actorType: 'staff',
-          actorId: input.staffId,
-          reason: 'undo',
-          metadata: { revertsEventId: lastStaffEvent.id },
-          source: 'kds',
-          idempotencyKey: input.idempotencyKey,
-          createdAt: input.now,
-        })
-        .returning();
-      if (!event) throw new Error('Order event insert returned no row.');
-
-      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
-      if (!ticket) throw new OrderNotFound();
-      return { ticket, replayed: false, event: toKitchenEvent(event) };
-    });
+    } catch (error) {
+      if (!isIdempotencyKeyConflict(error)) throw error;
+      const ticket = await this.loadTicketByIdempotencyKey(
+        input.tenantId,
+        input.idempotencyKey,
+        input.now,
+      );
+      return { ticket, replayed: true };
+    }
   }
 
   /** Event-only, no status change (§2.6) - doesn't need accept/advance's heavier
@@ -587,57 +677,67 @@ export class KitchenOrderRepository {
     replayed: boolean;
     event?: KitchenEvent;
   }> {
-    return withTenant(this.db, input.tenantId, async (tx) => {
-      const existingEvent = await tx.query.orderEvents.findFirst({
-        where: and(
-          eq(tables.orderEvents.tenantId, input.tenantId),
-          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
-        ),
+    try {
+      return await withTenant(this.db, input.tenantId, async (tx) => {
+        const existingEvent = await tx.query.orderEvents.findFirst({
+          where: and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+          ),
+        });
+        if (existingEvent)
+          return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: true };
+
+        const order = await tx.query.orders.findFirst({
+          where: and(
+            eq(tables.orders.tenantId, input.tenantId),
+            eq(tables.orders.id, input.orderId),
+          ),
+        });
+        if (!order) throw new OrderNotFound();
+        const status = order.status as OrderStatus;
+        if (status !== 'received' && status !== 'preparing')
+          throw new InvalidTransition(legalNextStatuses(status));
+
+        const item = await tx.query.orderItems.findFirst({
+          where: and(
+            eq(tables.orderItems.tenantId, input.tenantId),
+            eq(tables.orderItems.id, input.orderItemId),
+            eq(tables.orderItems.orderId, input.orderId),
+          ),
+        });
+        if (!item) throw new OrderItemNotFound();
+
+        const [event] = await tx
+          .insert(tables.orderEvents)
+          .values({
+            tenantId: input.tenantId,
+            orderId: order.id,
+            fromStatus: status,
+            toStatus: status,
+            actorType: 'staff',
+            actorId: input.staffId,
+            source: 'kds',
+            metadata: { action: 'item_tick', orderItemId: input.orderItemId, ticked: input.ticked },
+            idempotencyKey: input.idempotencyKey,
+            createdAt: input.now,
+          })
+          .returning();
+        if (!event) throw new Error('Order event insert returned no row.');
+
+        return {
+          orderItemId: input.orderItemId,
+          ticked: input.ticked,
+          replayed: false,
+          event: toKitchenEvent(event),
+        };
       });
-      if (existingEvent)
-        return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: true };
-
-      const order = await tx.query.orders.findFirst({
-        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
-      });
-      if (!order) throw new OrderNotFound();
-      const status = order.status as OrderStatus;
-      if (status !== 'received' && status !== 'preparing')
-        throw new InvalidTransition(legalNextStatuses(status));
-
-      const item = await tx.query.orderItems.findFirst({
-        where: and(
-          eq(tables.orderItems.tenantId, input.tenantId),
-          eq(tables.orderItems.id, input.orderItemId),
-          eq(tables.orderItems.orderId, input.orderId),
-        ),
-      });
-      if (!item) throw new OrderItemNotFound();
-
-      const [event] = await tx
-        .insert(tables.orderEvents)
-        .values({
-          tenantId: input.tenantId,
-          orderId: order.id,
-          fromStatus: status,
-          toStatus: status,
-          actorType: 'staff',
-          actorId: input.staffId,
-          source: 'kds',
-          metadata: { action: 'item_tick', orderItemId: input.orderItemId, ticked: input.ticked },
-          idempotencyKey: input.idempotencyKey,
-          createdAt: input.now,
-        })
-        .returning();
-      if (!event) throw new Error('Order event insert returned no row.');
-
-      return {
-        orderItemId: input.orderItemId,
-        ticked: input.ticked,
-        replayed: false,
-        event: toKitchenEvent(event),
-      };
-    });
+    } catch (error) {
+      if (!isIdempotencyKeyConflict(error)) throw error;
+      // No re-query needed - the tick's own request payload already carries
+      // everything the caller needs (item.6, no status change to re-derive).
+      return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: true };
+    }
   }
 
   /** GET /staff/board (backend doc §1) - used on first load and gap-cap resync,
@@ -956,6 +1056,28 @@ export class KitchenOrderRepository {
    *  mutation's own transaction. */
   async loadTicketById(tenantId: string, orderId: string, now: Date): Promise<OrderTicket | null> {
     return withTenant(this.db, tenantId, (tx) => this.loadTicket(tx, tenantId, orderId, now));
+  }
+
+  /** Recovery path for the losing side of an idempotency-key race (§2.2): its
+   *  own transaction is already rolled back, so this is a fresh read against
+   *  the winner's now-committed row - never a retry of the mutation itself. */
+  private async loadTicketByIdempotencyKey(
+    tenantId: string,
+    idempotencyKey: string,
+    now: Date,
+  ): Promise<OrderTicket> {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const event = await tx.query.orderEvents.findFirst({
+        where: and(
+          eq(tables.orderEvents.tenantId, tenantId),
+          eq(tables.orderEvents.idempotencyKey, idempotencyKey),
+        ),
+      });
+      if (!event) throw new OrderNotFound();
+      const ticket = await this.loadTicket(tx, tenantId, event.orderId, now);
+      if (!ticket) throw new OrderNotFound();
+      return ticket;
+    });
   }
 
   private async loadTicket(
