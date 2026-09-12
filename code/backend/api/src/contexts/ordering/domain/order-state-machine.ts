@@ -44,3 +44,18 @@ export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
 export function isNewTicket(status: OrderStatus): boolean {
   return (NEW_TICKET_STATUSES as readonly string[]).includes(status);
 }
+
+/** FR-3.7's undo can only ever be a pure status rollback, never a financial one -
+ *  so it must never reach a status whose own transition already moved money or
+ *  materials for real: `voided` (ledger negation + manager PIN), `abandoned`
+ *  (waste, no return), `collected` (payment + loyalty accrual). Those have their
+ *  own dedicated reversal paths (void); a generic revert must not shortcut them.
+ *  `received`/`preparing`/`ready`/`rejected` are safe: accept's own ledger write
+ *  is deliberately NOT undone by reverting out of `received` (INV-7/FR-3.7 - "the
+ *  reversal is logged, but ready messages already sent are not un-sent" and,
+ *  identically, materials already deducted are not un-deducted). */
+const REVERT_ELIGIBLE_STATUSES = ['received', 'preparing', 'ready', 'rejected'] as const;
+
+export function isRevertEligible(status: OrderStatus): boolean {
+  return (REVERT_ELIGIBLE_STATUSES as readonly string[]).includes(status);
+}

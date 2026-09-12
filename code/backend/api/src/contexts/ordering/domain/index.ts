@@ -6,5 +6,6 @@ export {
   NEW_TICKET_STATUSES,
   canTransition,
   isNewTicket,
+  isRevertEligible,
   legalNextStatuses,
 } from './order-state-machine.js';

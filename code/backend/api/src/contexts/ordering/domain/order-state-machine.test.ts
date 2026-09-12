@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { canTransition, isNewTicket, legalNextStatuses } from './order-state-machine.js';
+import {
+  canTransition,
+  isNewTicket,
+  isRevertEligible,
+  legalNextStatuses,
+} from './order-state-machine.js';
 
 describe('order state machine', () => {
   it('lets both channels converge on accept (01-system-design.md §4.3)', () => {
@@ -30,5 +35,17 @@ describe('order state machine', () => {
     expect(isNewTicket('placed')).toBe(true);
     expect(isNewTicket('pending')).toBe(true);
     expect(isNewTicket('received')).toBe(false);
+  });
+
+  it('never allows revert to reach a status that already moved money or materials for real', () => {
+    for (const status of ['voided', 'abandoned', 'collected'] as const) {
+      expect(isRevertEligible(status)).toBe(false);
+    }
+  });
+
+  it('allows revert for every pure status transition accept/advance/reject produce', () => {
+    for (const status of ['received', 'preparing', 'ready', 'rejected'] as const) {
+      expect(isRevertEligible(status)).toBe(true);
+    }
   });
 });

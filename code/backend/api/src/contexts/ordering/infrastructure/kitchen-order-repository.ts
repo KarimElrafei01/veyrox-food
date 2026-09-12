@@ -1,8 +1,9 @@
 import { and, eq, inArray, isNull, withTenant, type Database, tables } from '@veyroxai/db';
 import type { OrderTicket } from '@veyroxai/contracts';
-import type { EtaCartItem, LoyaltyTier } from '@veyroxai/domain';
+import { REVERT_WINDOW_SECONDS, type EtaCartItem, type LoyaltyTier } from '@veyroxai/domain';
 import {
   canTransition,
+  isRevertEligible,
   legalNextStatuses,
   type OrderStatus,
 } from '../domain/order-state-machine.js';
@@ -26,6 +27,13 @@ export class ItemNoLongerAvailable extends Error {
   constructor(readonly unavailable: readonly { menuItemId: string; modifierOptionId?: string }[]) {
     super('An item or modifier was 86ed after this order was placed.');
     this.name = 'ItemNoLongerAvailable';
+  }
+}
+
+export class RevertWindowExpired extends Error {
+  constructor() {
+    super('This can no longer be undone from the KDS - void the order instead.');
+    this.name = 'RevertWindowExpired';
   }
 }
 
@@ -407,6 +415,87 @@ export class KitchenOrderRepository {
         toStatus: input.toStatus,
         actorType: 'staff',
         actorId: input.staffId,
+        source: 'kds',
+        idempotencyKey: input.idempotencyKey,
+        createdAt: input.now,
+      });
+
+      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+      if (!ticket) throw new OrderNotFound();
+      return { ticket, replayed: false };
+    });
+  }
+
+  /** Undo one status transition within 60s (FR-3.7, backend doc §2.5). Never a
+   *  financial reversal - void is the only path that reverses the ledger. */
+  async revert(input: {
+    tenantId: string;
+    orderId: string;
+    idempotencyKey: string;
+    staffId: string;
+    now: Date;
+  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+    return withTenant(this.db, input.tenantId, async (tx) => {
+      const existingEvent = await tx.query.orderEvents.findFirst({
+        where: and(
+          eq(tables.orderEvents.tenantId, input.tenantId),
+          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+        ),
+      });
+      if (existingEvent) {
+        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
+        if (!ticket) throw new OrderNotFound();
+        return { ticket, replayed: true };
+      }
+
+      const order = await tx.query.orders.findFirst({
+        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
+      });
+      if (!order) throw new OrderNotFound();
+      const status = order.status as OrderStatus;
+      // `voided`/`abandoned`/`collected` already moved money or materials for
+      // real - their own dedicated path is the only legal way back, never this
+      // generic undo (order-state-machine.ts's isRevertEligible doc comment).
+      if (!isRevertEligible(status)) throw new InvalidTransition(legalNextStatuses(status));
+
+      // Step 1: the event that produced the current status, staff-actored only -
+      // a customer- or system-caused status is not staff's to undo.
+      const lastStaffEvent = await tx.query.orderEvents.findFirst({
+        where: and(
+          eq(tables.orderEvents.tenantId, input.tenantId),
+          eq(tables.orderEvents.orderId, order.id),
+          eq(tables.orderEvents.toStatus, status),
+          eq(tables.orderEvents.actorType, 'staff'),
+        ),
+        orderBy: (events, { desc }) => [desc(events.id)],
+      });
+      if (!lastStaffEvent?.fromStatus) throw new InvalidTransition(legalNextStatuses(status));
+
+      // Step 2: server clock, not client - the frontend's countdown is a UX
+      // affordance only, never the source of truth for whether undo is allowed.
+      const elapsedSeconds = (input.now.getTime() - lastStaffEvent.createdAt.getTime()) / 1000;
+      if (elapsedSeconds >= REVERT_WINDOW_SECONDS) throw new RevertWindowExpired();
+
+      const fromStatus = lastStaffEvent.fromStatus as OrderStatus;
+
+      // Pure status rollback - never touches accepted_at/ready_at/ledger/loyalty
+      // (FR-3.7/INV-7: "the reversal is logged, but... not un-sent/un-deducted").
+      await tx
+        .update(tables.orders)
+        .set({ status: fromStatus })
+        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
+
+      // A new, additive event - append-only for the same reason the ledger is:
+      // an auditor needs to see a revert happened, not just its net effect.
+      await tx.insert(tables.orderEvents).values({
+        tenantId: input.tenantId,
+        orderId: order.id,
+        fromStatus: status,
+        toStatus: fromStatus,
+        actorType: 'staff',
+        actorId: input.staffId,
+        reason: 'undo',
+        metadata: { revertsEventId: lastStaffEvent.id },
         source: 'kds',
         idempotencyKey: input.idempotencyKey,
         createdAt: input.now,

@@ -35,6 +35,8 @@ import { rejectOrderController } from './contexts/ordering/interface/reject-orde
 import type { RejectOrder } from './contexts/ordering/application/reject-order.js';
 import { advanceOrderController } from './contexts/ordering/interface/advance-order-controller.js';
 import type { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
+import { revertOrderController } from './contexts/ordering/interface/revert-order-controller.js';
+import type { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { devSessionController } from './dev/dev-session-controller.js';
 import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
@@ -96,6 +98,11 @@ export interface AppDeps {
     deviceKeys: readonly [string, ...string[]];
     pinKeys: readonly [string, ...string[]];
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  revertOrder?: {
+    revert: RevertOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
   };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
@@ -180,6 +187,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.acceptOrder) await app.register(acceptOrderController, deps.acceptOrder);
   if (deps.rejectOrder) await app.register(rejectOrderController, deps.rejectOrder);
   if (deps.advanceOrder) await app.register(advanceOrderController, deps.advanceOrder);
+  if (deps.revertOrder) await app.register(revertOrderController, deps.revertOrder);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 

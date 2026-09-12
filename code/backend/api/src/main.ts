@@ -27,6 +27,7 @@ import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-imag
 import { AcceptOrder } from './contexts/ordering/application/accept-order.js';
 import { RejectOrder } from './contexts/ordering/application/reject-order.js';
 import { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
+import { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
 
 const log = createLogger({ service: 'api' });
@@ -210,6 +211,11 @@ async function main(): Promise<void> {
       emit: async (event) => {
         log.info('OrderAdvanced', event);
       },
+    },
+    revertOrder: {
+      revert: new RevertOrder(kitchenOrders, etaQueue),
+      deviceKeys,
+      pinKeys,
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }

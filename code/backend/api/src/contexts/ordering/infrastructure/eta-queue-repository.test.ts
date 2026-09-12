@@ -13,6 +13,7 @@ describe('EtaQueueRepository', () => {
       set: async (key: string, value: string) => {
         values.set(key, value);
       },
+      del: async (key: string) => values.delete(key),
     };
     const repository = new EtaQueueRepository(null as never, redis);
     const state: EtaQueueState = {
@@ -53,6 +54,7 @@ describe('EtaQueueRepository', () => {
       set: async (key: string, value: string) => {
         redisValues.set(key, value);
       },
+      del: async (key: string) => redisValues.delete(key),
     };
     const repository = new EtaQueueRepository(db as never, redis);
     await Promise.all([
