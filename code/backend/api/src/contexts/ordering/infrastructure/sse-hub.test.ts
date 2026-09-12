@@ -67,7 +67,7 @@ describe('SseHub', () => {
     ).not.toThrow();
   });
 
-  it('sends a heartbeat comment every 20s to every open connection (ADR-0005)', () => {
+  it('sends a named heartbeat event every 20s to every open connection (ADR-0005, amended)', () => {
     vi.useFakeTimers();
     try {
       hub = new SseHub();
@@ -76,7 +76,9 @@ describe('SseHub', () => {
 
       vi.advanceTimersByTime(20_000);
 
-      expect(writes).toEqual([': heartbeat\n\n']);
+      // A named event, not a bare comment - EventSource.addEventListener can't
+      // see a comment, and the frontend staleness watchdog needs to see this.
+      expect(writes).toEqual(['event: heartbeat\ndata: {}\n\n']);
     } finally {
       vi.useRealTimers();
     }

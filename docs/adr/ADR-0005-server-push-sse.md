@@ -64,3 +64,11 @@ Compared to the polling fallback it replaces, this is strictly better: no 3-seco
 **Good**: sub-second propagation, no polling, no vendor, no message bus, replay-on-reconnect that closes the gap café wifi creates, and it reuses the audit log rather than adding infrastructure.
 
 **Bad**: we own reconnection correctness, heartbeats, and proxy behaviour — all of which are easy to get subtly wrong and are therefore covered by an explicit integration test (drop the connection mid-stream, assert no missed and no duplicated events). Long-lived connections also mean the API can no longer scale to zero, which is a real constraint on the near-zero hosting phase (ADR-0011).
+
+## Amendment, 2026-09-12 — heartbeat is a named event, not a bare comment
+
+Requirement 1 said "heartbeat **comment**" and requirement 4 said "the staleness banner stays" (FR-3.6) as if the same mechanism served both. It cannot: an SSE comment line (`: heartbeat\n\n`) is invisible to the browser's `EventSource` API by spec — `onmessage` and every `addEventListener` never fire for it. A client literally cannot use it to reset a staleness watchdog, which is the one thing requirement 4 needs it for. This surfaced only once F2's actual KDS frontend tried to consume it (`packages/ops-core`'s SSE client) — nothing before this needed the heartbeat to be observable, so nothing caught it.
+
+**Fix**: `SseHub`'s heartbeat now sends a named `event: heartbeat` frame (`data: {}`) on the same 20s interval, via the same `formatSseEvent` every real event already uses, instead of the bare comment string. This still resets Cloudflare/Fly's idle-connection timers (requirement 1's actual purpose — any bytes on the wire do that, comment or not) and is now something `EventSource.addEventListener('heartbeat', …)` can see, which is what the frontend staleness watchdog (FR-3.6, 10s threshold) is built against. No `id:` line — it carries no `order_events` row and must never be replayed.
+
+The wire-format detail changes; the requirement itself (heartbeat every 20s, for the reasons already stated) does not.

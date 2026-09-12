@@ -59,9 +59,15 @@ export class SseHub {
     // ADR-0005 requirement 1: Cloudflare and Fly both kill idle connections
     // without this. One shared timer, not one per connection - café scale is a
     // handful of tablets per tenant, a handful of tenants per process.
+    //
+    // A named event, not a bare SSE comment (ADR-0005's 2026-09-12 amendment):
+    // a comment line is invisible to the browser's EventSource API by spec, so
+    // the frontend staleness watchdog (FR-3.6) has nothing to listen for if
+    // this stays a comment - it still resets proxies' idle timers either way.
+    const heartbeat = formatSseEvent({ event: 'heartbeat', data: {} });
     this.heartbeatTimer = setInterval(() => {
       for (const subscribers of this.subscribersByTenant.values()) {
-        for (const subscriber of subscribers) subscriber.write(': heartbeat\n\n');
+        for (const subscriber of subscribers) subscriber.write(heartbeat);
       }
     }, 20_000);
     this.heartbeatTimer.unref?.();
