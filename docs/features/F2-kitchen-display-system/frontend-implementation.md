@@ -16,6 +16,28 @@ This is a **frontend-only** document. Every request/response shape referenced he
 in full in the companion `backend-implementation.md` — this doc only says which screen calls
 which endpoint, with which local state around it.
 
+**Scope correction for this build pass (2026-09-12)** — three things this document assumes are
+not yet true, resolved with the user before coding rather than discovered mid-build (working rule
+2):
+
+1. **Offline outbox not built yet.** §3.3/§3.4 describe every KDS action as fully operable offline
+   via `packages/ops-core`'s IndexedDB outbox (ADR-0006). That outbox is scoped in
+   `docs/06-sprint-plan.md` as **Sprint 4 (Till)**, not Sprint 3 (KDS) — `ops-core` is currently an
+   empty placeholder. This pass builds **online-only**: direct API calls with optimistic UI +
+   rollback-on-error. The staleness banner (§3) still renders correctly on an SSE drop, but actions
+   taken while stale do not queue and replay yet — that lands when Till's Sprint 4 work builds the
+   real shared outbox in `ops-core`, at which point §3.4's "(LOCAL)/pending sync" tags and §3.6's
+   flush-on-reconnect become real. Nothing here reverses ADR-0006; it is sequencing, not a redesign.
+2. **ADR-0022 (LAN peer relay) deferred, consistent with the backend.** §3's "3.5 Provisional
+   tickets" subsection and every `lanPeers`/`syncState: "provisional"` reference in §6 are **not
+   built this pass** — the backend's own LAN-relay receive/reconciliation endpoints were deferred
+   earlier for the same reason (ship core KDS first). The staleness banner ships without the
+   Till-orders-on-LAN caveat in its copy; §3.2's recommended banner text reverts to the simpler "new
+   orders may be delayed" framing until ADR-0022 is actually implemented on both ends.
+3. **No staff login/PIN-entry screen.** None of the 5 Stitch screens are one, and the backend's
+   ADR-0023 is deliberately verification-only (no enrollment). This pass reaches every screen via
+   dev-injected tokens (`pnpm tokens`); a real PIN-entry UI waits for the full S2–S5 auth realm.
+
 ---
 
 ## 0. Before writing a line of code
