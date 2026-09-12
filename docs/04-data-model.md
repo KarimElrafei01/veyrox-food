@@ -306,6 +306,26 @@ order_events (                                 -- APPEND-ONLY. The audit log.
 
 Six snapshot columns look redundant until the first time an owner asks why last month's report changed. They are the physical expression of Rule 2.
 
+**`kitchen_state`** — one row per tenant, holding the barista-set `active_stations` count (FR-3.10)
+that feeds FR-2.19's ETA queue-depth input:
+
+```sql
+kitchen_state (
+  tenant_id uuid PK REFERENCES tenants(id),
+  active_stations int NOT NULL DEFAULT 1 CHECK (active_stations BETWEEN 1 AND 12),
+  updated_at timestamptz NOT NULL,
+  updated_by_staff_id uuid NULL
+)
+```
+
+Deliberately **not** modeled through the ADR-0015 settings/config resolver — that mechanism is for
+configuration a device *reads* to decide behavior, not fast-changing operational state a barista
+*writes* multiple times a shift. A plain per-tenant row with a direct endpoint
+(`PUT /staff/kitchen-state/stations`, `05-api-and-integration-contracts.md`) is the simpler correct
+shape (CLAUDE.md: "write the simplest thing that satisfies the requirement"). No `order_events` row
+on change — this isn't an order-lifecycle fact — but it does publish its own SSE event
+(`kitchen_state.changed`) so every connected tablet's stepper stays in sync without polling.
+
 ---
 
 ## 7. The material ledger
@@ -559,7 +579,7 @@ At pilot volume nothing here is load-bearing; these exist so the first café wit
 
 ```sql
 orders            (tenant_id, created_at DESC)
-orders            (tenant_id, status) WHERE status IN ('pending','received','preparing','ready')
+orders            (tenant_id, status) WHERE status IN ('placed','pending','received','preparing','ready')
 order_items       (tenant_id, menu_item_id, order_id)
 material_ledger   (tenant_id, order_id)
 material_ledger   (tenant_id, material_id, created_at DESC)
