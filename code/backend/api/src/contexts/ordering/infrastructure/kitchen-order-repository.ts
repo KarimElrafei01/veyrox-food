@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, withTenant, type Database, tables } from '@veyroxai/db';
+import { and, eq, inArray, isNull, sql, withTenant, type Database, tables } from '@veyroxai/db';
 import type { OrderTicket } from '@veyroxai/contracts';
 import { REVERT_WINDOW_SECONDS, type EtaCartItem, type LoyaltyTier } from '@veyroxai/domain';
 import {
@@ -34,6 +34,13 @@ export class RevertWindowExpired extends Error {
   constructor() {
     super('This can no longer be undone from the KDS - void the order instead.');
     this.name = 'RevertWindowExpired';
+  }
+}
+
+export class OrderItemNotFound extends Error {
+  constructor() {
+    super('No such item on this order.');
+    this.name = 'OrderItemNotFound';
   }
 }
 
@@ -507,6 +514,62 @@ export class KitchenOrderRepository {
     });
   }
 
+  /** Event-only, no status change (§2.6) - doesn't need accept/advance's heavier
+   *  shape because there is nothing to guard beyond "the order is still being
+   *  worked." Ticking a `ready` or terminal order is meaningless. */
+  async tickItem(input: {
+    tenantId: string;
+    orderId: string;
+    orderItemId: string;
+    ticked: boolean;
+    idempotencyKey: string;
+    staffId: string;
+    now: Date;
+  }): Promise<{ orderItemId: string; ticked: boolean; replayed: boolean }> {
+    return withTenant(this.db, input.tenantId, async (tx) => {
+      const existingEvent = await tx.query.orderEvents.findFirst({
+        where: and(
+          eq(tables.orderEvents.tenantId, input.tenantId),
+          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+        ),
+      });
+      if (existingEvent)
+        return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: true };
+
+      const order = await tx.query.orders.findFirst({
+        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
+      });
+      if (!order) throw new OrderNotFound();
+      const status = order.status as OrderStatus;
+      if (status !== 'received' && status !== 'preparing')
+        throw new InvalidTransition(legalNextStatuses(status));
+
+      const item = await tx.query.orderItems.findFirst({
+        where: and(
+          eq(tables.orderItems.tenantId, input.tenantId),
+          eq(tables.orderItems.id, input.orderItemId),
+          eq(tables.orderItems.orderId, input.orderId),
+        ),
+      });
+      if (!item) throw new OrderItemNotFound();
+
+      await tx.insert(tables.orderEvents).values({
+        tenantId: input.tenantId,
+        orderId: order.id,
+        fromStatus: status,
+        toStatus: status,
+        actorType: 'staff',
+        actorId: input.staffId,
+        source: 'kds',
+        metadata: { action: 'item_tick', orderItemId: input.orderItemId, ticked: input.ticked },
+        idempotencyKey: input.idempotencyKey,
+        createdAt: input.now,
+      });
+
+      return { orderItemId: input.orderItemId, ticked: input.ticked, replayed: false };
+    });
+  }
+
   private async loadTicket(
     tx: Parameters<Parameters<Database['transaction']>[0]>[0],
     tenantId: string,
@@ -562,6 +625,28 @@ export class KitchenOrderRepository {
       modifiersByOrderItem.set(modifier.orderItemId, existing);
     }
 
+    // §2.6: current tick state is the *last* item_tick event per orderItemId -
+    // a small, bounded fold (a handful of rows per order), not a materialized
+    // view. Ordered ascending so later writes to the map win.
+    const tickEvents = items.length
+      ? await tx
+          .select({
+            orderItemId: sql<string>`${tables.orderEvents.metadata} ->> 'orderItemId'`,
+            ticked: sql<boolean>`(${tables.orderEvents.metadata} ->> 'ticked')::boolean`,
+          })
+          .from(tables.orderEvents)
+          .where(
+            and(
+              eq(tables.orderEvents.tenantId, tenantId),
+              eq(tables.orderEvents.orderId, orderId),
+              sql`${tables.orderEvents.metadata} ->> 'action' = 'item_tick'`,
+            ),
+          )
+          .orderBy(tables.orderEvents.id)
+      : [];
+    const tickedByItem = new Map<string, boolean>();
+    for (const event of tickEvents) tickedByItem.set(event.orderItemId, event.ticked);
+
     const source: OrderTicketSource = {
       orderId: order.id,
       orderNumber: order.orderNumber,
@@ -584,9 +669,7 @@ export class KitchenOrderRepository {
           nameSnapshotEn: modifier.nameSnapshotEn,
           nameSnapshotAr: modifier.nameSnapshotAr,
         })),
-        // No item_tick fold here yet (§2.6/task #6) - a ticket this endpoint
-        // returns is never past `preparing` mid-tick at the moment of Accept.
-        ticked: false,
+        ticked: tickedByItem.get(item.id) ?? false,
       })),
       lastStaffTransitionAt: lastStaffEvent?.createdAt ?? null,
     };
