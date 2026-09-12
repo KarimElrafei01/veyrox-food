@@ -24,6 +24,9 @@ import type { OrderPlacementMetricSink } from './contexts/ordering/application/o
 import type { EtaMetricSink } from './contexts/ordering/application/eta-metrics.js';
 import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
 import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
+import { AcceptOrder } from './contexts/ordering/application/accept-order.js';
+import { RejectOrder } from './contexts/ordering/application/reject-order.js';
+import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -67,6 +70,21 @@ async function main(): Promise<void> {
   const sessionKeys: [string, ...string[]] = previousSessionKey
     ? [sessionKey, previousSessionKey]
     : [sessionKey];
+  // ADR-0023: verification-only ahead of the full S2-S5 staff realm. Never the
+  // customer session's keys - a leaked key for one realm must not mint a token
+  // for another.
+  const deviceJwtKey = process.env.STAFF_DEVICE_JWT_KEY;
+  if (!deviceJwtKey) throw new Error('STAFF_DEVICE_JWT_KEY is not set');
+  const previousDeviceJwtKey = process.env.STAFF_DEVICE_JWT_KEY_PREVIOUS;
+  const deviceKeys: [string, ...string[]] = previousDeviceJwtKey
+    ? [deviceJwtKey, previousDeviceJwtKey]
+    : [deviceJwtKey];
+  const pinTokenKey = process.env.STAFF_PIN_TOKEN_KEY;
+  if (!pinTokenKey) throw new Error('STAFF_PIN_TOKEN_KEY is not set');
+  const previousPinTokenKey = process.env.STAFF_PIN_TOKEN_KEY_PREVIOUS;
+  const pinKeys: [string, ...string[]] = previousPinTokenKey
+    ? [pinTokenKey, previousPinTokenKey]
+    : [pinTokenKey];
   // Shared floor, not a ceiling: quote + ETA rebuilds may never claim more than
   // this many of the pool's 20 connections, so order placement is never left
   // fighting a read-side stampede for a connection (never routed through this
@@ -166,6 +184,22 @@ async function main(): Promise<void> {
       keys: sessionKeys,
       etaQueue,
       etaMetrics,
+    },
+    acceptOrder: {
+      accept: new AcceptOrder(new KitchenOrderRepository(database), etaQueue, etaMetrics),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderAccepted', event);
+      },
+    },
+    rejectOrder: {
+      reject: new RejectOrder(new KitchenOrderRepository(database)),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderRejected', event);
+      },
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }

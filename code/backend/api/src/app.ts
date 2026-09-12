@@ -29,6 +29,10 @@ import type { CustomerLocaleRepository } from './contexts/ordering/infrastructur
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
 import { orderStatusController } from './contexts/ordering/interface/order-status-controller.js';
 import type { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
+import { acceptOrderController } from './contexts/ordering/interface/accept-order-controller.js';
+import type { AcceptOrder } from './contexts/ordering/application/accept-order.js';
+import { rejectOrderController } from './contexts/ordering/interface/reject-order-controller.js';
+import type { RejectOrder } from './contexts/ordering/application/reject-order.js';
 import { devSessionController } from './dev/dev-session-controller.js';
 import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
@@ -71,6 +75,19 @@ export interface AppDeps {
     keys: readonly [string, ...string[]];
     etaQueue: EtaQueueRepository;
     etaMetrics: EtaMetricSink;
+  };
+  /** Staff realm (ADR-0023): every KDS mutation shares one device/PIN key pair. */
+  acceptOrder?: {
+    accept: AcceptOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  rejectOrder?: {
+    reject: RejectOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
   };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
@@ -152,6 +169,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.quoteOrder) await app.register(quoteOrderController, deps.quoteOrder);
   if (deps.placeOrder) await app.register(placeOrderController, deps.placeOrder);
   if (deps.orderStatus) await app.register(orderStatusController, deps.orderStatus);
+  if (deps.acceptOrder) await app.register(acceptOrderController, deps.acceptOrder);
+  if (deps.rejectOrder) await app.register(rejectOrderController, deps.rejectOrder);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 

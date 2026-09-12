@@ -290,6 +290,69 @@ export class KitchenOrderRepository {
     });
   }
 
+  /** New-column only (backend doc §2.3): a ticket already Accepted must go through
+   *  Void instead, never Reject - INV-7 ("no rejected order has any ledger rows at
+   *  all") is what this guard protects; there is nothing to un-deduct because
+   *  Accept never ran. */
+  async reject(input: {
+    tenantId: string;
+    orderId: string;
+    reasonCode: 'too_busy' | 'item_unavailable' | 'closing';
+    idempotencyKey: string;
+    staffId: string;
+    now: Date;
+  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+    return withTenant(this.db, input.tenantId, async (tx) => {
+      const existingEvent = await tx.query.orderEvents.findFirst({
+        where: and(
+          eq(tables.orderEvents.tenantId, input.tenantId),
+          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+        ),
+      });
+      if (existingEvent) {
+        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
+        if (!ticket) throw new OrderNotFound();
+        return { ticket, replayed: true };
+      }
+
+      const order = await tx.query.orders.findFirst({
+        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
+      });
+      if (!order) throw new OrderNotFound();
+      const status = order.status as OrderStatus;
+
+      if (status === 'rejected') {
+        const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+        if (!ticket) throw new OrderNotFound();
+        return { ticket, replayed: true };
+      }
+      if (!canTransition(status, 'rejected'))
+        throw new InvalidTransition(legalNextStatuses(status));
+
+      await tx
+        .update(tables.orders)
+        .set({ status: 'rejected', rejectionReason: input.reasonCode, rejectedAt: input.now })
+        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
+
+      await tx.insert(tables.orderEvents).values({
+        tenantId: input.tenantId,
+        orderId: order.id,
+        fromStatus: status,
+        toStatus: 'rejected',
+        actorType: 'staff',
+        actorId: input.staffId,
+        reason: input.reasonCode,
+        source: 'kds',
+        idempotencyKey: input.idempotencyKey,
+        createdAt: input.now,
+      });
+
+      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+      if (!ticket) throw new OrderNotFound();
+      return { ticket, replayed: false };
+    });
+  }
+
   private async loadTicket(
     tx: Parameters<Parameters<Database['transaction']>[0]>[0],
     tenantId: string,
