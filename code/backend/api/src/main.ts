@@ -251,6 +251,11 @@ async function main(): Promise<void> {
       deviceKeys,
       pinKeys,
     },
+    staffMenu: {
+      catalogue: new CatalogueRepository(database),
+      deviceKeys,
+      pinKeys,
+    },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }
       : undefined,

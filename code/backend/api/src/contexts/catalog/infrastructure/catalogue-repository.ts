@@ -265,4 +265,121 @@ export class CatalogueRepository {
       };
     });
   }
+
+  /**
+   * F2 backend doc §6: what the KDS 86 drawer needs - the tenant's *current*
+   * live menu with availability flags on every item and modifier option,
+   * under staff auth. Deliberately not `/public/menu/:menuVersion`: that
+   * endpoint is pinned to one immutable published version and gated by a
+   * customer session, wrong on both counts for a barista who needs the
+   * live, currently-true catalog (including items already 86'd, so they can
+   * be un-86'd) regardless of which version a customer's cart is pinned to.
+   *
+   * Read-only sibling of publish() - same live tables, no version snapshot
+   * created, and unlike publish() this does not filter out items lacking an
+   * active price or already-86'd items: a barista must see every active
+   * item/option to search and toggle it, not just what's currently sellable.
+   */
+  async loadStaffMenu(tenantId: string): Promise<{
+    categories: { id: string; nameEn: string; nameAr: string | null; sort: number }[];
+    items: {
+      id: string;
+      categoryId: string | null;
+      nameEn: string;
+      nameAr: string | null;
+      basePriceMinor: number | null;
+      imageObjectKey: string | null;
+      isAvailable: boolean;
+      sort: number;
+      modifierGroupIds: string[];
+    }[];
+    modifierGroups: {
+      id: string;
+      nameEn: string;
+      nameAr: string | null;
+      selection: string;
+      required: boolean;
+      options: {
+        id: string;
+        nameEn: string;
+        nameAr: string | null;
+        priceDeltaMinor: number;
+        isAvailable: boolean;
+      }[];
+    }[];
+  }> {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [categories, items, prices, attachments, groups, options] = await Promise.all([
+        tx.select().from(tables.menuCategories).where(eq(tables.menuCategories.tenantId, tenantId)),
+        tx
+          .select()
+          .from(tables.menuItems)
+          .where(and(eq(tables.menuItems.tenantId, tenantId), eq(tables.menuItems.active, true))),
+        tx
+          .select()
+          .from(tables.menuItemPrices)
+          .where(
+            and(
+              eq(tables.menuItemPrices.tenantId, tenantId),
+              isNull(tables.menuItemPrices.validTo),
+            ),
+          ),
+        tx
+          .select()
+          .from(tables.menuItemModifierGroups)
+          .where(eq(tables.menuItemModifierGroups.tenantId, tenantId)),
+        tx.select().from(tables.modifierGroups).where(eq(tables.modifierGroups.tenantId, tenantId)),
+        tx
+          .select()
+          .from(tables.modifierOptions)
+          .where(eq(tables.modifierOptions.tenantId, tenantId)),
+      ]);
+      const priceByItem = new Map(prices.map((price) => [price.menuItemId, price.priceMinor]));
+      return {
+        categories: categories
+          .sort((a, b) => a.sort - b.sort)
+          .map((category) => ({
+            id: category.id,
+            nameEn: category.nameEn,
+            nameAr: category.nameAr,
+            sort: category.sort,
+          })),
+        items: items
+          .sort((a, b) => a.sort - b.sort)
+          .map((item) => ({
+            id: item.id,
+            categoryId: item.categoryId,
+            nameEn: item.nameEn,
+            nameAr: item.nameAr,
+            basePriceMinor: priceByItem.get(item.id) ?? null,
+            imageObjectKey: item.imageObjectKey,
+            isAvailable: item.isAvailable,
+            sort: item.sort,
+            modifierGroupIds: attachments
+              .filter((attachment) => attachment.menuItemId === item.id)
+              .map((attachment) => attachment.groupId),
+          })),
+        modifierGroups: groups.map((group) => ({
+          id: group.id,
+          nameEn: group.nameEn,
+          nameAr: group.nameAr,
+          selection: group.selection,
+          required: group.required,
+          // No persisted sort column on modifier_options itself (only its
+          // versioned snapshot, menu_version_modifier_options, has one,
+          // assigned at publish time) - insertion order is the best available
+          // ordering for a staff tool that's about search/toggle, not display.
+          options: options
+            .filter((option) => option.groupId === group.id)
+            .map((option) => ({
+              id: option.id,
+              nameEn: option.nameEn,
+              nameAr: option.nameAr,
+              priceDeltaMinor: option.priceDeltaMinor,
+              isAvailable: option.isAvailable,
+            })),
+        })),
+      };
+    });
+  }
 }

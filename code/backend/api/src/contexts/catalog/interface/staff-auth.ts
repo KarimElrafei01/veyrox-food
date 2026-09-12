@@ -8,13 +8,13 @@ import {
 
 export { StaffSessionExpired, StaffSessionInvalid };
 
-/** Shared by every staff/KDS controller in this context (05-api-and-integration-
+/** Shared by every staff endpoint in this context (05-api-and-integration-
  *  contracts.md §1) - ADR-0023's verification-only slice ahead of the full
- *  S2-S5 realm. Cross-context imports may only reach identity/domain/index.js
- *  (ADR-0019, enforced by eslint's import-x/no-restricted-paths), so this thin
- *  header-parsing adapter is duplicated per context rather than shared via
- *  identity/interface/ - it touches FastifyRequest, which the domain layer's
- *  purity rule (no Fastify) forbids putting there instead. */
+ *  S2-S5 realm. Deliberately duplicated from ordering/interface/staff-auth.ts
+ *  rather than shared across contexts: cross-context imports may only reach
+ *  identity/domain/index.js (ADR-0019, eslint's import-x/no-restricted-paths),
+ *  and this thin header-parsing adapter touches FastifyRequest, which the
+ *  domain layer's purity rule (no Fastify) forbids putting there instead. */
 export function authenticateStaff(
   request: FastifyRequest,
   deviceKeys: readonly [string, ...string[]],

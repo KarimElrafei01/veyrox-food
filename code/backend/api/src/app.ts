@@ -17,6 +17,7 @@ import {
 } from './contexts/messaging/interface/whatsapp-webhook-controller.js';
 import { publicCatalogueController } from './contexts/catalog/interface/public-catalogue-controller.js';
 import type { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
+import { staffMenuController } from './contexts/catalog/interface/staff-menu-controller.js';
 import type { MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 import { quoteOrderController } from './contexts/ordering/interface/quote-order-controller.js';
 import type { QuoteOrder } from './contexts/ordering/application/quote-order.js';
@@ -132,6 +133,11 @@ export interface AppDeps {
     deviceKeys: readonly [string, ...string[]];
     pinKeys: readonly [string, ...string[]];
   };
+  staffMenu?: {
+    catalogue: CatalogueRepository;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+  };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
   /** Dev-only kitchen-action simulator (DEV_LOGIN). Off in production. */
@@ -221,6 +227,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.staffStream) await app.register(staffStreamController, deps.staffStream);
   if (deps.setActiveStations)
     await app.register(setActiveStationsController, deps.setActiveStations);
+  if (deps.staffMenu) await app.register(staffMenuController, deps.staffMenu);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 

@@ -82,3 +82,15 @@ export {
   boardSnapshotResponse,
   type BoardSnapshotResponse,
 } from './staff-ordering.js';
+export {
+  staffMenuOption,
+  type StaffMenuOption,
+  staffMenuModifierGroup,
+  type StaffMenuModifierGroup,
+  staffMenuItem,
+  type StaffMenuItem,
+  staffMenuCategory,
+  type StaffMenuCategory,
+  staffMenuResponse,
+  type StaffMenuResponse,
+} from './staff-catalog.js';
