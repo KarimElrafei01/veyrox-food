@@ -4,7 +4,9 @@ import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.
 import { applyEtaQueueEvent } from '../infrastructure/eta-queue-repository.js';
 import type { KitchenOrderRepository } from '../infrastructure/kitchen-order-repository.js';
 import { OrderNotFound } from '../infrastructure/kitchen-order-repository.js';
+import type { SseHub } from '../infrastructure/sse-hub.js';
 import { recordEtaRead, type EtaMetricSink } from './eta-metrics.js';
+import { publishOrderTransitioned } from './sse-events.js';
 
 export { OrderNotFound };
 
@@ -13,6 +15,7 @@ export class AcceptOrder {
     private readonly repository: KitchenOrderRepository,
     private readonly etaQueue: EtaQueueRepository,
     private readonly etaMetrics: EtaMetricSink,
+    private readonly sseHub: Pick<SseHub, 'publish'>,
   ) {}
 
   async execute(input: {
@@ -61,6 +64,15 @@ export class AcceptOrder {
       );
       await this.etaQueue.replace(input.tenantId, nextState);
     }
+
+    if (!result.replayed && result.event)
+      publishOrderTransitioned(
+        this.sseHub,
+        input.tenantId,
+        input.orderId,
+        result.event,
+        result.ticket,
+      );
 
     return result;
   }

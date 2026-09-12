@@ -894,6 +894,70 @@ export class KitchenOrderRepository {
     };
   }
 
+  /** GET /staff/stream's replay support (task #8) - the current tenant-wide
+   *  high-water mark, captured once at connect time so the replay range has a
+   *  fixed upper bound and nothing committed after can be double-counted
+   *  against the gap cap or missed between "read" and "subscribe." */
+  async currentMaxEventId(tenantId: string): Promise<string | null> {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [row] = await tx
+        .select({ maxId: sql<string | null>`max(${tables.orderEvents.id})` })
+        .from(tables.orderEvents)
+        .where(eq(tables.orderEvents.tenantId, tenantId));
+      return row?.maxId ?? null;
+    });
+  }
+
+  /** Raw event rows for SSE replay - the caller decides gap-cap vs. per-event
+   *  replay by comparing the row count against its own threshold. `limit` is
+   *  the caller's cap-plus-one, so it can tell "exactly at the cap" from "over it." */
+  async replayEvents(input: {
+    tenantId: string;
+    afterEventId: string;
+    upToEventId: string;
+    limit: number;
+  }): Promise<
+    {
+      id: string;
+      orderId: string;
+      fromStatus: string | null;
+      toStatus: string;
+      actorType: string;
+      createdAt: Date;
+      metadata: unknown;
+    }[]
+  > {
+    return withTenant(this.db, input.tenantId, (tx) =>
+      tx
+        .select({
+          id: tables.orderEvents.id,
+          orderId: tables.orderEvents.orderId,
+          fromStatus: tables.orderEvents.fromStatus,
+          toStatus: tables.orderEvents.toStatus,
+          actorType: tables.orderEvents.actorType,
+          createdAt: tables.orderEvents.createdAt,
+          metadata: tables.orderEvents.metadata,
+        })
+        .from(tables.orderEvents)
+        .where(
+          and(
+            eq(tables.orderEvents.tenantId, input.tenantId),
+            sql`${tables.orderEvents.id} > ${input.afterEventId}`,
+            sql`${tables.orderEvents.id} <= ${input.upToEventId}`,
+          ),
+        )
+        .orderBy(tables.orderEvents.id)
+        .limit(input.limit),
+    );
+  }
+
+  /** Public single-order wrapper around the same assembly loadTicket() uses
+   *  internally - SSE replay needs this for one order at a time, outside any
+   *  mutation's own transaction. */
+  async loadTicketById(tenantId: string, orderId: string, now: Date): Promise<OrderTicket | null> {
+    return withTenant(this.db, tenantId, (tx) => this.loadTicket(tx, tenantId, orderId, now));
+  }
+
   private async loadTicket(
     tx: Parameters<Parameters<Database['transaction']>[0]>[0],
     tenantId: string,

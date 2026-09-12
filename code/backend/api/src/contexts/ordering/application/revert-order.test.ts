@@ -35,7 +35,7 @@ describe('RevertOrder', () => {
     const repository = { revert } as unknown as KitchenOrderRepository;
     const invalidate = vi.fn(async () => undefined);
     const etaQueue = { invalidate } as unknown as EtaQueueRepository;
-    const revertOrder = new RevertOrder(repository, etaQueue);
+    const revertOrder = new RevertOrder(repository, etaQueue, { publish: vi.fn() });
 
     await revertOrder.execute({
       tenantId: 't1',
@@ -53,7 +53,7 @@ describe('RevertOrder', () => {
     const repository = { revert } as unknown as KitchenOrderRepository;
     const invalidate = vi.fn(async () => undefined);
     const etaQueue = { invalidate } as unknown as EtaQueueRepository;
-    const revertOrder = new RevertOrder(repository, etaQueue);
+    const revertOrder = new RevertOrder(repository, etaQueue, { publish: vi.fn() });
 
     await revertOrder.execute({
       tenantId: 't1',

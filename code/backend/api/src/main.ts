@@ -30,7 +30,9 @@ import { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
 import { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { TickItem } from './contexts/ordering/application/tick-item.js';
 import { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
+import { StreamBoardEvents } from './contexts/ordering/application/stream-board.js';
 import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
+import { SseHub } from './contexts/ordering/infrastructure/sse-hub.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -119,6 +121,8 @@ async function main(): Promise<void> {
     observe: (name, seconds) => log.info('order placement metric', { name, seconds }),
   };
   const kitchenOrders = new KitchenOrderRepository(database);
+  const sseHub = new SseHub();
+  const boardSnapshot = new LoadBoardSnapshot(kitchenOrders, etaQueue);
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -191,7 +195,7 @@ async function main(): Promise<void> {
       etaMetrics,
     },
     acceptOrder: {
-      accept: new AcceptOrder(kitchenOrders, etaQueue, etaMetrics),
+      accept: new AcceptOrder(kitchenOrders, etaQueue, etaMetrics, sseHub),
       deviceKeys,
       pinKeys,
       emit: async (event) => {
@@ -199,7 +203,7 @@ async function main(): Promise<void> {
       },
     },
     rejectOrder: {
-      reject: new RejectOrder(kitchenOrders),
+      reject: new RejectOrder(kitchenOrders, sseHub),
       deviceKeys,
       pinKeys,
       emit: async (event) => {
@@ -207,7 +211,7 @@ async function main(): Promise<void> {
       },
     },
     advanceOrder: {
-      advance: new AdvanceOrder(kitchenOrders, etaQueue),
+      advance: new AdvanceOrder(kitchenOrders, etaQueue, sseHub),
       deviceKeys,
       pinKeys,
       emit: async (event) => {
@@ -215,12 +219,12 @@ async function main(): Promise<void> {
       },
     },
     revertOrder: {
-      revert: new RevertOrder(kitchenOrders, etaQueue),
+      revert: new RevertOrder(kitchenOrders, etaQueue, sseHub),
       deviceKeys,
       pinKeys,
     },
     tickItem: {
-      tick: new TickItem(kitchenOrders),
+      tick: new TickItem(kitchenOrders, sseHub),
       deviceKeys,
       pinKeys,
       emit: async (event) => {
@@ -228,9 +232,13 @@ async function main(): Promise<void> {
       },
     },
     boardSnapshot: {
-      board: new LoadBoardSnapshot(kitchenOrders, etaQueue),
+      board: boardSnapshot,
       deviceKeys,
       pinKeys,
+    },
+    staffStream: {
+      stream: new StreamBoardEvents(kitchenOrders, boardSnapshot, sseHub),
+      deviceKeys,
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }

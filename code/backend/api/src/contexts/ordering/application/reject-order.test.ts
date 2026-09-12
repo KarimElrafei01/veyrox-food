@@ -11,7 +11,7 @@ describe('RejectOrder', () => {
       async () => ({ ticket: { status: 'rejected' } as OrderTicket, replayed: false }) as const,
     );
     const repository = { reject } as unknown as KitchenOrderRepository;
-    const rejectOrder = new RejectOrder(repository);
+    const rejectOrder = new RejectOrder(repository, { publish: vi.fn() });
 
     await rejectOrder.execute({
       tenantId: 't1',

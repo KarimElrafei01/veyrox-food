@@ -8,7 +8,7 @@ describe('TickItem', () => {
   it('forwards the tick flag and idempotency key to the repository', async () => {
     const tickItem = vi.fn(async () => ({ orderItemId: 'oi1', ticked: true, replayed: false }));
     const repository = { tickItem } as unknown as KitchenOrderRepository;
-    const tick = new TickItem(repository);
+    const tick = new TickItem(repository, { publish: vi.fn() });
 
     await tick.execute({
       tenantId: 't1',

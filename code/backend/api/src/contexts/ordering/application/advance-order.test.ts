@@ -53,7 +53,8 @@ function subject(options: {
     })),
     replace,
   } as unknown as EtaQueueRepository;
-  return { advanceOrder: new AdvanceOrder(repository, etaQueue), advance, replace };
+  const sseHub = { publish: vi.fn() };
+  return { advanceOrder: new AdvanceOrder(repository, etaQueue, sseHub), advance, replace };
 }
 
 describe('AdvanceOrder', () => {

@@ -51,7 +51,12 @@ function subject(options: {
     replace,
   } as unknown as EtaQueueRepository;
   const etaMetrics = { increment: vi.fn(), gauge: vi.fn() } as unknown as EtaMetricSink;
-  return { acceptOrder: new AcceptOrder(repository, etaQueue, etaMetrics), accept, replace };
+  const sseHub = { publish: vi.fn() };
+  return {
+    acceptOrder: new AcceptOrder(repository, etaQueue, etaMetrics, sseHub),
+    accept,
+    replace,
+  };
 }
 
 describe('AcceptOrder', () => {
