@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Chivo:wght@500;600;700;800&amp;family=JetBrains+Mono:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary-fixed":"#ffdad7","inverse-on-surface":"#283044","on-error-container":"#ffdad6","inverse-surface":"#dae2fd","outline-variant":"#3c4a42","surface-container-high":"#222a3d","primary-fixed-dim":"#4edea3","on-tertiary-container":"#79000e","inverse-primary":"#006c49","on-surface":"#dae2fd","surface-variant":"#2d3449","on-primary":"#003824","on-secondary-container":"#5b3800","on-background":"#dae2fd","on-primary-container":"#00422b","outline":"#86948a","surface-tint":"#4edea3","on-error":"#690005","secondary-fixed":"#ffddb8","tertiary-fixed-dim":"#ffb3ad","on-primary-fixed":"#002113","tertiary":"#ffb3ad","surface":"#0b1326","on-secondary-fixed":"#2a1700","surface-dim":"#0b1326","background":"#0b1326","surface-container":"#171f33","on-tertiary":"#68000a","secondary":"#ffb95f","primary-container":"#10b981","surface-bright":"#31394d","on-tertiary-fixed":"#410004","on-surface-variant":"#bbcabf","on-primary-fixed-variant":"#005236","surface-container-lowest":"#060e20","primary":"#4edea3","secondary-fixed-dim":"#ffb95f","surface-container-highest":"#2d3449","secondary-container":"#ee9800","error-container":"#93000a","error":"#ffb4ab","on-tertiary-fixed-variant":"#930013","tertiary-container":"#ff7a73","on-secondary":"#472a00","on-secondary-fixed-variant":"#653e00","surface-container-low":"#131b2e","primary-fixed":"#6ffbbe"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"touch-min":"3rem","ticket-padding-x":"1rem","column-gap":"1rem","touch-target":"3.5rem","item-row-gap":"0.5rem","edge-safe-margin":"1.25rem","gutter-ticket":"0.75rem","ticket-padding-y":"0.875rem"},"fontFamily":{"headline-sm":["Chivo"],"headline-md":["Chivo"],"body-sm":["Chivo"],"headline-lg":["Chivo"],"label-lg":["JetBrains Mono"],"timer-display":["JetBrains Mono"],"headline-xl":["Chivo"],"body-md":["Chivo"],"body-lg":["Chivo"],"label-md":["JetBrains Mono"],"timer-display-sm":["JetBrains Mono"],"label-sm":["JetBrains Mono"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"700"}],"body-sm":["14px",{"lineHeight":"18px","fontWeight":"500"}],"headline-lg":["28px",{"lineHeight":"36px","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","fontWeight":"700"}],"timer-display":["24px",{"lineHeight":"28px","fontWeight":"700"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"800"}],"body-md":["16px",{"lineHeight":"22px","fontWeight":"500"}],"body-lg":["18px",{"lineHeight":"26px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"600"}],"timer-display-sm":["18px",{"lineHeight":"22px","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface select-none antialiased min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface-container shadow-[0_2px_12px_rgba(0,0,0,0.4)]"><div class="h-20 w-full px-edge-safe-margin flex items-center justify-between gap-4"><div class="flex items-center gap-4 min-w-0"><img alt="KDS Chef Station Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1XshynEh64XVtoSRHL04nGBh95Cy0bcJP99tD7LT5ogdrW0D2EluP0dMYF3Og2M8XuNlxeynWOlnOGGkfhpGSeiLsf_sFyX2bSdqVw_g1msEDuIwy4Y3oIVWO5lESVQXs44J2XOpRzEsFjmToKoijTAwJ7HymZlNqaWlH6ezyCqE_sV7L15dFcrHjSogi_3de3BbUUnhOKuCx--fmgO4fN3g2Kz5QKEJw0MibDLOcncSldUOTbFXNxR2ZM"/><div class="flex flex-col min-w-0"><span class="font-headline-md text-headline-md text-on-surface uppercase tracking-tight truncate">Hot Line 1 - Main Kitchen</span><div class="flex items-center gap-2 mt-0.5"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Connected · updated 2s ago</span></div></div></div><nav class="hidden xl:flex items-center gap-2" data-active-classes="bg-surface-container-highest text-primary font-bold"><a aria-current="page" class="px-4 py-2 rounded-xl transition-colors uppercase tracking-wide bg-surface-container-highest text-primary font-bold" data-path="live-ticket-rail" href="#">Live Orders</a><a class="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-headline-sm text-headline-sm uppercase tracking-wide" data-path="bumped-orders-recall" href="#">Recall Log</a><a class="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-headline-sm text-headline-sm uppercase tracking-wide" data-path="expeditor-overview" href="#">Expo Summary</a></nav><div class="flex items-center gap-3 flex-shrink-0"><div class="flex items-center bg-surface-container-low p-1 rounded-xl shadow-inner"><span class="font-label-md text-label-md text-on-surface-variant px-3 uppercase tracking-wider hidden sm:inline">Stations</span><button aria-label="Decrease active stations" class="w-touch-min h-touch-min rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center font-headline-md text-headline-md transition-all" type="button">-</button><span class="font-timer-display text-timer-display text-primary px-3.5 min-w-[2.5rem] text-center">2</span><button aria-label="Increase active stations" class="w-touch-min h-touch-min rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center font-headline-md text-headline-md transition-all" type="button">+</button></div><button class="h-touch-min px-4 bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl flex items-center gap-2.5 transition-all shadow-sm" type="button"><span class="font-headline-sm text-headline-sm tracking-wide uppercase">86 Items</span><span class="bg-error-container text-on-error-container font-label-md text-label-md px-2 py-0.5 rounded-full">4</span></button><button aria-label="Kitchen Display Settings" class="w-touch-min h-touch-min bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl flex items-center justify-center transition-all shadow-sm" type="button"><span class="material-symbols-outlined text-[24px]">tune</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- KDS Live Board Backdrop (De-emphasized background grid simulating live rail) -->
+<div class="relative w-full px-edge-safe-margin py-6 min-h-[calc(100vh-5rem)] overflow-hidden">
+<!-- Background blurred simulation of other active line tickets -->
+<div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-gutter-ticket opacity-25 filter blur-sm pointer-events-none select-none">
+<!-- Ghost Ticket 1037 -->
+<div class="bg-surface-container rounded-xl p-4 flex flex-col gap-3 shadow-lg">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">#1037 · DINE-IN T-04</span>
+<span class="font-timer-display-sm text-timer-display-sm text-error">24:15</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error w-11/12"></div>
+</div>
+<div class="space-y-2 mt-2">
+<div class="h-4 bg-surface-variant rounded w-3/4"></div>
+<div class="h-3 bg-surface-container-high rounded w-1/2"></div>
+<div class="h-4 bg-surface-variant rounded w-5/6"></div>
+</div>
+</div>
+<!-- Ghost Ticket 1038 -->
+<div class="bg-surface-container rounded-xl p-4 flex flex-col gap-3 shadow-lg">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">#1038 · UBER EATS</span>
+<span class="font-timer-display-sm text-timer-display-sm text-secondary">12:04</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-2/3"></div>
+</div>
+<div class="space-y-2 mt-2">
+<div class="h-4 bg-surface-variant rounded w-4/5"></div>
+<div class="h-4 bg-surface-variant rounded w-2/3"></div>
+</div>
+</div>
+<!-- Ghost Ticket 1040 -->
+<div class="bg-surface-container rounded-xl p-4 flex flex-col gap-3 shadow-lg">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">#1040 · BAR T-11</span>
+<span class="font-timer-display-sm text-timer-display-sm text-primary">04:12</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/4"></div>
+</div>
+<div class="space-y-2 mt-2">
+<div class="h-4 bg-surface-variant rounded w-2/3"></div>
+<div class="h-4 bg-surface-variant rounded w-3/4"></div>
+</div>
+</div>
+<!-- Ghost Ticket 1041 -->
+<div class="hidden xl:flex bg-surface-container rounded-xl p-4 flex-col gap-3 shadow-lg">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">#1041 · TAKEOUT</span>
+<span class="font-timer-display-sm text-timer-display-sm text-primary">01:48</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/6"></div>
+</div>
+<div class="space-y-2 mt-2">
+<div class="h-4 bg-surface-variant rounded w-3/5"></div>
+</div>
+</div>
+</div>
+<!-- Active Expanded Modal Panel Overlay -->
+<div class="absolute inset-0 bg-surface-container-lowest/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 z-40 overflow-y-auto">
+<!-- Center High-Contrast Tablet Ticket Card -->
+<div class="w-full max-w-5xl bg-surface-container-high rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col my-auto transition-transform duration-150">
+<!-- Top Urgency / State Indicator Ribbon (Solid Emerald for Ready State) -->
+<div class="w-full h-2.5 bg-primary-container"></div>
+<!-- Ticket Modal Header -->
+<div class="px-6 py-5 bg-surface-container flex flex-wrap items-center justify-between gap-4">
+<!-- Left: Order Identification & Priority Badging -->
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight">#1039</span>
+<span class="font-headline-lg text-headline-lg text-primary uppercase tracking-normal">- SOPHIA</span>
+</div>
+<!-- Priority VIP Star Tag -->
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-secondary text-on-secondary shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Priority VIP</span>
+</div>
+<!-- Till POS Origin Badge -->
+<div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-variant text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+<span class="font-label-md text-label-md tracking-wider">Till POS · Dine-In T-06</span>
+</div>
+</div>
+<!-- Right: Live Timer & Dismiss (X) Action -->
+<div class="flex items-center gap-4 flex-shrink-0">
+<!-- Total Elapsed Duration Display -->
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Total Active Time</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[22px]">timer</span>
+<span class="font-timer-display text-timer-display text-secondary tracking-tight" id="activeTimer">18:22</span>
+</div>
+</div>
+<!-- Close Modal Icon Button -->
+<button aria-label="Close Ticket Modal" class="w-touch-target h-touch-target rounded-xl bg-surface-variant hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center transition-all ml-1" onclick="window.history.back()" type="button">
+<span class="material-symbols-outlined text-[28px]">close</span>
+</button>
+</div>
+</div>
+<!-- Stage Progress & Milestone Breakdown Strip -->
+<div class="px-6 py-4 bg-surface-container-low flex flex-col gap-3">
+<div class="flex flex-wrap items-center justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<!-- Current Status Pill -->
+<span class="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm uppercase tracking-wide shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                Status: Ready
+              </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider hidden md:inline">· Just advanced from Cooking (Hot Hold Station B)</span>
+</div>
+<!-- Expeditor Notice -->
+<div class="flex items-center gap-2 text-primary font-label-md text-label-md">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span>Plate Bell Rang · Expo Standby</span>
+</div>
+</div>
+<!-- Milestones Timeline Strip -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
+<!-- Milestone 1: Received -->
+<div class="bg-surface-container px-3.5 py-2 rounded-lg flex flex-col">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">1. Received</span>
+<span class="material-symbols-outlined text-[16px] text-primary">done</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface mt-0.5">0:00</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">12:23 PM</span>
+</div>
+<!-- Milestone 2: Prep Started -->
+<div class="bg-surface-container px-3.5 py-2 rounded-lg flex flex-col">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">2. Station Prep</span>
+<span class="material-symbols-outlined text-[16px] text-primary">done</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface mt-0.5">2:10</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+2m 10s</span>
+</div>
+<!-- Milestone 3: Sauté & Grill -->
+<div class="bg-surface-container px-3.5 py-2 rounded-lg flex flex-col">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">3. Cooking</span>
+<span class="material-symbols-outlined text-[16px] text-primary">done</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface mt-0.5">16:40</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+14m 30s</span>
+</div>
+<!-- Milestone 4: Plated & Ready -->
+<div class="bg-surface-container-highest px-3.5 py-2 rounded-lg flex flex-col">
+<div class="flex items-center justify-between text-primary">
+<span class="font-label-sm text-label-sm uppercase font-bold">4. Expo Ready</span>
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="font-label-lg text-label-lg text-primary mt-0.5">18:22</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+1m 42s</span>
+</div>
+</div>
+</div>
+<!-- Main Body: High-Contrast Large Item Breakdown & Special Modifiers -->
+<div class="p-6 flex flex-col gap-4 bg-surface-container-high overflow-y-auto max-h-[491px]">
+<div class="flex items-center justify-between pb-1">
+<span class="font-headline-sm text-headline-sm text-on-surface uppercase tracking-wide">Ticket Items (4 Portions)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tap row to toggle item line completion</span>
+</div>
+<!-- Item Row 1: Pan-Seared Salmon -->
+<div class="item-row group cursor-pointer bg-surface-container hover:bg-surface-variant rounded-xl p-4 flex items-start justify-between gap-4 transition-all shadow-sm" onclick="toggleItem(this)">
+<div class="flex items-start gap-4 min-w-0">
+<!-- Physical High-Target Checkbox -->
+<div class="item-check w-8 h-8 rounded-lg bg-surface-variant group-hover:bg-surface-bright flex items-center justify-center flex-shrink-0 mt-1 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px] hidden check-icon" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<!-- Item Details -->
+<div class="flex flex-col min-w-0">
+<div class="flex items-baseline gap-3">
+<span class="font-headline-md text-headline-md text-primary font-bold">1x</span>
+<span class="item-title font-headline-md text-headline-md text-on-surface tracking-tight">Pan-Seared Salmon</span>
+</div>
+<!-- Modifiers & Preparation Tags -->
+<div class="flex flex-wrap items-center gap-2 mt-2">
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest text-on-surface font-label-md text-label-md">
+                    Grilled Asparagus
+                  </span>
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest text-on-surface font-label-md text-label-md">
+                    Lemon Butter Sauce
+                  </span>
+<span class="px-2.5 py-1 rounded-md bg-secondary-fixed text-on-secondary-fixed font-label-md text-label-md font-bold uppercase">
+                    ☆ Crispy Skin (Chef Request)
+                  </span>
+</div>
+</div>
+</div>
+<!-- Station Metadata -->
+<div class="flex flex-col items-end flex-shrink-0 text-right">
+<span class="px-3 py-1 rounded-md bg-surface-variant text-on-surface-variant font-label-sm text-label-sm uppercase font-bold">Fish Grill #2</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Plated: Chef Marco</span>
+</div>
+</div>
+<!-- Item Row 2: Caesar Salad with Critical Allergen/Special Modification -->
+<div class="item-row group cursor-pointer bg-surface-container hover:bg-surface-variant rounded-xl p-4 flex items-start justify-between gap-4 transition-all shadow-sm" onclick="toggleItem(this)">
+<div class="flex items-start gap-4 min-w-0">
+<!-- Physical High-Target Checkbox -->
+<div class="item-check w-8 h-8 rounded-lg bg-surface-variant group-hover:bg-surface-bright flex items-center justify-center flex-shrink-0 mt-1 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px] hidden check-icon" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<!-- Item Details -->
+<div class="flex flex-col min-w-0">
+<div class="flex items-baseline gap-3">
+<span class="font-headline-md text-headline-md text-primary font-bold">1x</span>
+<span class="item-title font-headline-md text-headline-md text-on-surface tracking-tight">Caesar Salad</span>
+</div>
+<!-- High-Alert Dietary Exclusion Modifiers -->
+<div class="flex flex-wrap items-center gap-2 mt-2">
+<span class="px-3 py-1 rounded-md bg-error-container text-on-error-container font-label-md text-label-md font-bold uppercase flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">no_food</span>
+                    NO Croutons (Gluten Alert)
+                  </span>
+<span class="px-3 py-1 rounded-md bg-secondary-container text-on-secondary-container font-label-md text-label-md font-bold uppercase flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">soup_kitchen</span>
+                    Anchovies On Side
+                  </span>
+</div>
+</div>
+</div>
+<!-- Station Metadata -->
+<div class="flex flex-col items-end flex-shrink-0 text-right">
+<span class="px-3 py-1 rounded-md bg-surface-variant text-on-surface-variant font-label-sm text-label-sm uppercase font-bold">Cold Pantry</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Plated: Chef Clara</span>
+</div>
+</div>
+<!-- Item Row 3: Sparkling Mineral Water -->
+<div class="item-row group cursor-pointer bg-surface-container hover:bg-surface-variant rounded-xl p-4 flex items-start justify-between gap-4 transition-all shadow-sm" onclick="toggleItem(this)">
+<div class="flex items-start gap-4 min-w-0">
+<!-- Physical High-Target Checkbox -->
+<div class="item-check w-8 h-8 rounded-lg bg-surface-variant group-hover:bg-surface-bright flex items-center justify-center flex-shrink-0 mt-1 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px] hidden check-icon" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<!-- Item Details -->
+<div class="flex flex-col min-w-0">
+<div class="flex items-baseline gap-3">
+<span class="font-headline-md text-headline-md text-primary font-bold">2x</span>
+<span class="item-title font-headline-md text-headline-md text-on-surface tracking-tight">Sparkling Mineral Water</span>
+</div>
+<!-- Drink Modifiers -->
+<div class="flex flex-wrap items-center gap-2 mt-2">
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">eco</span>
+                    Fresh Lime Slices
+                  </span>
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest text-on-surface-variant font-label-md text-label-md">
+                    Chilled Glassware · No Ice
+                  </span>
+</div>
+</div>
+</div>
+<!-- Station Metadata -->
+<div class="flex flex-col items-end flex-shrink-0 text-right">
+<span class="px-3 py-1 rounded-md bg-surface-variant text-on-surface-variant font-label-sm text-label-sm uppercase font-bold">Service Bar</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Poured: Alex</span>
+</div>
+</div>
+</div>
+<!-- Notification Banner Strip: SMS/WhatsApp Confirmation Status -->
+<div class="px-6 py-3.5 bg-surface-container flex flex-wrap items-center justify-between gap-3 shadow-inner">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">mark_chat_read</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-primary uppercase tracking-wide">Guest Notified</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-sm text-label-sm text-on-surface-variant">WhatsApp + SMS Auto-Trigger</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ready pickup notice dispatched to Sophia (+1 ··· 4892) at 12:41 PM</span>
+</div>
+</div>
+<!-- Notification Action Override / Resend -->
+<button class="h-10 px-4 rounded-lg bg-surface-variant hover:bg-surface-bright active:scale-95 text-on-surface flex items-center gap-2 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">forward_to_inbox</span>
+<span class="font-label-md text-label-md font-bold uppercase">Resend Ping</span>
+</button>
+</div>
+<!-- Sticky Operational Action Footer (56px Touch Targets) -->
+<div class="px-6 py-5 bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-4">
+<!-- Secondary Action: Move Back One Step (Time-restricted reversible bump bar) -->
+<div class="w-full sm:w-auto flex flex-col gap-1">
+<button class="h-touch-target px-6 rounded-xl bg-surface-variant hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-between gap-4 transition-all w-full sm:w-80 shadow-md" id="rollbackBtn" onclick="stepBackward()" type="button">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-secondary text-[24px]">undo</span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-wider text-left">Move Back 1 Step</span>
+</div>
+<span class="font-label-lg text-label-lg text-secondary bg-surface-container px-2.5 py-1 rounded-md" id="countdownLabel">47s</span>
+</button>
+<!-- Countdown Progress Bar Indicator -->
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full transition-all duration-1000 ease-linear" id="undoProgressBar" style="width: 78%;"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-center sm:text-left">Rollback window: available for 47s</span>
+</div>
+<!-- Primary Confirmation Action: Complete Order / Handed Off -->
+<div class="w-full sm:w-auto flex items-center gap-3">
+<button class="h-touch-target flex-1 sm:flex-initial px-8 rounded-xl bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary active:scale-95 flex items-center justify-center gap-3 transition-all shadow-xl" onclick="completeHandover(this)" type="button">
+<span class="material-symbols-outlined text-[26px]">done_all</span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-wide">Final Bump · Hand Off</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Micro-interactions: Check items and Countdown Timer -->
+<script>
+    // Toggle completion for individual ticket items
+    function toggleItem(rowElement) {
+      const checkIcon = rowElement.querySelector('.check-icon');
+      const itemTitle = rowElement.querySelector('.item-title');
+      const checkBox = rowElement.querySelector('.item-check');
+
+      if (checkIcon.classList.contains('hidden')) {
+        checkIcon.classList.remove('hidden');
+        checkBox.classList.add('bg-primary-container', 'text-on-primary-container');
+        itemTitle.classList.add('line-through', 'opacity-40');
+      } else {
+        checkIcon.classList.add('hidden');
+        checkBox.classList.remove('bg-primary-container', 'text-on-primary-container');
+        itemTitle.classList.remove('line-through', 'opacity-40');
+      }
+    }
+
+    // Interactive step backward simulation
+    function stepBackward() {
+      const rollbackBtn = document.getElementById('rollbackBtn');
+      rollbackBtn.innerHTML = '<span class="material-symbols-outlined text-primary text-[24px]">published_with_changes</span><span class="font-headline-sm text-headline-sm uppercase text-primary">Moved to Cooking</span>';
+      setTimeout(() => {
+        alert("Ticket #1039 returned to active Cooking queue.");
+      }, 300);
+    }
+
+    // Final Hand Off bump feedback
+    function completeHandover(btn) {
+      btn.classList.remove('bg-primary-container', 'text-on-primary-container');
+      btn.classList.add('bg-surface-bright', 'text-on-surface');
+      btn.innerHTML = '<span class="material-symbols-outlined text-[26px] animate-spin">sync</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Cleared to Log</span>';
+      setTimeout(() => {
+        window.history.back();
+      }, 700);
+    }
+
+    // Countdown timer for 47s rollback window
+    let secondsLeft = 47;
+    const countdownElement = document.getElementById('countdownLabel');
+    const undoProgressBar = document.getElementById('undoProgressBar');
+
+    const interval = setInterval(() => {
+      if (secondsLeft > 0) {
+        secondsLeft--;
+        if (countdownElement) {
+          countdownElement.textContent = secondsLeft + 's';
+        }
+        if (undoProgressBar) {
+          undoProgressBar.style.width = ((secondsLeft / 60) * 100) + '%';
+        }
+      } else {
+        clearInterval(interval);
+        const rollbackBtn = document.getElementById('rollbackBtn');
+        if (rollbackBtn) {
+          rollbackBtn.disabled = true;
+          rollbackBtn.classList.add('opacity-40', 'pointer-events-none');
+          countdownElement.textContent = 'Expired';
+        }
+      }
+    }, 1000);
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-2px_8px_rgba(0,0,0,0.3)]"><div class="h-12 w-full px-edge-safe-margin flex items-center justify-between"><div class="flex items-center gap-6"><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">KDS Terminal #04 · Firmware v4.12.0</span><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">All Lines Active</span></div><div class="flex items-center gap-4"><span class="font-label-md text-label-md text-on-surface-variant">Avg Prep Time: <span class="text-on-surface font-bold">8m 42s</span></span><span class="font-label-md text-label-md text-on-surface-variant">Station Pace: <span class="text-primary font-bold">100% On-Target</span></span></div></div></footer></body></html>

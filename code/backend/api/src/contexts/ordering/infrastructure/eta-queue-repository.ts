@@ -1,5 +1,8 @@
 import { and, eq, inArray, withTenant, type Database, tables } from '@veyroxai/db';
 import type { QueueTicket } from '@veyroxai/domain';
+import { singleFlight } from './single-flight.js';
+import { jitteredTtlSeconds } from './cache-ttl.js';
+import type { createReadPathBudget } from './read-path-budget.js';
 
 export interface EtaQueueState {
   activeStations: number;
@@ -46,12 +49,15 @@ export function applyEtaQueueEvent(
 }
 
 export class EtaQueueRepository {
+  private readonly coalesceRebuild = singleFlight<EtaQueueState>();
+
   constructor(
     private readonly db: Database,
     private readonly redis: {
       get(key: string): Promise<string | null>;
       set(key: string, value: string, mode: 'EX', seconds: number): Promise<unknown>;
     },
+    private readonly readBudget: ReturnType<typeof createReadPathBudget> = (fn) => fn(),
   ) {}
 
   async load(
@@ -64,12 +70,25 @@ export class EtaQueueRepository {
       // Redis is an optimization; quotes must remain available without it.
     }
     try {
-      const state = await this.rebuild(tenantId);
-      try {
-        await this.redis.set(`queue:${tenantId}`, JSON.stringify(state), 'EX', 300);
-      } catch {
-        // The Postgres result is still a correct queue snapshot.
-      }
+      // Coalesced: a Redis TTL expiry under load means many requests miss at
+      // once. Without this, each opened its own transaction on the pool that
+      // order placement also depends on (a cache stampede starving checkout).
+      const state = await this.coalesceRebuild(tenantId, async () => {
+        // Capped so a read stampede can never claim every connection in the
+        // shared pool — order placement is not routed through this budget.
+        const rebuilt = await this.readBudget(() => this.rebuild(tenantId));
+        try {
+          await this.redis.set(
+            `queue:${tenantId}`,
+            JSON.stringify(rebuilt),
+            'EX',
+            jitteredTtlSeconds(300, 60),
+          );
+        } catch {
+          // The Postgres result is still a correct queue snapshot.
+        }
+        return rebuilt;
+      });
       return { state, source: 'postgres' };
     } catch {
       return {

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Chivo:wght@500;600;700;800&amp;family=JetBrains+Mono:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary-fixed":"#ffdad7","inverse-on-surface":"#283044","on-error-container":"#ffdad6","inverse-surface":"#dae2fd","outline-variant":"#3c4a42","surface-container-high":"#222a3d","primary-fixed-dim":"#4edea3","on-tertiary-container":"#79000e","inverse-primary":"#006c49","on-surface":"#dae2fd","surface-variant":"#2d3449","on-primary":"#003824","on-secondary-container":"#5b3800","on-background":"#dae2fd","on-primary-container":"#00422b","outline":"#86948a","surface-tint":"#4edea3","on-error":"#690005","secondary-fixed":"#ffddb8","tertiary-fixed-dim":"#ffb3ad","on-primary-fixed":"#002113","tertiary":"#ffb3ad","surface":"#0b1326","on-secondary-fixed":"#2a1700","surface-dim":"#0b1326","background":"#0b1326","surface-container":"#171f33","on-tertiary":"#68000a","secondary":"#ffb95f","primary-container":"#10b981","surface-bright":"#31394d","on-tertiary-fixed":"#410004","on-surface-variant":"#bbcabf","on-primary-fixed-variant":"#005236","surface-container-lowest":"#060e20","primary":"#4edea3","secondary-fixed-dim":"#ffb95f","surface-container-highest":"#2d3449","secondary-container":"#ee9800","error-container":"#93000a","error":"#ffb4ab","on-tertiary-fixed-variant":"#930013","tertiary-container":"#ff7a73","on-secondary":"#472a00","on-secondary-fixed-variant":"#653e00","surface-container-low":"#131b2e","primary-fixed":"#6ffbbe"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"touch-min":"3rem","ticket-padding-x":"1rem","column-gap":"1rem","touch-target":"3.5rem","item-row-gap":"0.5rem","edge-safe-margin":"1.25rem","gutter-ticket":"0.75rem","ticket-padding-y":"0.875rem"},"fontFamily":{"headline-sm":["Chivo"],"headline-md":["Chivo"],"body-sm":["Chivo"],"headline-lg":["Chivo"],"label-lg":["JetBrains Mono"],"timer-display":["JetBrains Mono"],"headline-xl":["Chivo"],"body-md":["Chivo"],"body-lg":["Chivo"],"label-md":["JetBrains Mono"],"timer-display-sm":["JetBrains Mono"],"label-sm":["JetBrains Mono"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"700"}],"body-sm":["14px",{"lineHeight":"18px","fontWeight":"500"}],"headline-lg":["28px",{"lineHeight":"36px","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","fontWeight":"700"}],"timer-display":["24px",{"lineHeight":"28px","fontWeight":"700"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"800"}],"body-md":["16px",{"lineHeight":"22px","fontWeight":"500"}],"body-lg":["18px",{"lineHeight":"26px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"600"}],"timer-display-sm":["18px",{"lineHeight":"22px","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface select-none antialiased min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface-container shadow-[0_2px_12px_rgba(0,0,0,0.4)]"><div class="h-20 w-full px-edge-safe-margin flex items-center justify-between gap-4"><div class="flex items-center gap-4 min-w-0"><img alt="KDS Chef Station Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1XshynEh64XVtoSRHL04nGBh95Cy0bcJP99tD7LT5ogdrW0D2EluP0dMYF3Og2M8XuNlxeynWOlnOGGkfhpGSeiLsf_sFyX2bSdqVw_g1msEDuIwy4Y3oIVWO5lESVQXs44J2XOpRzEsFjmToKoijTAwJ7HymZlNqaWlH6ezyCqE_sV7L15dFcrHjSogi_3de3BbUUnhOKuCx--fmgO4fN3g2Kz5QKEJw0MibDLOcncSldUOTbFXNxR2ZM"/><div class="flex flex-col min-w-0"><span class="font-headline-md text-headline-md text-on-surface uppercase tracking-tight truncate">Hot Line 1 - Main Kitchen</span><div class="flex items-center gap-2 mt-0.5"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Connected · updated 2s ago</span></div></div></div><nav class="hidden xl:flex items-center gap-2" data-active-classes="bg-surface-container-highest text-primary font-bold"><a aria-current="page" class="px-4 py-2 rounded-xl transition-colors uppercase tracking-wide bg-surface-container-highest text-primary font-bold" data-path="live-ticket-rail" href="#">Live Orders</a><a class="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-headline-sm text-headline-sm uppercase tracking-wide" data-path="bumped-orders-recall" href="#">Recall Log</a><a class="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-headline-sm text-headline-sm uppercase tracking-wide" data-path="expeditor-overview" href="#">Expo Summary</a></nav><div class="flex items-center gap-3 flex-shrink-0"><div class="flex items-center bg-surface-container-low p-1 rounded-xl shadow-inner"><span class="font-label-md text-label-md text-on-surface-variant px-3 uppercase tracking-wider hidden sm:inline">Stations</span><button aria-label="Decrease active stations" class="w-touch-min h-touch-min rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center font-headline-md text-headline-md transition-all" type="button">-</button><span class="font-timer-display text-timer-display text-primary px-3.5 min-w-[2.5rem] text-center">2</span><button aria-label="Increase active stations" class="w-touch-min h-touch-min rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center font-headline-md text-headline-md transition-all" type="button">+</button></div><button class="h-touch-min px-4 bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl flex items-center gap-2.5 transition-all shadow-sm" type="button"><span class="font-headline-sm text-headline-sm tracking-wide uppercase">86 Items</span><span class="bg-error-container text-on-error-container font-label-md text-label-md px-2 py-0.5 rounded-full">4</span></button><button aria-label="Kitchen Display Settings" class="w-touch-min h-touch-min bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl flex items-center justify-center transition-all shadow-sm" type="button"><span class="material-symbols-outlined text-[24px]">tune</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full relative overflow-hidden select-none">
+<!-- BACKGROUND LIVE KDS BOARD (Simulated Visible Under Scrim) -->
+<div class="w-full px-edge-safe-margin py-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-column-gap opacity-35 filter blur-[1px] pointer-events-none transition-all duration-300">
+<!-- Ticket 1: Urgent Red Ticket -->
+<div class="bg-surface-container rounded-xl shadow-xl flex flex-col overflow-hidden">
+<div class="h-2 bg-error"></div>
+<div class="p-ticket-padding-y px-ticket-padding-x bg-surface-container-high flex items-center justify-between">
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface uppercase">#T-104 · Table 6</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">DINE-IN • 3 GUESTS</span>
+</div>
+<div class="flex items-center gap-1.5 bg-error-container text-on-error-container px-2.5 py-1 rounded-lg">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+<span class="font-timer-display-sm text-timer-display-sm">18:42</span>
+</div>
+</div>
+<div class="p-ticket-padding-x py-3 flex flex-col gap-item-row-gap">
+<div class="flex items-start justify-between">
+<span class="font-body-lg text-body-lg text-on-surface">2x Pan-Seared Salmon</span>
+<span class="font-label-md text-label-md text-primary font-bold">STATION 1</span>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded-lg text-secondary font-label-sm text-label-sm">
+          MOD: Asparagus Sub Mashed Potatoes
+        </div>
+<div class="flex items-start justify-between mt-2">
+<span class="font-body-lg text-body-lg text-on-surface">1x Truffle Parmesan Fries</span>
+</div>
+</div>
+<div class="mt-auto p-ticket-padding-x py-3 bg-surface-container-low">
+<div class="w-full h-touch-min bg-surface-container-highest rounded-lg flex items-center justify-center font-headline-sm text-headline-sm text-on-surface uppercase">
+          Bump Order
+        </div>
+</div>
+</div>
+<!-- Ticket 2: Amber Ticket -->
+<div class="bg-surface-container rounded-xl shadow-xl flex flex-col overflow-hidden">
+<div class="h-2 bg-secondary"></div>
+<div class="p-ticket-padding-y px-ticket-padding-x bg-surface-container-high flex items-center justify-between">
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface uppercase">#O-219 · Pickup</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">UBER EATS</span>
+</div>
+<div class="flex items-center gap-1.5 bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded-lg">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+<span class="font-timer-display-sm text-timer-display-sm">09:14</span>
+</div>
+</div>
+<div class="p-ticket-padding-x py-3 flex flex-col gap-item-row-gap">
+<div class="flex items-start justify-between">
+<span class="font-body-lg text-body-lg text-on-surface">1x Crispy Cauliflower</span>
+</div>
+<div class="bg-error-container text-on-error-container p-2 rounded-lg font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span> ALLERGY: SESAME FREE
+        </div>
+<div class="flex items-start justify-between mt-1">
+<span class="font-body-lg text-body-lg text-on-surface">2x Ginger Beer</span>
+</div>
+</div>
+<div class="mt-auto p-ticket-padding-x py-3 bg-surface-container-low">
+<div class="w-full h-touch-min bg-surface-container-highest rounded-lg flex items-center justify-center font-headline-sm text-headline-sm text-on-surface uppercase">
+          Bump Order
+        </div>
+</div>
+</div>
+<!-- Ticket 3: Kitchen Green Ticket -->
+<div class="bg-surface-container rounded-xl shadow-xl flex flex-col overflow-hidden">
+<div class="h-2 bg-primary"></div>
+<div class="p-ticket-padding-y px-ticket-padding-x bg-surface-container-high flex items-center justify-between">
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface uppercase">#T-107 · Table 12</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">DINE-IN • 4 GUESTS</span>
+</div>
+<div class="flex items-center gap-1.5 bg-primary text-on-primary px-2.5 py-1 rounded-lg">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span class="font-timer-display-sm text-timer-display-sm">03:22</span>
+</div>
+</div>
+<div class="p-ticket-padding-x py-3 flex flex-col gap-item-row-gap">
+<div class="flex items-start justify-between">
+<span class="font-body-lg text-body-lg text-on-surface">3x Brioche Burger Sliders</span>
+</div>
+<div class="flex items-start justify-between">
+<span class="font-body-lg text-body-lg text-on-surface">2x Lemon Herb Iced Tea</span>
+</div>
+</div>
+<div class="mt-auto p-ticket-padding-x py-3 bg-surface-container-low">
+<div class="w-full h-touch-min bg-surface-container-highest rounded-lg flex items-center justify-center font-headline-sm text-headline-sm text-on-surface uppercase">
+          Bump Order
+        </div>
+</div>
+</div>
+<!-- Ticket 4: Expo Summary Card -->
+<div class="bg-surface-container rounded-xl shadow-xl flex flex-col overflow-hidden">
+<div class="h-2 bg-primary-fixed-dim"></div>
+<div class="p-ticket-padding-y px-ticket-padding-x bg-surface-container-high flex items-center justify-between">
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface uppercase">Line Metrics</span>
+<span class="block font-label-sm text-label-sm text-primary">REALTIME EXPO</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[24px]">query_stats</span>
+</div>
+<div class="p-ticket-padding-x py-4 flex flex-col gap-3">
+<div class="flex justify-between items-center bg-surface-container-low p-2.5 rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Active Rush Tickets</span>
+<span class="font-timer-display-sm text-timer-display-sm text-primary">14</span>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-2.5 rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Currently 86'd</span>
+<span class="font-timer-display-sm text-timer-display-sm text-error">4 Items</span>
+</div>
+</div>
+</div>
+</div>
+<!-- DIM OVERLAY (Backdrop Backdrop Click Target) -->
+<div class="fixed inset-0 z-40 bg-surface-container-lowest/85 backdrop-blur-[2px] transition-opacity duration-300" id="modal-overlay"></div>
+<!-- SLIDE-IN 86 DRAWER (Anchored Right) -->
+<aside class="fixed top-0 right-0 z-50 h-full w-full max-w-2xl bg-surface-container-high shadow-2xl flex flex-col transform translate-x-0 transition-transform duration-300 ease-out" id="drawer-panel">
+<!-- DRAWER HEADER SECTION -->
+<div class="bg-surface-container px-6 pt-6 pb-5 flex flex-col gap-3 shadow-md relative">
+<div class="flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-error-container text-on-error-container flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[28px]">block</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline-lg text-headline-lg text-on-surface uppercase tracking-tight">86 · Mark Unavailable</h2>
+<span class="bg-surface-variant text-primary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full uppercase tracking-wider">Live Sync</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mt-0.5">Commercial Station Inventory Control</p>
+</div>
+</div>
+<!-- Prominent Kitchen Close Button -->
+<button aria-label="Close unavailable panel" class="w-touch-target h-touch-target rounded-xl bg-surface-container-highest hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center transition-all shadow-md focus:outline-none" id="close-drawer-btn" type="button">
+<span class="material-symbols-outlined text-[32px]">close</span>
+</button>
+</div>
+<!-- Critical Prompt Notice (Specified in prompt) -->
+<div class="mt-1 bg-surface-container-lowest p-3.5 rounded-xl flex items-center gap-3 shadow-inner">
+<span class="material-symbols-outlined text-secondary text-[24px] flex-shrink-0">campaign</span>
+<p class="font-headline-sm text-headline-sm text-secondary tracking-normal">
+          This hides it from customers immediately.
+        </p>
+</div>
+<!-- SEARCH BAR -->
+<div class="relative mt-2">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[26px]">search</span>
+<input class="w-full h-touch-target pl-13 pr-12 bg-surface-container-low text-on-surface font-body-lg text-body-lg rounded-xl placeholder:text-on-surface-variant/70 focus:bg-surface-container-lowest focus:text-primary outline-none transition-all shadow-inner" id="item-search" placeholder="Search menu items or modifiers..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-on-surface-variant hover:text-on-surface flex items-center justify-center" id="clear-search-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+</button>
+</div>
+<!-- CATEGORY FILTER PILLS -->
+<div class="flex items-center gap-2 overflow-x-auto pt-1 pb-1">
+<button class="cat-pill active-cat px-5 h-touch-min rounded-xl bg-primary text-on-primary font-headline-sm text-headline-sm uppercase tracking-wide flex-shrink-0 flex items-center justify-center shadow-md transition-all" type="button">
+          All (28)
+        </button>
+<button class="cat-pill px-5 h-touch-min rounded-xl bg-surface-container-highest hover:bg-surface-bright text-on-surface font-headline-sm text-headline-sm uppercase tracking-wide flex-shrink-0 flex items-center justify-center transition-all" type="button">
+          Mains
+        </button>
+<button class="cat-pill px-5 h-touch-min rounded-xl bg-surface-container-highest hover:bg-surface-bright text-on-surface font-headline-sm text-headline-sm uppercase tracking-wide flex-shrink-0 flex items-center justify-center transition-all" type="button">
+          Sides
+        </button>
+<button class="cat-pill px-5 h-touch-min rounded-xl bg-surface-container-highest hover:bg-surface-bright text-on-surface font-headline-sm text-headline-sm uppercase tracking-wide flex-shrink-0 flex items-center justify-center transition-all" type="button">
+          Drinks
+        </button>
+</div>
+</div>
+<!-- LIST OF MENU ITEMS WITH LARGE KITCHEN TOGGLES -->
+<div class="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3.5 divide-y-0">
+<!-- ITEM 1: Double Wagyu Burger (TOGGLED OFF / 86'd) -->
+<div class="item-card bg-surface-container-lowest rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4 transition-all">
+<div class="flex items-start gap-4 min-w-0">
+<div class="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 opacity-60">
+<img class="w-full h-full object-cover" data-alt="A gourmet double wagyu beef patty burger with melted cheddar on a brioche bun presented in a professional dark moody kitchen restaurant setting with warm cinematic backlighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNxkMxiqUjt5P7lSC_DU5bZs8Ips5hJRoD1hSHUszz_ilhev3fctR471YD9pDog0jOfd3gnXhe0hBPKFXtgyOU0Lmk9_2vuRaH5XilgIgv9J0GnBWHOiytqbl8-XxvHOrEBfoXCsbuBJnHbPWvkZLYggvoXQL8PQmtMnhTtJ5uVx-GkHHkb2J6AT04LBjvkPLFntTaDQUj__ikCVQHBbLZ2GSstfA8f2C75aSh60Mzr5RP-SYXlz0z"/>
+<div class="absolute inset-0 bg-error/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-error text-[24px]">do_not_disturb_on</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface line-through opacity-80 truncate">Double Wagyu Burger</span>
+<span class="bg-error-container text-on-error-container font-label-sm text-label-sm px-2 py-0.5 rounded uppercase tracking-wider font-bold">86'D</span>
+</div>
+<!-- Off since 8:15 — auto-returns at close -->
+<div class="flex items-center gap-1.5 mt-1 text-tertiary">
+<span class="material-symbols-outlined text-[16px]">history_toggle_off</span>
+<span class="font-label-md text-label-md font-bold">Off since 8:15 — auto-returns at close</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Mains · Station: Grill 2 · SKU #WAG-98</span>
+</div>
+</div>
+<!-- Touch-Friendly Inactive Gray/Red Toggle -->
+<button aria-checked="false" aria-label="Toggle Double Wagyu Burger" class="toggle-btn w-20 h-12 rounded-full bg-surface-variant p-1.5 flex items-center transition-colors flex-shrink-0 cursor-pointer justify-start" role="switch" type="button">
+<div class="toggle-knob w-9 h-9 rounded-full bg-error flex items-center justify-center text-on-error shadow-md transform translate-x-0 transition-transform">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</div>
+</button>
+</div>
+<!-- ITEM 2: Truffle Parmesan Fries (TOGGLED ON) -->
+<div class="item-card bg-surface-container rounded-2xl p-4 shadow-md flex items-center justify-between gap-4 hover:bg-surface-bright/40 transition-all">
+<div class="flex items-start gap-4 min-w-0">
+<div class="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Crispy golden cut truffle parmesan french fries garnished with fresh micro parsley flakes in a modern matte black commercial kitchen bowl with ambient culinary highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM2KgM2zr0-jdObvVQ8diNnyyPc7dfT23tezQYvHnv-ks8CBfEFLgbkk3lnE-G1OaBKS_sk0iVcgG6X28LHxhhr013JshXkHsHato-9ZBlsKBIKECwMRkEwnCUjyRMdtlZH0ntVZjBodTtr52wzMtqKKoTzEVdoi1KSUFiOg3YVjQwHqUzOz6ovPHs0kQGRKXgQmGWapdXTr4pHlXkI6M_STz7BUnw2Cew-HpZkgAHd8ecnW4Htdpv"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface truncate">Truffle Parmesan Fries</span>
+<span class="bg-primary/20 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+</div>
+<span class="font-label-md text-label-md text-primary font-bold mt-1">Available for POS &amp; Delivery</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Sides · Station: Fryer 1 · SKU #FRY-02</span>
+</div>
+</div>
+<!-- Touch-Friendly Kitchen Active Green Toggle -->
+<button aria-checked="true" aria-label="Toggle Truffle Parmesan Fries" class="toggle-btn w-20 h-12 rounded-full bg-primary-container p-1.5 flex items-center transition-colors flex-shrink-0 cursor-pointer justify-end" role="switch" type="button">
+<div class="toggle-knob w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary font-bold shadow-md transform translate-x-0 transition-transform">
+<span class="material-symbols-outlined text-[22px]">check</span>
+</div>
+</button>
+</div>
+<!-- ITEM 3: Pan-Seared Salmon (TOGGLED ON) -->
+<div class="item-card bg-surface-container rounded-2xl p-4 shadow-md flex items-center justify-between gap-4 hover:bg-surface-bright/40 transition-all">
+<div class="flex items-start gap-4 min-w-0">
+<div class="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A gourmet pan seared crispy skin Atlantic salmon fillet served over sauteed greens and lemon glaze in a high end commercial kitchen plated presentation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqDo33MNKSl73ySLkSUUKRVsGzPN8zyq4xHVBG_zN-mzAOGJwuZ2X4f7P5cdwrSgTja1PKTNI6VccdaK8fKfO6uJ_Kol6fRwrmNoq8VMTcF1Vm2SzNItema3Lg5XKMHdHhFKSRTBktxD8JK2RJ9rS_EPHCgQwRr50coMCQIPIW8ffRFzNHWyPhao68qtOgtRfe-YDdj-wTOEgNrtO8uCHKMC8aOiJjYRernjLTfMRjvRJyf9J8K2lg"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface truncate">Pan-Seared Salmon</span>
+<span class="bg-primary/20 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+</div>
+<span class="font-label-md text-label-md text-primary font-bold mt-1">Available for POS &amp; Delivery</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Mains · Station: Sauté · SKU #SAL-11</span>
+</div>
+</div>
+<!-- Touch-Friendly Active Green Toggle -->
+<button aria-checked="true" aria-label="Toggle Pan-Seared Salmon" class="toggle-btn w-20 h-12 rounded-full bg-primary-container p-1.5 flex items-center transition-colors flex-shrink-0 cursor-pointer justify-end" role="switch" type="button">
+<div class="toggle-knob w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary font-bold shadow-md transform translate-x-0 transition-transform">
+<span class="material-symbols-outlined text-[22px]">check</span>
+</div>
+</button>
+</div>
+<!-- ITEM 4: Crispy Cauliflower (TOGGLED ON) -->
+<div class="item-card bg-surface-container rounded-2xl p-4 shadow-md flex items-center justify-between gap-4 hover:bg-surface-bright/40 transition-all">
+<div class="flex items-start gap-4 min-w-0">
+<div class="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Spiced roasted crispy cauliflower florets with spicy tahini and pomegranate seeds presented on a restaurant ceramic plate inside a dark commercial kitchen setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuVTmDChaz_-vaQtPmv0QiRv_-cG-G-3Qb1KJz6R0Ie2kb1od0xbCa9G6FlXPlG-9XOJ5LPtgqD0EpCivqidtbg5jf-5uae-d1gNmbGTKaenZQyIbjLDt4xL02rozKLO2Gv0yIeQ_zcPCMdjk7v9hPXnFpKc1iFRmDCePpGjxhB_w29zE--6d5goS74bVnawsMnwfwZ5k8hlZuWmx2rt0SHr8ogD37Yrre6SDItVfMC4oDhAY6J9_l"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface truncate">Crispy Cauliflower</span>
+<span class="bg-primary/20 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+</div>
+<span class="font-label-md text-label-md text-primary font-bold mt-1">Available for POS &amp; Delivery</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Sides · Station: Fryer 2 · SKU #CAU-44</span>
+</div>
+</div>
+<!-- Touch-Friendly Active Green Toggle -->
+<button aria-checked="true" aria-label="Toggle Crispy Cauliflower" class="toggle-btn w-20 h-12 rounded-full bg-primary-container p-1.5 flex items-center transition-colors flex-shrink-0 cursor-pointer justify-end" role="switch" type="button">
+<div class="toggle-knob w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary font-bold shadow-md transform translate-x-0 transition-transform">
+<span class="material-symbols-outlined text-[22px]">check</span>
+</div>
+</button>
+</div>
+<!-- ITEM 5: Brioche Buns (TOGGLED ON, LOW STOCK WARNING) -->
+<div class="item-card bg-surface-container rounded-2xl p-4 shadow-md flex items-center justify-between gap-4 hover:bg-surface-bright/40 transition-all">
+<div class="flex items-start gap-4 min-w-0">
+<div class="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Freshly baked shiny golden brioche burger buns stacked neatly on a commercial baker stainless steel prep station under kitchen warm lamp." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXvXdrWGpvPry0pOCRtUiCUsxpoI3R_sOmJCVuovf7vMKX7QdRvhVbAlTXD8wSF6xgRL_0updHuYDxUrWvVA29GjtgKOaBjXMhVf5iWygtLob9J-NHgGnrcwWck1if3tVp30pk4chjI7LTbI1_JcwJLiUG_INJ3gWXn3mZoQ6mPx94Q97JxxB8R3NKgJuDwreoz-wC3cPPmp3ddXbhBLJqAuZyvanl1Bj4U6QSisQRwY5th5uYDqOX"/>
+<div class="absolute bottom-0 inset-x-0 bg-secondary-container text-on-secondary-container font-label-sm text-[9px] text-center py-0.5 font-bold uppercase">
+              Low Stock
+            </div>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface truncate">Brioche Buns</span>
+<div class="flex items-center gap-1 bg-secondary text-on-secondary font-label-sm text-label-sm px-2 py-0.5 rounded font-bold">
+<span class="material-symbols-outlined text-[14px]">production_quantity_limits</span>
+<span>LOW: ~8 LEFT</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 mt-1 text-secondary">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span class="font-label-md text-label-md font-bold">Approaching 86 threshold · Active</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Modifier · Station: Expo / Grill · SKU #MOD-BUN</span>
+</div>
+</div>
+<!-- Touch-Friendly Kitchen Active Green Toggle with Alert Indicator -->
+<div class="flex flex-col items-center gap-1">
+<button aria-checked="true" aria-label="Toggle Brioche Buns" class="toggle-btn w-20 h-12 rounded-full bg-primary-container p-1.5 flex items-center transition-colors flex-shrink-0 cursor-pointer justify-end" role="switch" type="button">
+<div class="toggle-knob w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary font-bold shadow-md transform translate-x-0 transition-transform">
+<span class="material-symbols-outlined text-[22px]">check</span>
+</div>
+</button>
+<span class="font-label-sm text-label-sm text-secondary tracking-wider font-bold">COUNT DOWN</span>
+</div>
+</div>
+</div>
+<!-- DRAWER QUICK ACTIONS FOOTER -->
+<div class="bg-surface-container px-6 py-4 flex items-center justify-between gap-4 shadow-2xl">
+<div class="flex items-center gap-3">
+<span class="w-3 h-3 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">3 Channels Synced (POS, Kiosk, Online)</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="h-touch-min px-4 rounded-xl bg-surface-container-highest hover:bg-surface-bright active:scale-95 text-on-surface font-headline-sm text-headline-sm uppercase tracking-wide transition-all shadow-sm" id="reinstate-all-btn" type="button">
+          Reset All Items
+        </button>
+<button class="h-touch-min px-6 rounded-xl bg-primary text-on-primary font-headline-sm text-headline-sm uppercase tracking-wider flex items-center gap-2 active:scale-95 transition-all shadow-lg" id="done-drawer-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+          Done
+        </button>
+</div>
+</div>
+</aside>
+<!-- SCRIPT FOR TOGGLE LOGIC & DRAWER CLOSING -->
+<script>
+    (() => {
+      const overlay = document.getElementById('modal-overlay');
+      const drawer = document.getElementById('drawer-panel');
+      const closeBtn = document.getElementById('close-drawer-btn');
+      const doneBtn = document.getElementById('done-drawer-btn');
+      const clearSearchBtn = document.getElementById('clear-search-btn');
+      const searchInput = document.getElementById('item-search');
+      const categoryPills = document.querySelectorAll('.cat-pill');
+
+      // Close drawer function
+      function hideDrawer() {
+        drawer.classList.remove('translate-x-0');
+        drawer.classList.add('translate-x-full');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+      }
+
+      function showDrawer() {
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+      }
+
+      closeBtn.addEventListener('click', hideDrawer);
+      doneBtn.addEventListener('click', hideDrawer);
+      overlay.addEventListener('click', hideDrawer);
+
+      // Search clear
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.focus();
+      });
+
+      // Category Pill Toggle
+      categoryPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          categoryPills.forEach(p => {
+            p.classList.remove('bg-primary', 'text-on-primary');
+            p.classList.add('bg-surface-container-highest', 'text-on-surface');
+          });
+          pill.classList.remove('bg-surface-container-highest', 'text-on-surface');
+          pill.classList.add('bg-primary', 'text-on-primary');
+        });
+      });
+
+      // Toggle Switch Interactive Logic
+      const toggleButtons = document.querySelectorAll('.toggle-btn');
+      toggleButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          const isChecked = this.getAttribute('aria-checked') === 'true';
+          const card = this.closest('.item-card');
+          const title = card.querySelector('.font-headline-md');
+
+          if (isChecked) {
+            // Turn OFF (86 it)
+            this.setAttribute('aria-checked', 'false');
+            this.classList.remove('bg-primary-container', 'justify-end');
+            this.classList.add('bg-surface-variant', 'justify-start');
+            
+            const knob = this.querySelector('.toggle-knob');
+            knob.classList.remove('bg-surface-container-lowest', 'text-primary');
+            knob.classList.add('bg-error', 'text-on-error');
+            knob.innerHTML = '<span class="material-symbols-outlined text-[20px]">close</span>';
+
+            card.classList.remove('bg-surface-container');
+            card.classList.add('bg-surface-container-lowest');
+            title.classList.add('line-through', 'opacity-80');
+
+            // Quick haptic touch feedback
+            if (window.navigator && window.navigator.vibrate) {
+              window.navigator.vibrate([30]);
+            }
+          } else {
+            // Turn ON (Available)
+            this.setAttribute('aria-checked', 'true');
+            this.classList.remove('bg-surface-variant', 'justify-start');
+            this.classList.add('bg-primary-container', 'justify-end');
+            
+            const knob = this.querySelector('.toggle-knob');
+            knob.classList.remove('bg-error', 'text-on-error');
+            knob.classList.add('bg-surface-container-lowest', 'text-primary');
+            knob.innerHTML = '<span class="material-symbols-outlined text-[22px]">check</span>';
+
+            card.classList.remove('bg-surface-container-lowest');
+            card.classList.add('bg-surface-container');
+            title.classList.remove('line-through', 'opacity-80');
+
+            if (window.navigator && window.navigator.vibrate) {
+              window.navigator.vibrate([15]);
+            }
+          }
+        });
+      });
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-2px_8px_rgba(0,0,0,0.3)]"><div class="h-12 w-full px-edge-safe-margin flex items-center justify-between"><div class="flex items-center gap-6"><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">KDS Terminal #04 · Firmware v4.12.0</span><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">All Lines Active</span></div><div class="flex items-center gap-4"><span class="font-label-md text-label-md text-on-surface-variant">Avg Prep Time: <span class="text-on-surface font-bold">8m 42s</span></span><span class="font-label-md text-label-md text-on-surface-variant">Station Pace: <span class="text-primary font-bold">100% On-Target</span></span></div></div></footer></body></html>

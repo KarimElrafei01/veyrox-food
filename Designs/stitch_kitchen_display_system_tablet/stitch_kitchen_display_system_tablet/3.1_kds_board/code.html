@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Chivo:wght@500;600;700;800&amp;family=JetBrains+Mono:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary-fixed":"#ffdad7","inverse-on-surface":"#283044","on-error-container":"#ffdad6","inverse-surface":"#dae2fd","outline-variant":"#3c4a42","surface-container-high":"#222a3d","primary-fixed-dim":"#4edea3","on-tertiary-container":"#79000e","inverse-primary":"#006c49","on-surface":"#dae2fd","surface-variant":"#2d3449","on-primary":"#003824","on-secondary-container":"#5b3800","on-background":"#dae2fd","on-primary-container":"#00422b","outline":"#86948a","surface-tint":"#4edea3","on-error":"#690005","secondary-fixed":"#ffddb8","tertiary-fixed-dim":"#ffb3ad","on-primary-fixed":"#002113","tertiary":"#ffb3ad","surface":"#0b1326","on-secondary-fixed":"#2a1700","surface-dim":"#0b1326","background":"#0b1326","surface-container":"#171f33","on-tertiary":"#68000a","secondary":"#ffb95f","primary-container":"#10b981","surface-bright":"#31394d","on-tertiary-fixed":"#410004","on-surface-variant":"#bbcabf","on-primary-fixed-variant":"#005236","surface-container-lowest":"#060e20","primary":"#4edea3","secondary-fixed-dim":"#ffb95f","surface-container-highest":"#2d3449","secondary-container":"#ee9800","error-container":"#93000a","error":"#ffb4ab","on-tertiary-fixed-variant":"#930013","tertiary-container":"#ff7a73","on-secondary":"#472a00","on-secondary-fixed-variant":"#653e00","surface-container-low":"#131b2e","primary-fixed":"#6ffbbe"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"touch-min":"3rem","ticket-padding-x":"1rem","column-gap":"1rem","touch-target":"3.5rem","item-row-gap":"0.5rem","edge-safe-margin":"1.25rem","gutter-ticket":"0.75rem","ticket-padding-y":"0.875rem"},"fontFamily":{"headline-sm":["Chivo"],"headline-md":["Chivo"],"body-sm":["Chivo"],"headline-lg":["Chivo"],"label-lg":["JetBrains Mono"],"timer-display":["JetBrains Mono"],"headline-xl":["Chivo"],"body-md":["Chivo"],"body-lg":["Chivo"],"label-md":["JetBrains Mono"],"timer-display-sm":["JetBrains Mono"],"label-sm":["JetBrains Mono"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"700"}],"body-sm":["14px",{"lineHeight":"18px","fontWeight":"500"}],"headline-lg":["28px",{"lineHeight":"36px","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","fontWeight":"700"}],"timer-display":["24px",{"lineHeight":"28px","fontWeight":"700"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"800"}],"body-md":["16px",{"lineHeight":"22px","fontWeight":"500"}],"body-lg":["18px",{"lineHeight":"26px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"600"}],"timer-display-sm":["18px",{"lineHeight":"22px","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface select-none antialiased min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface-container shadow-[0_2px_12px_rgba(0,0,0,0.4)]"><div class="h-20 w-full px-edge-safe-margin flex items-center justify-between gap-4"><div class="flex items-center gap-4 min-w-0"><img alt="KDS Chef Station Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1XshynEh64XVtoSRHL04nGBh95Cy0bcJP99tD7LT5ogdrW0D2EluP0dMYF3Og2M8XuNlxeynWOlnOGGkfhpGSeiLsf_sFyX2bSdqVw_g1msEDuIwy4Y3oIVWO5lESVQXs44J2XOpRzEsFjmToKoijTAwJ7HymZlNqaWlH6ezyCqE_sV7L15dFcrHjSogi_3de3BbUUnhOKuCx--fmgO4fN3g2Kz5QKEJw0MibDLOcncSldUOTbFXNxR2ZM"/><div class="flex flex-col min-w-0"><span class="font-headline-md text-headline-md text-on-surface uppercase tracking-tight truncate">Hot Line 1 - Main Kitchen</span><div class="flex items-center gap-2 mt-0.5"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Connected · updated 2s ago</span></div></div></div><nav class="hidden xl:flex items-center gap-2" data-active-classes="bg-surface-container-highest text-primary font-bold"><a aria-current="page" class="px-4 py-2 rounded-xl transition-colors uppercase tracking-wide bg-surface-container-highest text-primary font-bold" data-path="live-ticket-rail" href="#">Live Orders</a><a class="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-headline-sm text-headline-sm uppercase tracking-wide" data-path="bumped-orders-recall" href="#">Recall Log</a><a class="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-headline-sm text-headline-sm uppercase tracking-wide" data-path="expeditor-overview" href="#">Expo Summary</a></nav><div class="flex items-center gap-3 flex-shrink-0"><div class="flex items-center bg-surface-container-low p-1 rounded-xl shadow-inner"><span class="font-label-md text-label-md text-on-surface-variant px-3 uppercase tracking-wider hidden sm:inline">Stations</span><button aria-label="Decrease active stations" class="w-touch-min h-touch-min rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center font-headline-md text-headline-md transition-all" type="button">-</button><span class="font-timer-display text-timer-display text-primary px-3.5 min-w-[2.5rem] text-center">2</span><button aria-label="Increase active stations" class="w-touch-min h-touch-min rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface flex items-center justify-center font-headline-md text-headline-md transition-all" type="button">+</button></div><button class="h-touch-min px-4 bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl flex items-center gap-2.5 transition-all shadow-sm" type="button"><span class="font-headline-sm text-headline-sm tracking-wide uppercase">86 Items</span><span class="bg-error-container text-on-error-container font-label-md text-label-md px-2 py-0.5 rounded-full">4</span></button><button aria-label="Kitchen Display Settings" class="w-touch-min h-touch-min bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl flex items-center justify-center transition-all shadow-sm" type="button"><span class="material-symbols-outlined text-[24px]">tune</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Expeditor Live Metrics Bar -->
+<section class="w-full px-edge-safe-margin py-3 bg-surface-container-lowest flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest font-bold">Live Stream Active</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Rail Capacity: <span class="text-on-surface font-bold">12 / 16 Slots</span></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Peak Velocity: <span class="text-secondary font-bold">34 tkt/hr</span></span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">timelapse</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Line Pace</span>
+<span class="font-label-md text-label-md text-primary font-bold">Optimal (-1.2m)</span>
+</div>
+<button class="h-8 px-3.5 bg-surface-container-high hover:bg-surface-bright active:scale-95 text-on-surface rounded-lg flex items-center gap-1.5 transition-all shadow-sm font-label-md text-label-md uppercase tracking-wider" onclick="recallLastBump()" type="button">
+<span class="material-symbols-outlined text-[16px]">undo</span>
+        Recall Bump
+      </button>
+</div>
+</section>
+<!-- 4-Column Ticket Rail Container -->
+<div class="w-full px-edge-safe-margin py-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-column-gap items-start overflow-x-auto">
+<!-- COLUMN 1: NEW -->
+<div class="flex flex-col gap-3 min-w-[300px]">
+<!-- Column Header -->
+<div class="flex items-center justify-between px-3 py-2.5 bg-surface-container-high rounded-xl shadow-md">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface uppercase tracking-wide">New</h2>
+</div>
+<span class="bg-surface-container-lowest text-secondary font-label-lg text-label-lg px-2.5 py-0.5 rounded-full">3</span>
+</div>
+<!-- Tickets Container -->
+<div class="flex flex-col gap-gutter-ticket">
+<!-- Highlighted Action Card (Waiting to Accept) -->
+<article class="bg-surface-container-highest rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-lg relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer">
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary-container animate-pulse"></div>
+<!-- Alert Bar Inside Ticket -->
+<div class="flex items-center justify-between bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] animate-spin" style="animation-duration: 3s;">hourglass_top</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Waiting 2:14 — Action Needed</span>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm">02:14</span>
+</div>
+<!-- Ticket Header -->
+<div class="flex items-center justify-between gap-2 pt-1">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0" title="Incoming via WhatsApp">chat</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1042 MARCUS</h3>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-secondary rounded uppercase font-bold">WhatsApp</span>
+</div>
+<!-- Modifiers & Items -->
+<div class="flex flex-col gap-1.5 bg-surface-container-low p-2.5 rounded-lg">
+<div class="flex items-baseline justify-between">
+<span class="font-body-md text-body-md text-on-surface font-bold">1× Smoked Brisket Brioche</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hot</span>
+</div>
+<ul class="pl-4 flex flex-col gap-1 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-secondary">
+<li>House Pickled Jalapeños</li>
+<li>Extra Aged Cheddar Melt</li>
+<li class="bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-bold uppercase w-fit list-none -ml-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span> No Onions (Strict Allergy)
+              </li>
+</ul>
+<div class="flex items-baseline justify-between mt-1">
+<span class="font-body-md text-body-md text-on-surface font-bold">1× Truffle Parmesan Fries</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Side</span>
+</div>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-secondary">
+<li>Aioli Dip on Side</li>
+</ul>
+</div>
+<!-- Large Dual Action Touch Targets -->
+<div class="grid grid-cols-2 gap-2 mt-1">
+<button class="h-touch-target bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-headline-sm uppercase tracking-wide rounded-xl flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all" onclick="acceptTicket(this)" type="button">
+<span class="material-symbols-outlined text-[24px]">check_circle</span>
+              Accept
+            </button>
+<button class="h-touch-target bg-surface-container-high hover:bg-error-container hover:text-on-error-container text-on-surface font-headline-sm text-headline-sm uppercase tracking-wide rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all" onclick="rejectTicket(this)" type="button">
+<span class="material-symbols-outlined text-[22px]">cancel</span>
+              Reject
+            </button>
+</div>
+</article>
+<!-- Standard New Ticket Card -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1 bg-outline-variant"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0" title="Direct Point of Sale">point_of_sale</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1043 DANIEL</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-on-surface-variant">01:05</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-on-surface-variant rounded uppercase">Till · T-04</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dine In</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">2× Nashville Hot Chicken Bun</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-primary">
+<li>Spice Level: Inferno (X3)</li>
+<li>Slaw on Side</li>
+</ul>
+<span class="font-body-md text-body-md text-on-surface font-bold mt-1">1× Sweet Sweet Iced Tea</span>
+</div>
+<div class="w-full pt-1 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">touch_app</span> Tap card to advance
+          </div>
+</article>
+<!-- New Ticket 3 -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1 bg-outline-variant"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0">chat</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1044 CHLOE</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-on-surface-variant">00:32</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-secondary rounded uppercase font-bold">WhatsApp</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Takeaway</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">1× Roasted Beetroot Goat Cheese Salad</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-secondary">
+<li>Candied Walnuts</li>
+<li>Dressing Separate</li>
+</ul>
+</div>
+<div class="w-full pt-1 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">touch_app</span> Tap card to advance
+          </div>
+</article>
+</div>
+</div>
+<!-- COLUMN 2: RECEIVED -->
+<div class="flex flex-col gap-3 min-w-[300px]">
+<!-- Column Header -->
+<div class="flex items-center justify-between px-3 py-2.5 bg-surface-container-high rounded-xl shadow-md">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface uppercase tracking-wide">Received</h2>
+</div>
+<span class="bg-surface-container-lowest text-primary font-label-lg text-label-lg px-2.5 py-0.5 rounded-full">4</span>
+</div>
+<!-- Tickets Container -->
+<div class="flex flex-col gap-gutter-ticket">
+<!-- Priority Card with Gold Badge -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0">point_of_sale</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1045 ELENA</h3>
+</div>
+<!-- Priority Shimmer Badge -->
+<div class="flex items-center gap-1 px-2 py-0.5 bg-secondary text-on-secondary-container rounded font-label-sm text-label-sm font-bold shadow-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              PRIORITY
+            </div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">Till · Table 01 (VIP)</span>
+<span class="font-timer-display-sm text-timer-display-sm text-primary font-bold">04:12</span>
+</div>
+<div class="flex flex-col gap-1.5 bg-surface-container-low p-2.5 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">2× Dry-Aged Ribeye 12oz</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-secondary">
+<li>1st: Medium-Rare · Peppercorn Jus</li>
+<li>2nd: Rare · Chimichurri Herb Crust</li>
+</ul>
+<span class="font-body-md text-body-md text-on-surface font-bold mt-1">1× Grilled Broccolini &amp; Almonds</span>
+</div>
+<button class="w-full h-11 bg-surface-container-highest hover:bg-primary hover:text-on-primary text-on-surface rounded-lg font-label-md text-label-md uppercase tracking-wider flex items-center justify-center gap-1 transition-colors" type="button">
+            Start Ticket
+          </button>
+</article>
+<!-- Standard Received Card -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1 bg-outline-variant"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0">chat</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1046 LIAM</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-on-surface-variant">03:45</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-secondary rounded uppercase font-bold">WhatsApp</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Delivery · DoorDash</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">1× Margherita Classica Pizza</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-outline">
+<li>Extra Buffalo Mozzarella</li>
+<li>Well Done Crispy Crust</li>
+</ul>
+<span class="font-body-md text-body-md text-on-surface font-bold mt-1">1× Garlic Herb Dipping Cup</span>
+</div>
+<div class="w-full pt-1 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">touch_app</span> Tap card to advance
+          </div>
+</article>
+<!-- Received Card 3 -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1 bg-outline-variant"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0">point_of_sale</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1047 JESSICA</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-on-surface-variant">02:50</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-on-surface-variant rounded uppercase">Till · Bar Counter</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dine In</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">2× Smash Cheeseburger Combo</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-outline">
+<li>No Pickles on both</li>
+<li>With Seasoned Waffle Fries</li>
+</ul>
+</div>
+<div class="w-full pt-1 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">touch_app</span> Tap card to advance
+          </div>
+</article>
+</div>
+</div>
+<!-- COLUMN 3: PREPARING -->
+<div class="flex flex-col gap-3 min-w-[300px]">
+<!-- Column Header -->
+<div class="flex items-center justify-between px-3 py-2.5 bg-surface-container-high rounded-xl shadow-md">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface uppercase tracking-wide">Preparing</h2>
+</div>
+<span class="bg-surface-container-lowest text-tertiary font-label-lg text-label-lg px-2.5 py-0.5 rounded-full">3</span>
+</div>
+<!-- Tickets Container -->
+<div class="flex flex-col gap-gutter-ticket">
+<!-- Ticket Glowing Urgent Red (Well Past ETA - Late) -->
+<article class="bg-surface-container-highest rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-xl relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-2 bg-error animate-pulse"></div>
+<!-- Late Critical Badge Header -->
+<div class="flex items-center justify-between bg-error-container text-on-error-container px-2.5 py-1.5 rounded-md mt-0.5">
+<div class="flex items-center gap-1 font-headline-sm text-headline-sm uppercase font-extrabold tracking-wider">
+<span class="material-symbols-outlined text-[18px]">emergency_home</span>
+              CRITICAL · LATE
+            </div>
+<span class="font-timer-display text-timer-display font-extrabold">22:45</span>
+</div>
+<div class="flex items-center justify-between text-on-surface mt-1">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-error text-[22px] flex-shrink-0">point_of_sale</span>
+<h3 class="font-headline-md text-headline-md text-error uppercase truncate">#1038 VICTOR</h3>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-on-surface rounded font-bold">Till · T-12</span>
+</div>
+<div class="flex items-center justify-between text-error font-label-md text-label-md px-1 font-bold">
+<span>Target: ETA 15:00</span>
+<span class="bg-error text-on-error px-2 py-0.5 rounded text-[11px] uppercase tracking-wider">+7:45 OVERDUE</span>
+</div>
+<!-- Items Checklist -->
+<div class="flex flex-col gap-1.5 bg-surface-container-low p-2.5 rounded-lg">
+<div class="flex items-center justify-between" onclick="toggleItem(event, this)">
+<span class="font-body-md text-body-md text-on-surface font-bold line-through opacity-50">1× Slow-Braised Pork Shank</span>
+<span class="material-symbols-outlined text-primary text-[18px]">check_box</span>
+</div>
+<div class="flex items-center justify-between" onclick="toggleItem(event, this)">
+<span class="font-body-md text-body-md text-on-surface font-bold">2× Duck Confit Cassoulet</span>
+<span class="material-symbols-outlined text-outline text-[18px]">check_box_outline_blank</span>
+</div>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-error">
+<li>Extra Crispy Skin</li>
+<li class="bg-error-container text-on-error-container px-1 py-0.2 rounded font-bold w-fit list-none -ml-4">Celiac Friendly Prep</li>
+</ul>
+</div>
+<!-- Action Affordance Bump Area -->
+<button class="w-full h-touch-target bg-error hover:bg-on-error-container text-on-error font-headline-sm text-headline-sm uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">done_all</span> Mark Ready · Rush
+          </button>
+</article>
+<!-- Ticket Turning Amber (Past ETA) -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary-container"></div>
+<div class="flex items-center justify-between text-secondary bg-surface-container-lowest px-2.5 py-1 rounded-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">alarm_on</span>
+<span class="font-label-sm text-label-sm uppercase font-bold">Over ETA Target</span>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm font-bold">14:20 / ETA 12:00</span>
+</div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0">chat</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1039 SOPHIA</h3>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 bg-secondary text-on-secondary-container rounded font-label-sm text-label-sm font-bold shadow-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+              PRIORITY
+            </div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm px-2 py-0.5 bg-surface-container-lowest text-secondary rounded uppercase font-bold">WhatsApp</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pickup Booth #2</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">1× Pan-Seared Salmon Bowl</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-secondary">
+<li>Brown Rice Base</li>
+<li>Avocado + Mango Salsa</li>
+<li>Ponzu Sauce on side</li>
+</ul>
+<span class="font-body-md text-body-md text-on-surface font-bold mt-1">1× Fresh Coconut Water</span>
+</div>
+<button class="w-full h-11 bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container text-on-surface rounded-lg font-label-md text-label-md uppercase tracking-wider flex items-center justify-center gap-1 transition-colors" type="button">
+            Bump To Ready
+          </button>
+</article>
+<!-- Ticket 3: On Track Preparing -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all cursor-pointer hover:bg-surface-container-high" onclick="advanceCard(this)">
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0">point_of_sale</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1040 CARLOS</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-primary">06:50</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">Till · T-08</span>
+<span class="font-label-sm text-label-sm text-outline">ETA 10:00 (On-Time)</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg">
+<span class="font-body-md text-body-md text-on-surface font-bold">2× Woodfired Diavola Salami</span>
+<ul class="pl-4 flex flex-col gap-0.5 list-disc text-on-surface-variant font-body-sm text-body-sm marker:text-primary">
+<li>Chili Honey Drizzle</li>
+</ul>
+</div>
+<div class="w-full pt-1 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">touch_app</span> Tap card to advance
+          </div>
+</article>
+</div>
+</div>
+<!-- COLUMN 4: READY -->
+<div class="flex flex-col gap-3 min-w-[300px]">
+<!-- Column Header -->
+<div class="flex items-center justify-between px-3 py-2.5 bg-surface-container-high rounded-xl shadow-md">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface uppercase tracking-wide">Ready</h2>
+</div>
+<span class="bg-surface-container-lowest text-primary-fixed font-label-lg text-label-lg px-2.5 py-0.5 rounded-full">2</span>
+</div>
+<!-- Tickets Container -->
+<div class="flex flex-col gap-gutter-ticket">
+<!-- Ready Card 1 -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all">
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-primary-container"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0">point_of_sale</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1035 AMIRA</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-on-surface-variant">01:45 ago</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase px-2 py-0.5 bg-surface-container-lowest text-primary rounded font-bold">Pass Station · Heat Lamp 2</span>
+<span class="font-label-sm text-label-sm">Dine In #05</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg opacity-85">
+<div class="flex items-center justify-between text-on-surface line-through opacity-60 font-body-sm text-body-sm">
+<span>1× Wagyu Sliders Trio</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+<div class="flex items-center justify-between text-on-surface line-through opacity-60 font-body-sm text-body-sm">
+<span>1× Loaded Sweet Potato Wedges</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+</div>
+<!-- Full Width Complete / Expedite Bump Target -->
+<button class="w-full h-touch-target bg-primary hover:bg-primary-fixed text-on-primary font-headline-sm text-headline-sm uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all" onclick="completeTicket(this)" type="button">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+            Expedite / Deliver
+          </button>
+</article>
+<!-- Ready Card 2 -->
+<article class="bg-surface-container rounded-xl p-ticket-padding-x py-ticket-padding-y shadow-md relative overflow-hidden flex flex-col gap-2.5 transition-all">
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-primary-container"></div>
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0">chat</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase truncate">#1036 ZACHARY</h3>
+</div>
+<span class="font-timer-display-sm text-timer-display-sm text-on-surface-variant">00:20 ago</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase px-2 py-0.5 bg-surface-container-lowest text-secondary rounded font-bold">WhatsApp Bagged</span>
+<span class="font-label-sm text-label-sm">Curbside Pickup</span>
+</div>
+<div class="flex flex-col gap-1 bg-surface-container-low p-2 rounded-lg opacity-85">
+<div class="flex items-center justify-between text-on-surface line-through opacity-60 font-body-sm text-body-sm">
+<span>2× Crispy Fish Tacos Baja</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+<div class="flex items-center justify-between text-on-surface line-through opacity-60 font-body-sm text-body-sm">
+<span>1× Churros with Spiced Dulce</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+</div>
+<button class="w-full h-touch-target bg-primary hover:bg-primary-fixed text-on-primary font-headline-sm text-headline-sm uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all" onclick="completeTicket(this)" type="button">
+<span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+            Hand Off To Courier
+          </button>
+</article>
+</div>
+</div>
+</div>
+<!-- Expeditor Summary Dock -->
+<section class="w-full px-edge-safe-margin pb-6 pt-2">
+<div class="bg-surface-container-high rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+<div class="flex items-center gap-6 flex-wrap">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[24px]">kitchen</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Hot Line Expedition</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Grill 1 · Saute 2 · Fryers Dual Active</span>
+</div>
+</div>
+<div class="h-8 w-px bg-surface-variant hidden md:block"></div>
+<div class="flex items-center gap-5">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Active Tickets</span>
+<span class="font-headline-md text-headline-md text-on-surface">12</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Delayed (&gt;15m)</span>
+<span class="font-headline-md text-headline-md text-error">1</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Avg Turnaround</span>
+<span class="font-headline-md text-headline-md text-primary">8m 42s</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="h-touch-min px-4 bg-surface-container-highest hover:bg-surface-bright active:scale-95 text-on-surface rounded-xl font-headline-sm text-headline-sm uppercase tracking-wider flex items-center gap-2 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">fullscreen</span>
+          Lock Screen
+        </button>
+<button class="h-touch-min px-5 bg-primary hover:bg-primary-fixed text-on-primary rounded-xl font-headline-sm text-headline-sm uppercase tracking-wider flex items-center gap-2 shadow-md active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">print</span>
+          Batch Print Tickets
+        </button>
+</div>
+</div>
+</section>
+<!-- Interactive Client Behavior -->
+<script>
+    function advanceCard(cardElement) {
+      cardElement.classList.add('scale-[0.98]', 'opacity-80');
+      setTimeout(() => {
+        cardElement.classList.remove('scale-[0.98]', 'opacity-80');
+      }, 150);
+    }
+
+    function toggleItem(event, row) {
+      event.stopPropagation();
+      const textSpan = row.querySelector('span:first-child');
+      const iconSpan = row.querySelector('.material-symbols-outlined');
+      const isStruck = textSpan.classList.contains('line-through');
+
+      if (isStruck) {
+        textSpan.classList.remove('line-through', 'opacity-50');
+        iconSpan.textContent = 'check_box_outline_blank';
+        iconSpan.classList.replace('text-primary', 'text-outline');
+      } else {
+        textSpan.classList.add('line-through', 'opacity-50');
+        iconSpan.textContent = 'check_box';
+        iconSpan.classList.replace('text-outline', 'text-primary');
+      }
+    }
+
+    function acceptTicket(btn) {
+      const card = btn.closest('article');
+      card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      card.style.transform = 'translateX(20px)';
+      card.style.opacity = '0.3';
+      setTimeout(() => {
+        card.remove();
+      }, 300);
+    }
+
+    function rejectTicket(btn) {
+      const card = btn.closest('article');
+      card.style.transition = 'all 0.3s ease';
+      card.style.transform = 'scale(0.9)';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.remove();
+      }, 300);
+    }
+
+    function completeTicket(btn) {
+      const card = btn.closest('article');
+      card.style.transition = 'all 0.4s ease-out';
+      card.style.transform = 'translateY(-20px)';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.remove();
+      }, 400);
+    }
+
+    function recallLastBump() {
+      const banner = document.createElement('div');
+      banner.className = 'fixed bottom-4 right-4 z-50 bg-secondary text-on-secondary-container px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-headline-sm text-headline-sm uppercase transition-all duration-300';
+      banner.innerHTML = '<span class="material-symbols-outlined">history</span> Recalled order #1034 &mdash; restored to Rail';
+      document.body.appendChild(banner);
+      setTimeout(() => {
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+      }, 2500);
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-2px_8px_rgba(0,0,0,0.3)]"><div class="h-12 w-full px-edge-safe-margin flex items-center justify-between"><div class="flex items-center gap-6"><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">KDS Terminal #04 · Firmware v4.12.0</span><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">All Lines Active</span></div><div class="flex items-center gap-4"><span class="font-label-md text-label-md text-on-surface-variant">Avg Prep Time: <span class="text-on-surface font-bold">8m 42s</span></span><span class="font-label-md text-label-md text-on-surface-variant">Station Pace: <span class="text-primary font-bold">100% On-Target</span></span></div></div></footer></body></html>

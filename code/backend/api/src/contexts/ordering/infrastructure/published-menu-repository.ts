@@ -1,19 +1,40 @@
 import { and, eq, withTenant, type Database, tables } from '@veyroxai/db';
 import { toMinor, type LoyaltyTier, type PricingMenu } from '@veyroxai/domain';
+import { singleFlight } from './single-flight.js';
+import { jitteredTtlSeconds } from './cache-ttl.js';
+import type { createReadPathBudget } from './read-path-budget.js';
 
 export class PublishedMenuRepository {
+  private readonly coalesceLoad = singleFlight<PricingMenu | null>();
+
   constructor(
     private readonly db: Database,
     private readonly cache: {
       get(key: string): Promise<string | null>;
       set(key: string, value: string, mode: 'EX', seconds: number): Promise<unknown>;
     },
+    private readonly readBudget: ReturnType<typeof createReadPathBudget> = (fn) => fn(),
   ) {}
 
   async loadPricingMenu(tenantId: string, menuVersionId: string): Promise<PricingMenu | null> {
     const cacheKey = `menu:${tenantId}:${menuVersionId}`;
     const cached = await this.cache.get(cacheKey);
     if (cached) return JSON.parse(cached) as PricingMenu;
+    // Coalesced: many requests racing a cache miss (cold cache, or a
+    // republish invalidating the key) would otherwise each open a
+    // transaction on the pool that order placement also depends on.
+    return this.coalesceLoad(cacheKey, () =>
+      // Capped so a read stampede can never claim every connection in the
+      // shared pool — order placement is not routed through this budget.
+      this.readBudget(() => this.rebuildPricingMenu(tenantId, menuVersionId, cacheKey)),
+    );
+  }
+
+  private async rebuildPricingMenu(
+    tenantId: string,
+    menuVersionId: string,
+    cacheKey: string,
+  ): Promise<PricingMenu | null> {
     return withTenant(this.db, tenantId, async (tx) => {
       const where = and(
         eq(tables.menuVersionItems.tenantId, tenantId),
@@ -83,7 +104,7 @@ export class PublishedMenuRepository {
           isAvailable: optionAvailable.get(option.modifierOptionId) ?? false,
         })),
       };
-      await this.cache.set(cacheKey, JSON.stringify(menu), 'EX', 86_400);
+      await this.cache.set(cacheKey, JSON.stringify(menu), 'EX', jitteredTtlSeconds(86_400, 3_600));
       return menu;
     });
   }

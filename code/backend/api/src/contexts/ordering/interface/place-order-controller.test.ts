@@ -70,7 +70,7 @@ function harness(placeImpl: PlaceOrder['execute'], emit = vi.fn(async () => {}))
       queue: { enqueue: async () => {} },
     },
     placeOrder: { place, resolver, keys: [KEY], etaQueue, etaMetrics, metrics, emit },
-  }).then((app) => ({ app, place, emit, metrics, etaMetrics }));
+  }).then((app) => ({ app, place, resolver, emit, metrics, etaMetrics }));
 }
 
 const payload = JSON.stringify({
@@ -185,6 +185,27 @@ describe('POST /public/orders', () => {
       code: 'OPEN_ORDER_LIMIT',
       existingOrder: { orderNumber: 'A-041', status: 'ready' },
     });
+    await app.close();
+  });
+
+  it('rejects a session with an open order before repricing or starting a placement transaction', async () => {
+    const { app, place, resolver } = await harness(async () => {
+      throw new Error('should not price or place an already-open order');
+    });
+    (resolver.execute as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      customer: { tier: 'bronze' },
+      ordering: { minOrderValueMinor: 0 },
+      openOrder: { orderId: 'o9', orderNumber: 'A-041', status: 'ready' },
+    });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/public/orders',
+      headers: headers(),
+      payload,
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({ code: 'OPEN_ORDER_LIMIT' });
+    expect(place.execute).not.toHaveBeenCalled();
     await app.close();
   });
 

@@ -16,6 +16,7 @@ import { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue
 import { QuoteOrder } from './contexts/ordering/application/quote-order.js';
 import { PublishedMenuRepository } from './contexts/ordering/infrastructure/published-menu-repository.js';
 import { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-queue-repository.js';
+import { createReadPathBudget } from './contexts/ordering/infrastructure/read-path-budget.js';
 import { PlaceOrder } from './contexts/ordering/application/place-order.js';
 import { OrderPlacementRepository } from './contexts/ordering/infrastructure/order-placement-repository.js';
 import { CustomerLocaleRepository } from './contexts/ordering/infrastructure/customer-locale-repository.js';
@@ -66,7 +67,12 @@ async function main(): Promise<void> {
   const sessionKeys: [string, ...string[]] = previousSessionKey
     ? [sessionKey, previousSessionKey]
     : [sessionKey];
-  const publishedMenus = new PublishedMenuRepository(database, redis);
+  // Shared floor, not a ceiling: quote + ETA rebuilds may never claim more than
+  // this many of the pool's 20 connections, so order placement is never left
+  // fighting a read-side stampede for a connection (never routed through this
+  // budget itself, so it is never capped by it).
+  const readPathBudget = createReadPathBudget(16);
+  const publishedMenus = new PublishedMenuRepository(database, redis, readPathBudget);
   const imageStore =
     process.env.R2_BUCKET &&
     process.env.R2_ENDPOINT &&
@@ -79,7 +85,7 @@ async function main(): Promise<void> {
         })
       : undefined;
   const quoteOrder = new QuoteOrder(publishedMenus);
-  const etaQueue = new EtaQueueRepository(database, redis);
+  const etaQueue = new EtaQueueRepository(database, redis, readPathBudget);
   // Shared by the quote and placement paths so a degraded (no-cache, or Postgres-down)
   // ETA read is one signal regardless of which endpoint hit it.
   const etaMetrics: EtaMetricSink = {

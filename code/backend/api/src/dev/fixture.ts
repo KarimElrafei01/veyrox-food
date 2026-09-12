@@ -488,11 +488,9 @@ async function main() {
       promisedEtaUpperAt: new Date(now.getTime() + 3 * 60_000),
     });
 
-    // A load seeding run must leave prior test orders untouched so its added
-    // customers are the only variable in the following stress run.
-    if (requestedLoadCustomers === 0) {
-      await closeStrayOpenOrders(db, t, new Set([goldPreparing.id, received.id, ready.id]));
-    }
+    // A load seeding run must start from reusable customer sessions. History stays
+    // intact: this records a collected transition instead of deleting test orders.
+    await closeStrayOpenOrders(db, t, new Set([goldPreparing.id, received.id, ready.id]));
 
     const iat = Math.floor(now.getTime() / 1000);
     const exp = iat + 24 * 3600;
