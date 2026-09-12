@@ -1,0 +1,144 @@
+/*
+ * Culinary Operations Display Engine — the KDS/Till design system (ADR-0018
+ * amendment, F2 frontend-implementation.md §0.1). Values from the Google Stitch
+ * export (stitch_kitchen_display_system_tablet/culinary_operations_display_engine/
+ * DESIGN.md), cross-checked against every screen's actual code.html — the two
+ * disagree in a few places and code.html is what rendered the shipped
+ * screenshots, so code.html wins (see the radius note below).
+ *
+ * This is a SECOND, separate design system, not a Brew & Baladi reskin: a
+ * permanently-dark, industrial system for wall-mounted kitchen hardware viewed
+ * from 4-8 feet under steam and glare, versus Brew & Baladi's warm, light-first
+ * customer identity. It commits to dark only — no light variant exists in the
+ * source, and none should be invented (mirrors how brew-baladi.css commits to
+ * light only). code/frontends/kds sets `data-theme="kds-industrial"` once on
+ * its root and never switches it.
+ */
+:root[data-theme='kds-industrial'] {
+  /* — colour: surfaces — */
+  --vx-surface: #0b1326;
+  --vx-surface-dim: #0b1326;
+  --vx-surface-bright: #31394d;
+  --vx-surface-lowest: #060e20;
+  --vx-surface-low: #131b2e;
+  --vx-surface-container: #171f33;
+  --vx-surface-high: #222a3d;
+  --vx-surface-highest: #2d3449;
+  --vx-on-surface: #dae2fd;
+  --vx-on-surface-variant: #bbcabf;
+  --vx-inverse-surface: #dae2fd;
+  --vx-inverse-on-surface: #283044;
+  --vx-outline: #86948a;
+  --vx-outline-variant: #3c4a42;
+
+  /* — colour: brand/status roles — */
+  --vx-primary: #4edea3; /* Kitchen Green — connectivity, New, primary actions */
+  --vx-on-primary: #003824;
+  --vx-primary-container: #10b981;
+  --vx-on-primary-container: #00422b;
+  --vx-secondary: #ffb95f; /* Alert Amber — warning-phase ticket age, priority */
+  --vx-on-secondary: #472a00;
+  --vx-secondary-container: #ee9800;
+  --vx-on-secondary-container: #5b3800;
+  --vx-tertiary: #ffb3ad; /* soft red accent */
+  --vx-on-tertiary: #68000a;
+  --vx-tertiary-container: #ff7a73;
+  --vx-on-tertiary-container: #79000e;
+
+  /* — colour: status — */
+  --vx-error: #ffb4ab; /* Emergent Red — critical/overdue, allergy */
+  --vx-on-error: #690005;
+  --vx-error-container: #93000a;
+  --vx-on-error-container: #ffdad6;
+
+  /* — colour: ticket age band (FR-3.8, packages/domain's ageBand) — */
+  --vx-age-green: var(--vx-primary);
+  --vx-age-amber: var(--vx-secondary);
+  --vx-age-red: var(--vx-tertiary);
+
+  /* — spacing (DESIGN.md front-matter and every screen's code.html agree) — */
+  --vx-space-2xs: 0.25rem;
+  --vx-space-xs: 0.5rem;
+  --vx-space-sm: 0.75rem;
+  --vx-space-md: 1rem;
+  --vx-space-lg: 1.5rem;
+  --vx-space-xl: 2rem;
+  --vx-space-2xl: 3rem;
+  --vx-gutter: 1.25rem; /* edge-safe-margin */
+  --vx-tap-min: 3rem; /* touch-min — floor for secondary controls */
+  --vx-tap-target: 3.5rem; /* touch-target — every bump/accept/reject button */
+  --vx-ticket-gutter: 0.75rem; /* gutter-ticket — ticket-to-ticket */
+  --vx-ticket-padding-x: 1rem;
+  --vx-ticket-padding-y: 0.875rem;
+  --vx-item-row-gap: 0.5rem;
+  --vx-column-gap: 1rem;
+
+  /*
+   * Radius: DESIGN.md's own front-matter `rounded:` block (sm .125/DEFAULT
+   * .25/md .375/lg .5/xl .75rem) is, digit for digit, Tailwind's *stock*
+   * default scale - it reads like the export tool echoing Tailwind's baseline
+   * rather than this design's actual customization. Every screen's real
+   * tailwind.config (code.html) overrides DEFAULT/lg/xl to a tighter scale
+   * (.125/.25/.5rem) — that override is what actually rendered every
+   * screenshot, so it, not the front-matter block, is authoritative here.
+   * `full` is implemented as a true pill (9999px) rather than code.html's
+   * literal 0.75rem: on every small badge in the shipped screens that value
+   * is already ≥ half the badge's height, which CSS clamps to a full capsule
+   * either way — 9999px is the same visual result, generalized correctly to
+   * any size instead of accidentally-correct at one.
+   */
+  --vx-radius-sm: 0.125rem;
+  --vx-radius: 0.125rem;
+  --vx-radius-md: 0.375rem;
+  --vx-radius-lg: 0.25rem;
+  --vx-radius-xl: 0.5rem;
+  --vx-radius-pill: 9999px;
+
+  /*
+   * Elevation: this system explicitly rejects ambient blur shadows (DESIGN.md
+   * "Elevation & Depth" — they wash out under reflective kitchen lighting).
+   * Hierarchy comes from surface tiering + solid outlines instead; these two
+   * shadow tokens exist only for the header bar and the modal/drawer backdrop,
+   * the two places every screen's code.html still uses a real box-shadow.
+   */
+  --vx-elevation-low: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --vx-elevation-high: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  --vx-scrim: rgba(2, 6, 23, 0.85); /* Level 3 modal backdrop */
+
+  /* — typography — */
+  --vx-font-display: 'Chivo', 'Cairo', 'Segoe UI', system-ui, sans-serif;
+  --vx-font-body: 'Chivo', 'Cairo', 'Segoe UI', system-ui, sans-serif;
+  --vx-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --vx-text-headline-xl: 2.25rem; /* 36px/800/44 */
+  --vx-leading-headline-xl: 2.75rem;
+  --vx-text-headline-lg: 1.75rem; /* 28px/700/36 */
+  --vx-leading-headline-lg: 2.25rem;
+  --vx-text-headline-md: 1.375rem; /* 22px/700/28 */
+  --vx-leading-headline-md: 1.75rem;
+  --vx-text-headline-sm: 1.125rem; /* 18px/700/24 */
+  --vx-leading-headline-sm: 1.5rem;
+  --vx-text-body-lg: 1.125rem; /* 18px/600/26 */
+  --vx-leading-body-lg: 1.625rem;
+  --vx-text-body-md: 1rem; /* 16px/500/22 */
+  --vx-leading-body-md: 1.375rem;
+  --vx-text-body-sm: 0.875rem; /* 14px/500/18 */
+  --vx-leading-body-sm: 1.125rem;
+  --vx-text-timer: 1.5rem; /* 24px/700/28, JetBrains Mono */
+  --vx-leading-timer: 1.75rem;
+  --vx-text-timer-sm: 1.125rem; /* 18px/700/22 */
+  --vx-leading-timer-sm: 1.375rem;
+  --vx-text-label-lg: 0.875rem; /* 14px/700/18, JetBrains Mono */
+  --vx-leading-label-lg: 1.125rem;
+  --vx-text-label-md: 0.75rem; /* 12px/600/16 */
+  --vx-leading-label-md: 1rem;
+  --vx-text-label-sm: 0.6875rem; /* 11px/600/14 */
+  --vx-leading-label-sm: 0.875rem;
+
+  /* — motion — */
+  --vx-motion-fast: 120ms;
+  --vx-motion: 200ms;
+  --vx-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  color-scheme: dark;
+}
