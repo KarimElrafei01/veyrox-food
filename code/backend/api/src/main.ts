@@ -24,6 +24,17 @@ import type { OrderPlacementMetricSink } from './contexts/ordering/application/o
 import type { EtaMetricSink } from './contexts/ordering/application/eta-metrics.js';
 import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
 import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
+import { AcceptOrder } from './contexts/ordering/application/accept-order.js';
+import { RejectOrder } from './contexts/ordering/application/reject-order.js';
+import { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
+import { RevertOrder } from './contexts/ordering/application/revert-order.js';
+import { TickItem } from './contexts/ordering/application/tick-item.js';
+import { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
+import { StreamBoardEvents } from './contexts/ordering/application/stream-board.js';
+import { SetActiveStations } from './contexts/ordering/application/set-active-stations.js';
+import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
+import { KitchenStateRepository } from './contexts/ordering/infrastructure/kitchen-state-repository.js';
+import { SseHub } from './contexts/ordering/infrastructure/sse-hub.js';
 
 const log = createLogger({ service: 'api' });
 
@@ -67,6 +78,21 @@ async function main(): Promise<void> {
   const sessionKeys: [string, ...string[]] = previousSessionKey
     ? [sessionKey, previousSessionKey]
     : [sessionKey];
+  // ADR-0023: verification-only ahead of the full S2-S5 staff realm. Never the
+  // customer session's keys - a leaked key for one realm must not mint a token
+  // for another.
+  const deviceJwtKey = process.env.STAFF_DEVICE_JWT_KEY;
+  if (!deviceJwtKey) throw new Error('STAFF_DEVICE_JWT_KEY is not set');
+  const previousDeviceJwtKey = process.env.STAFF_DEVICE_JWT_KEY_PREVIOUS;
+  const deviceKeys: [string, ...string[]] = previousDeviceJwtKey
+    ? [deviceJwtKey, previousDeviceJwtKey]
+    : [deviceJwtKey];
+  const pinTokenKey = process.env.STAFF_PIN_TOKEN_KEY;
+  if (!pinTokenKey) throw new Error('STAFF_PIN_TOKEN_KEY is not set');
+  const previousPinTokenKey = process.env.STAFF_PIN_TOKEN_KEY_PREVIOUS;
+  const pinKeys: [string, ...string[]] = previousPinTokenKey
+    ? [pinTokenKey, previousPinTokenKey]
+    : [pinTokenKey];
   // Shared floor, not a ceiling: quote + ETA rebuilds may never claim more than
   // this many of the pool's 20 connections, so order placement is never left
   // fighting a read-side stampede for a connection (never routed through this
@@ -96,6 +122,9 @@ async function main(): Promise<void> {
     increment: (name, labels) => log.info('order placement metric', { name, ...labels }),
     observe: (name, seconds) => log.info('order placement metric', { name, seconds }),
   };
+  const kitchenOrders = new KitchenOrderRepository(database);
+  const sseHub = new SseHub();
+  const boardSnapshot = new LoadBoardSnapshot(kitchenOrders, etaQueue);
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -166,6 +195,66 @@ async function main(): Promise<void> {
       keys: sessionKeys,
       etaQueue,
       etaMetrics,
+    },
+    acceptOrder: {
+      accept: new AcceptOrder(kitchenOrders, etaQueue, etaMetrics, sseHub),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderAccepted', event);
+      },
+    },
+    rejectOrder: {
+      reject: new RejectOrder(kitchenOrders, sseHub),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderRejected', event);
+      },
+    },
+    advanceOrder: {
+      advance: new AdvanceOrder(kitchenOrders, etaQueue, sseHub),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderAdvanced', event);
+      },
+    },
+    revertOrder: {
+      revert: new RevertOrder(kitchenOrders, etaQueue, sseHub),
+      deviceKeys,
+      pinKeys,
+    },
+    tickItem: {
+      tick: new TickItem(kitchenOrders, sseHub),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderItemTicked', event);
+      },
+    },
+    boardSnapshot: {
+      board: boardSnapshot,
+      deviceKeys,
+      pinKeys,
+    },
+    staffStream: {
+      stream: new StreamBoardEvents(kitchenOrders, boardSnapshot, sseHub),
+      deviceKeys,
+    },
+    setActiveStations: {
+      setActiveStations: new SetActiveStations(
+        new KitchenStateRepository(database),
+        etaQueue,
+        sseHub,
+      ),
+      deviceKeys,
+      pinKeys,
+    },
+    staffMenu: {
+      catalogue: new CatalogueRepository(database),
+      deviceKeys,
+      pinKeys,
     },
     devSessions: devDatabase
       ? { db: devDatabase, sessionKey, catalogue: new CatalogueRepository(devDatabase) }

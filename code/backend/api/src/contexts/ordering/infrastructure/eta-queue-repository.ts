@@ -56,9 +56,23 @@ export class EtaQueueRepository {
     private readonly redis: {
       get(key: string): Promise<string | null>;
       set(key: string, value: string, mode: 'EX', seconds: number): Promise<unknown>;
+      del(key: string): Promise<unknown>;
     },
     private readonly readBudget: ReturnType<typeof createReadPathBudget> = (fn) => fn(),
   ) {}
+
+  /** Drops the cached snapshot so the next `load()` rebuilds from Postgres.
+   *  Used where computing an incremental delta isn't worth the risk of getting
+   *  it wrong - e.g. revert (§2.5), which can move a ticket in either direction
+   *  and is rare enough that one extra rebuild is cheaper than a bespoke event
+   *  variant for every reversible transition. */
+  async invalidate(tenantId: string): Promise<void> {
+    try {
+      await this.redis.del(`queue:${tenantId}`);
+    } catch {
+      // Best-effort - a stale-for-up-to-5-minutes cache self-heals via TTL either way.
+    }
+  }
 
   async load(
     tenantId: string,
@@ -104,22 +118,31 @@ export class EtaQueueRepository {
 
   private async rebuild(tenantId: string): Promise<EtaQueueState> {
     return withTenant(this.db, tenantId, async (tx) => {
-      const rows = await tx
-        .select({
-          orderId: tables.orders.id,
-          status: tables.orders.status,
-          acceptedAt: tables.orders.acceptedAt,
-          prepSeconds: tables.menuItems.basePrepSeconds,
-        })
-        .from(tables.orders)
-        .innerJoin(tables.orderItems, eq(tables.orderItems.orderId, tables.orders.id))
-        .innerJoin(tables.menuItems, eq(tables.menuItems.id, tables.orderItems.menuItemId))
-        .where(
-          and(
-            eq(tables.orders.tenantId, tenantId),
-            inArray(tables.orders.status, ['received', 'preparing']),
+      const [rows, kitchenStateRow] = await Promise.all([
+        tx
+          .select({
+            orderId: tables.orders.id,
+            status: tables.orders.status,
+            acceptedAt: tables.orders.acceptedAt,
+            prepSeconds: tables.menuItems.basePrepSeconds,
+          })
+          .from(tables.orders)
+          .innerJoin(tables.orderItems, eq(tables.orderItems.orderId, tables.orders.id))
+          .innerJoin(tables.menuItems, eq(tables.menuItems.id, tables.orderItems.menuItemId))
+          .where(
+            and(
+              eq(tables.orders.tenantId, tenantId),
+              inArray(tables.orders.status, ['received', 'preparing']),
+            ),
           ),
-        );
+        // kitchen_state (task #9) is the durable source of truth for
+        // activeStations - without this, a cache miss/TTL expiry would
+        // silently forget a barista's setting and reset the queue to 1.
+        tx
+          .select({ activeStations: tables.kitchenState.activeStations })
+          .from(tables.kitchenState)
+          .where(eq(tables.kitchenState.tenantId, tenantId)),
+      ]);
       const tickets = new Map<string, QueueTicket>();
       for (const row of rows) {
         const previous = tickets.get(row.orderId);
@@ -132,7 +155,7 @@ export class EtaQueueRepository {
         });
       }
       return {
-        activeStations: 1,
+        activeStations: kitchenStateRow[0]?.activeStations ?? 1,
         tickets: [...tickets.values()],
         updatedAt: new Date().toISOString(),
       };

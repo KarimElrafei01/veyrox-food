@@ -91,9 +91,12 @@ Materials are **not** deducted here. They are deducted when a barista accepts th
 | `GET` | `/staff/stream` | **SSE live updates** (ADR-0005). Replay via `Last-Event-ID` |
 | `POST` | `/orders` | Create a Till order (`draft`) |
 | `POST` | `/orders/:id/send-to-kitchen` | `draft → pending`; queues the ticket in KDS New with no material deduction |
-| `POST` | `/orders/:id/accept` | `pending → received`; **writes material deductions** |
+| `POST` | `/orders/:id/accept` | `placed \| pending → received`; **writes material deductions** |
+| `POST` | `/orders/:id/reject` | New-column only (`placed \| pending → rejected`); reason-coded (FR-3.12), no ledger rows |
 | `POST` | `/orders/:id/advance` | Advance status; idempotent on the target state |
 | `POST` | `/orders/:id/revert` | Undo one step within 60s (FR-3.7) |
+| `POST` | `/orders/:id/items/:itemId/tick` | Mark/unmark one line item complete; event-only, no status change |
+| `PUT` | `/staff/kitchen-state/stations` | Set `active_stations` (FR-3.10), feeds FR-2.19's queue-depth input |
 | `POST` | `/orders/:id/collect` | `{ method: "cash" \| "visa" }` on a ready order → `collected` with its attributed payment |
 | `POST` | `/orders/:id/void` | **Requires manager PIN token + reason code** |
 | `POST` | `/orders/:id/refund` | Paid-order reversal (FR-4.8, P1) |
@@ -111,6 +114,29 @@ Semantics that matter:
 - Already in `toStatus` → **200 with the current order**, `Idempotency-Replayed: true`. Not a 409. Baristas double-tap; the contract accommodates reality (FR-3.5).
 - An illegal transition → 409 `INVALID_TRANSITION` with `allowedTransitions` in the payload, so the client can self-correct rather than guess.
 - Entering `ready` enqueues the customer notification **inside the same transaction's commit hook**, so a rolled-back transition can never send a message.
+
+### `POST /orders/:id/reject`
+
+```json
+{ "reasonCode": "item_unavailable", "idempotencyKey": "..." }
+```
+
+`reasonCode` ∈ `too_busy | item_unavailable | closing` (FR-3.12). Legal only from `placed` or
+`pending` — a ticket already Accepted must go through Void instead, never Reject, since Reject's
+whole contract is "nothing was deducted, so nothing is returned" (INV-7: no `rejected` order ever
+has ledger rows). Illegal source status → 409 `INVALID_TRANSITION`. Commit hook enqueues the polite
+decline WhatsApp message; no manager PIN required, unlike Void, because nothing has been committed
+to inventory yet.
+
+### `PUT /staff/kitchen-state/stations`
+
+```json
+{ "activeStations": 3, "idempotencyKey": "..." }
+```
+
+Response: `{ "activeStations": 3, "updatedAt": "..." }`. Sets `kitchen_state.active_stations`
+(`04-data-model.md`); publishes `kitchen_state.changed` on the same SSE stream every connected
+tablet already listens to, so no client polls for it.
 
 ### `POST /orders/:id/void`
 

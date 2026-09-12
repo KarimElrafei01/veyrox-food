@@ -17,6 +17,7 @@ import {
 } from './contexts/messaging/interface/whatsapp-webhook-controller.js';
 import { publicCatalogueController } from './contexts/catalog/interface/public-catalogue-controller.js';
 import type { CatalogueRepository } from './contexts/catalog/infrastructure/catalogue-repository.js';
+import { staffMenuController } from './contexts/catalog/interface/staff-menu-controller.js';
 import type { MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 import { quoteOrderController } from './contexts/ordering/interface/quote-order-controller.js';
 import type { QuoteOrder } from './contexts/ordering/application/quote-order.js';
@@ -29,6 +30,22 @@ import type { CustomerLocaleRepository } from './contexts/ordering/infrastructur
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
 import { orderStatusController } from './contexts/ordering/interface/order-status-controller.js';
 import type { OrderStatusRepository } from './contexts/ordering/infrastructure/order-status-repository.js';
+import { acceptOrderController } from './contexts/ordering/interface/accept-order-controller.js';
+import type { AcceptOrder } from './contexts/ordering/application/accept-order.js';
+import { rejectOrderController } from './contexts/ordering/interface/reject-order-controller.js';
+import type { RejectOrder } from './contexts/ordering/application/reject-order.js';
+import { advanceOrderController } from './contexts/ordering/interface/advance-order-controller.js';
+import type { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
+import { revertOrderController } from './contexts/ordering/interface/revert-order-controller.js';
+import type { RevertOrder } from './contexts/ordering/application/revert-order.js';
+import { tickItemController } from './contexts/ordering/interface/tick-item-controller.js';
+import type { TickItem } from './contexts/ordering/application/tick-item.js';
+import { boardSnapshotController } from './contexts/ordering/interface/board-snapshot-controller.js';
+import type { LoadBoardSnapshot } from './contexts/ordering/application/load-board-snapshot.js';
+import { staffStreamController } from './contexts/ordering/interface/staff-stream-controller.js';
+import type { StreamBoardEvents } from './contexts/ordering/application/stream-board.js';
+import { setActiveStationsController } from './contexts/ordering/interface/set-active-stations-controller.js';
+import type { SetActiveStations } from './contexts/ordering/application/set-active-stations.js';
 import { devSessionController } from './dev/dev-session-controller.js';
 import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
@@ -71,6 +88,55 @@ export interface AppDeps {
     keys: readonly [string, ...string[]];
     etaQueue: EtaQueueRepository;
     etaMetrics: EtaMetricSink;
+  };
+  /** Staff realm (ADR-0023): every KDS mutation shares one device/PIN key pair. */
+  acceptOrder?: {
+    accept: AcceptOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  rejectOrder?: {
+    reject: RejectOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  advanceOrder?: {
+    advance: AdvanceOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  revertOrder?: {
+    revert: RevertOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+  };
+  tickItem?: {
+    tick: TickItem;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  boardSnapshot?: {
+    board: LoadBoardSnapshot;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+  };
+  staffStream?: {
+    stream: StreamBoardEvents;
+    deviceKeys: readonly [string, ...string[]];
+  };
+  setActiveStations?: {
+    setActiveStations: SetActiveStations;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+  };
+  staffMenu?: {
+    catalogue: CatalogueRepository;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
   };
   /** Dev-only session picker (DEV_LOGIN). Off in production. */
   devSessions?: { db: Database; sessionKey: string; catalogue: CatalogueRepository };
@@ -152,6 +218,16 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.quoteOrder) await app.register(quoteOrderController, deps.quoteOrder);
   if (deps.placeOrder) await app.register(placeOrderController, deps.placeOrder);
   if (deps.orderStatus) await app.register(orderStatusController, deps.orderStatus);
+  if (deps.acceptOrder) await app.register(acceptOrderController, deps.acceptOrder);
+  if (deps.rejectOrder) await app.register(rejectOrderController, deps.rejectOrder);
+  if (deps.advanceOrder) await app.register(advanceOrderController, deps.advanceOrder);
+  if (deps.revertOrder) await app.register(revertOrderController, deps.revertOrder);
+  if (deps.tickItem) await app.register(tickItemController, deps.tickItem);
+  if (deps.boardSnapshot) await app.register(boardSnapshotController, deps.boardSnapshot);
+  if (deps.staffStream) await app.register(staffStreamController, deps.staffStream);
+  if (deps.setActiveStations)
+    await app.register(setActiveStationsController, deps.setActiveStations);
+  if (deps.staffMenu) await app.register(staffMenuController, deps.staffMenu);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 
