@@ -33,6 +33,8 @@ import { acceptOrderController } from './contexts/ordering/interface/accept-orde
 import type { AcceptOrder } from './contexts/ordering/application/accept-order.js';
 import { rejectOrderController } from './contexts/ordering/interface/reject-order-controller.js';
 import type { RejectOrder } from './contexts/ordering/application/reject-order.js';
+import { advanceOrderController } from './contexts/ordering/interface/advance-order-controller.js';
+import type { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
 import { devSessionController } from './dev/dev-session-controller.js';
 import { devKitchenController } from './dev/dev-kitchen-controller.js';
 import type { Database } from '@veyroxai/db';
@@ -85,6 +87,12 @@ export interface AppDeps {
   };
   rejectOrder?: {
     reject: RejectOrder;
+    deviceKeys: readonly [string, ...string[]];
+    pinKeys: readonly [string, ...string[]];
+    emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+  };
+  advanceOrder?: {
+    advance: AdvanceOrder;
     deviceKeys: readonly [string, ...string[]];
     pinKeys: readonly [string, ...string[]];
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
@@ -171,6 +179,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.orderStatus) await app.register(orderStatusController, deps.orderStatus);
   if (deps.acceptOrder) await app.register(acceptOrderController, deps.acceptOrder);
   if (deps.rejectOrder) await app.register(rejectOrderController, deps.rejectOrder);
+  if (deps.advanceOrder) await app.register(advanceOrderController, deps.advanceOrder);
   if (deps.devSessions) await app.register(devSessionController, deps.devSessions);
   if (deps.devKitchen) await app.register(devKitchenController, deps.devKitchen);
 

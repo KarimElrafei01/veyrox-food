@@ -26,6 +26,7 @@ import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-
 import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 import { AcceptOrder } from './contexts/ordering/application/accept-order.js';
 import { RejectOrder } from './contexts/ordering/application/reject-order.js';
+import { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
 import { KitchenOrderRepository } from './contexts/ordering/infrastructure/kitchen-order-repository.js';
 
 const log = createLogger({ service: 'api' });
@@ -114,6 +115,7 @@ async function main(): Promise<void> {
     increment: (name, labels) => log.info('order placement metric', { name, ...labels }),
     observe: (name, seconds) => log.info('order placement metric', { name, seconds }),
   };
+  const kitchenOrders = new KitchenOrderRepository(database);
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -186,7 +188,7 @@ async function main(): Promise<void> {
       etaMetrics,
     },
     acceptOrder: {
-      accept: new AcceptOrder(new KitchenOrderRepository(database), etaQueue, etaMetrics),
+      accept: new AcceptOrder(kitchenOrders, etaQueue, etaMetrics),
       deviceKeys,
       pinKeys,
       emit: async (event) => {
@@ -194,11 +196,19 @@ async function main(): Promise<void> {
       },
     },
     rejectOrder: {
-      reject: new RejectOrder(new KitchenOrderRepository(database)),
+      reject: new RejectOrder(kitchenOrders),
       deviceKeys,
       pinKeys,
       emit: async (event) => {
         log.info('OrderRejected', event);
+      },
+    },
+    advanceOrder: {
+      advance: new AdvanceOrder(kitchenOrders, etaQueue),
+      deviceKeys,
+      pinKeys,
+      emit: async (event) => {
+        log.info('OrderAdvanced', event);
       },
     },
     devSessions: devDatabase

@@ -353,6 +353,71 @@ export class KitchenOrderRepository {
     });
   }
 
+  /** Received->Preparing, Preparing->Ready - board taps and tap-to-advance
+   *  (05-api-and-integration-contracts.md §3). Already-in-toStatus is a 200
+   *  no-op (FR-3.5: baristas double-tap), never a 409. */
+  async advance(input: {
+    tenantId: string;
+    orderId: string;
+    toStatus: 'preparing' | 'ready';
+    idempotencyKey: string;
+    staffId: string;
+    now: Date;
+  }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
+    return withTenant(this.db, input.tenantId, async (tx) => {
+      const existingEvent = await tx.query.orderEvents.findFirst({
+        where: and(
+          eq(tables.orderEvents.tenantId, input.tenantId),
+          eq(tables.orderEvents.idempotencyKey, input.idempotencyKey),
+        ),
+      });
+      if (existingEvent) {
+        const ticket = await this.loadTicket(tx, input.tenantId, existingEvent.orderId, input.now);
+        if (!ticket) throw new OrderNotFound();
+        return { ticket, replayed: true };
+      }
+
+      const order = await tx.query.orders.findFirst({
+        where: and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, input.orderId)),
+      });
+      if (!order) throw new OrderNotFound();
+      const status = order.status as OrderStatus;
+
+      if (status === input.toStatus) {
+        const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+        if (!ticket) throw new OrderNotFound();
+        return { ticket, replayed: true };
+      }
+      if (!canTransition(status, input.toStatus))
+        throw new InvalidTransition(legalNextStatuses(status));
+
+      await tx
+        .update(tables.orders)
+        .set(
+          input.toStatus === 'ready'
+            ? { status: 'ready', readyAt: input.now }
+            : { status: 'preparing' },
+        )
+        .where(and(eq(tables.orders.tenantId, input.tenantId), eq(tables.orders.id, order.id)));
+
+      await tx.insert(tables.orderEvents).values({
+        tenantId: input.tenantId,
+        orderId: order.id,
+        fromStatus: status,
+        toStatus: input.toStatus,
+        actorType: 'staff',
+        actorId: input.staffId,
+        source: 'kds',
+        idempotencyKey: input.idempotencyKey,
+        createdAt: input.now,
+      });
+
+      const ticket = await this.loadTicket(tx, input.tenantId, order.id, input.now);
+      if (!ticket) throw new OrderNotFound();
+      return { ticket, replayed: false };
+    });
+  }
+
   private async loadTicket(
     tx: Parameters<Parameters<Database['transaction']>[0]>[0],
     tenantId: string,
