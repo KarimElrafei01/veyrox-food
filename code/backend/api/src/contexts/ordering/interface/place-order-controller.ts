@@ -69,6 +69,9 @@ export async function placeOrderController(
         tenantId = session.tenantId;
         const resolved = await options.resolver.execute(session, new Date());
         tier = resolved.customer.tier;
+        // This is only a fast rejection path. The placement transaction repeats the
+        // check after acquiring its per-customer lock, which remains the invariant.
+        if (resolved.openOrder) throw new OpenOrderLimit(resolved.openOrder);
         const body = parseBody(request);
         const header = idempotencyKeyHeader.parse(request.headers);
 

@@ -24,6 +24,45 @@ describe('EtaQueueRepository', () => {
     await expect(repository.load('tenant')).resolves.toEqual({ state, source: 'redis' });
   });
 
+  it('coalesces concurrent cache misses into a single rebuild transaction', async () => {
+    let transactions = 0;
+    const db = {
+      transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+        transactions += 1;
+        const tx = {
+          execute: async () => undefined,
+          select: () => ({
+            from: () => ({
+              innerJoin: () => ({
+                innerJoin: () => ({
+                  where: async () => {
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                    return [];
+                  },
+                }),
+              }),
+            }),
+          }),
+        };
+        return fn(tx);
+      },
+    };
+    const redisValues = new Map<string, string>();
+    const redis = {
+      get: async (key: string) => redisValues.get(key) ?? null,
+      set: async (key: string, value: string) => {
+        redisValues.set(key, value);
+      },
+    };
+    const repository = new EtaQueueRepository(db as never, redis);
+    await Promise.all([
+      repository.load('tenant'),
+      repository.load('tenant'),
+      repository.load('tenant'),
+    ]);
+    expect(transactions).toBe(1);
+  });
+
   it('keeps the projection aligned with accepted, preparing, and removed tickets', () => {
     const now = new Date('2026-09-06T12:00:00.000Z');
     const accepted = applyEtaQueueEvent(

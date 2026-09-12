@@ -4,11 +4,11 @@ import { schema } from './schema/index.js';
 
 export type Database = ReturnType<typeof createDatabase>;
 
-export function createPool(connectionString = process.env.DATABASE_URL): Pool {
+export function createPool(connectionString = process.env.DATABASE_URL, max = 20): Pool {
   if (!connectionString) {
     throw new Error('DATABASE_URL is not set');
   }
-  return new Pool({ connectionString, max: 10 });
+  return new Pool({ connectionString, max });
 }
 
 export function createDatabase(pool: Pool) {
