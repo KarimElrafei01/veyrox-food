@@ -252,6 +252,7 @@ export const en = {
   'kds.noSession.title': 'No staff session',
   'kds.noSession.body':
     'Run `pnpm --filter @veyroxai/api tokens` and open the printed loginUrl on this device.',
+  'kds.header.wordmark': 'Veyrox KDS',
   'kds.header.hotLine': 'Hot Line 1 · Main Kitchen',
   'kds.header.connected': 'Connected · updated {seconds}s ago',
   'kds.header.connectedNow': 'Connected · updated just now',
@@ -269,6 +270,7 @@ export const en = {
   'kds.metrics.peakVelocity': 'Peak Velocity: {count} tkt/hr',
   'kds.metrics.avgTurnaround': 'Avg Turnaround: {time}',
   'kds.metrics.recallBump': 'Recall Bump',
+  'kds.footer.lineLabel': 'Hot Line Expedition',
   'kds.footer.activeTickets': 'Active Tickets',
   'kds.footer.delayed': 'Delayed (>15m)',
   'kds.footer.avgTurnaround': 'Avg Turnaround',

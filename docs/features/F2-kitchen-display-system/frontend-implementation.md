@@ -37,6 +37,14 @@ not yet true, resolved with the user before coding rather than discovered mid-bu
 3. **No staff login/PIN-entry screen.** None of the 5 Stitch screens are one, and the backend's
    ADR-0023 is deliberately verification-only (no enrollment). This pass reaches every screen via
    dev-injected tokens (`pnpm tokens`); a real PIN-entry UI waits for the full S2–S5 auth realm.
+4. **§1.1's "line-pace summary" has no backend metric.** `backend-implementation.md` §1's
+   `GET /staff/board` response carries `activeTicketCount`, `delayedOver15mCount`,
+   `avgTurnaroundSeconds`, `railCapacity`, and `peakVelocityPerHour` — no line-pace field exists,
+   and the Stitch source's "Optimal (-1.2m)" pill has no defined computation behind it anywhere in
+   `docs/`. Per §0.3's own rule against fabricated data reading as real, this pill is **omitted**
+   from the metrics strip this pass rather than rendered with an invented value (unlike Recall
+   Log/Expo Summary, which are inert-but-present since they show no data). Defining what "line
+   pace" means is a backend-metrics question for a later pass, not a frontend styling one.
 
 ---
 

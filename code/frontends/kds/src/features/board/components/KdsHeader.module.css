@@ -1,0 +1,180 @@
+.header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  block-size: 5rem;
+  background: var(--vx-surface-container);
+  box-shadow: var(--vx-elevation-low);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vx-space-md);
+  padding-inline: var(--vx-gutter);
+}
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-md);
+  min-width: 0;
+}
+.wordmark {
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-sm);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vx-primary);
+  flex-shrink: 0;
+}
+.titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lineLabel {
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--vx-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+}
+.dot {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-age-green);
+}
+.dot.disconnected {
+  background: var(--vx-age-red);
+}
+.statusText {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+}
+.navLink {
+  padding: var(--vx-space-2xs) var(--vx-space-sm);
+  border-radius: var(--vx-radius-lg);
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--vx-on-surface-variant);
+  background: transparent;
+  border: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.navLink.active {
+  color: var(--vx-primary);
+  background: var(--vx-surface-highest);
+  opacity: 1;
+  cursor: default;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-sm);
+  flex-shrink: 0;
+}
+.stations {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+  background: var(--vx-surface-low);
+  padding: var(--vx-space-2xs);
+  border-radius: var(--vx-radius-lg);
+}
+.stationsLabel {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+  color: var(--vx-on-surface-variant);
+  text-transform: uppercase;
+  padding-inline: var(--vx-space-2xs);
+}
+.stepButton {
+  inline-size: var(--vx-tap-min);
+  block-size: var(--vx-tap-min);
+  border-radius: var(--vx-radius-lg);
+  border: none;
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface);
+  font-size: var(--vx-text-headline-md);
+  font-weight: 700;
+  cursor: pointer;
+}
+.stepButton:active {
+  transform: scale(0.95);
+}
+.stepButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.stationsCount {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-timer-sm);
+  color: var(--vx-primary);
+  min-inline-size: 2.5rem;
+  text-align: center;
+}
+
+.iconButton {
+  inline-size: var(--vx-tap-min);
+  block-size: var(--vx-tap-min);
+  border-radius: var(--vx-radius-lg);
+  border: none;
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.pillButton {
+  composes: iconButton;
+  inline-size: auto;
+  padding-inline: var(--vx-space-md);
+  gap: var(--vx-space-2xs);
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge {
+  background: var(--vx-error-container);
+  color: var(--vx-on-error-container);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+  font-weight: 700;
+  padding: 0.0625rem var(--vx-space-2xs);
+  border-radius: var(--vx-radius-pill);
+}
+.avatar {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-primary);
+  color: var(--vx-on-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

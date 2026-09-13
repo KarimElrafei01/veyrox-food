@@ -1,0 +1,64 @@
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vx-space-md);
+  padding: var(--vx-space-sm) var(--vx-gutter);
+  background: var(--vx-surface-lowest);
+}
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-lg);
+  flex-wrap: wrap;
+}
+.live {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+}
+.dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-age-green);
+}
+.liveText {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-sm);
+  font-weight: 700;
+  color: var(--vx-age-green);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-sm);
+  color: var(--vx-on-surface-variant);
+  text-transform: uppercase;
+}
+.statValue {
+  color: var(--vx-on-surface);
+  font-weight: 700;
+}
+.recallButton {
+  block-size: 2rem;
+  padding-inline: var(--vx-space-sm);
+  border-radius: var(--vx-radius-lg);
+  border: none;
+  background: var(--vx-surface-high);
+  color: var(--vx-on-surface);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+  cursor: pointer;
+}
+.recallButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

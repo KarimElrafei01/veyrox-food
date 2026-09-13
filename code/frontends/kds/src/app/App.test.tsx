@@ -1,14 +1,18 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { expect, it } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { beforeEach, expect, it } from 'vitest';
 import { App } from './App.js';
 
-it('renders the kitchen title and flips direction on toggle', () => {
+beforeEach(() => {
+  localStorage.clear();
+});
+
+it('shows the no-session screen when no dev-injected staff session exists', () => {
   render(<App />);
   expect(document.documentElement.dir).toBe('ltr');
-  expect(screen.getByRole('heading').textContent).toBe('Kitchen');
+  expect(screen.getByText('No staff session')).toBeTruthy();
+});
 
-  fireEvent.click(screen.getByRole('button'));
-
-  expect(document.documentElement.dir).toBe('rtl');
-  expect(screen.getByRole('heading').textContent).toBe('المطبخ');
+it('sets the kds-industrial theme on the document root', () => {
+  render(<App />);
+  expect(document.documentElement.dataset.theme).toBe('kds-industrial');
 });

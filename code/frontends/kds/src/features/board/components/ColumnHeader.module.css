@@ -1,0 +1,34 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--vx-space-xs) var(--vx-space-sm);
+  background: var(--vx-surface-high);
+  border-radius: var(--vx-radius-xl);
+}
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-xs);
+}
+.dot {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: var(--vx-radius-pill);
+}
+.title {
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--vx-on-surface);
+}
+.count {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-lg);
+  font-weight: 700;
+  padding: 0.125rem var(--vx-space-xs);
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-surface-lowest);
+}
