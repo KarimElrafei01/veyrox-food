@@ -81,6 +81,14 @@ export {
   type SetActiveStationsResponse,
   boardSnapshotResponse,
   type BoardSnapshotResponse,
+  boardSnapshotStreamEvent,
+  type BoardSnapshotStreamEvent,
+  orderTransitionedEvent,
+  type OrderTransitionedEvent,
+  orderItemTickedEvent,
+  type OrderItemTickedEvent,
+  kitchenStateChangedEvent,
+  type KitchenStateChangedEvent,
 } from './staff-ordering.js';
 export {
   staffMenuOption,

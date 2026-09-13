@@ -118,6 +118,37 @@ export const setActiveStationsResponse = z.object({
 });
 export type SetActiveStationsResponse = z.infer<typeof setActiveStationsResponse>;
 
+/**
+ * GET /staff/stream's per-event `data` payloads (backend doc §3 / sse-events.ts,
+ * stream-board.ts's replay). Not asserted server-side today - the backend
+ * constructs these object literals directly - but the frontend's SSE reducer
+ * parses every frame against these, since a silently-wrong wire shape here
+ * would corrupt live board state with no error until a screenshot caught it.
+ */
+export const orderTransitionedEvent = z.object({
+  orderId: z.uuid(),
+  fromStatus: z.string().nullable(),
+  toStatus: z.string(),
+  actorType: z.string(),
+  occurredAt: z.string().datetime({ offset: true }),
+  order: orderTicket,
+});
+export type OrderTransitionedEvent = z.infer<typeof orderTransitionedEvent>;
+
+export const orderItemTickedEvent = z.object({
+  orderId: z.uuid(),
+  orderItemId: z.uuid(),
+  ticked: z.boolean(),
+  occurredAt: z.string().datetime({ offset: true }),
+});
+export type OrderItemTickedEvent = z.infer<typeof orderItemTickedEvent>;
+
+export const kitchenStateChangedEvent = z.object({
+  activeStations: z.number().int().min(1).max(12),
+  updatedAt: z.string().datetime({ offset: true }),
+});
+export type KitchenStateChangedEvent = z.infer<typeof kitchenStateChangedEvent>;
+
 export const boardSnapshotResponse = z.object({
   // order_events.id is a uuid v7 PK (04-data-model.md §2), not the plain
   // integer the backend doc's own illustrative example shows - uuid v7 sorts
@@ -144,3 +175,9 @@ export const boardSnapshotResponse = z.object({
   traceId: z.string(),
 });
 export type BoardSnapshotResponse = z.infer<typeof boardSnapshotResponse>;
+
+/** The `board.snapshot` SSE event's data (ADR-0005 gap-cap resync,
+ *  stream-board.ts) - the same shape minus `traceId`, which only the HTTP
+ *  response adds. */
+export const boardSnapshotStreamEvent = boardSnapshotResponse.omit({ traceId: true });
+export type BoardSnapshotStreamEvent = z.infer<typeof boardSnapshotStreamEvent>;
