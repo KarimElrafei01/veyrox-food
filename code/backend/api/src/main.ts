@@ -180,6 +180,8 @@ async function main(): Promise<void> {
         new OrderPlacementRepository(database),
         etaQueue,
         etaMetrics,
+        kitchenOrders,
+        sseHub,
       ),
       resolver: new ResolveCustomerSession(new CustomerSessionRepository(database)),
       keys: sessionKeys,

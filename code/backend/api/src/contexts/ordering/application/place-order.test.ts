@@ -4,6 +4,8 @@ import { PlaceOrder, ItemUnavailable, MinimumOrderValue, PriceChanged } from './
 import type { QuoteOrder } from './quote-order.js';
 import type { OrderPlacementRepository } from '../infrastructure/order-placement-repository.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import type { KitchenOrderRepository } from '../infrastructure/kitchen-order-repository.js';
+import type { SseHub } from '../infrastructure/sse-hub.js';
 import type { EtaMetricSink } from './eta-metrics.js';
 
 const ITEM = '11111111-1111-4111-8111-111111111111';
@@ -63,16 +65,29 @@ function subject(options: {
       },
       response: { orderId: 'o1', orderNumber: 'A-001', totalMinor: 9000 },
       replayed: false,
+      event: {
+        id: 'e1',
+        fromStatus: null,
+        toStatus: 'placed',
+        actorType: 'customer',
+        createdAt: new Date('2026-09-07T00:00:00.000Z'),
+      },
     }));
   const orders = {
     findReplay: options.findReplay ?? vi.fn(async () => null),
     place,
   } as unknown as OrderPlacementRepository;
+  const kitchenOrders = {
+    loadTicketById: vi.fn(async () => null),
+  } as unknown as KitchenOrderRepository;
+  const sseHub = { publish: vi.fn() } as unknown as SseHub;
   return {
-    useCase: new PlaceOrder(quote, orders, etaQueue, etaMetrics),
+    useCase: new PlaceOrder(quote, orders, etaQueue, etaMetrics, kitchenOrders, sseHub),
     place,
     findReplay: orders.findReplay,
     etaMetrics,
+    kitchenOrders,
+    sseHub,
   };
 }
 
@@ -112,7 +127,7 @@ describe('PlaceOrder', () => {
           placedAt: '2026-09-07T00:00:00.000Z',
         },
         response: { orderId: 'o1', orderNumber: 'A-001', totalMinor: 9000 },
-        replayed: true,
+        replayed: true as const,
       })),
     });
     const result = await useCase.execute(input);

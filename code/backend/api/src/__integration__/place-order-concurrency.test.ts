@@ -10,6 +10,8 @@ import type { EtaMetricSink } from '../contexts/ordering/application/eta-metrics
 import type { OrderPlacementMetricSink } from '../contexts/ordering/application/order-placement-metrics.js';
 import { OrderPlacementRepository } from '../contexts/ordering/infrastructure/order-placement-repository.js';
 import { EtaQueueRepository } from '../contexts/ordering/infrastructure/eta-queue-repository.js';
+import { KitchenOrderRepository } from '../contexts/ordering/infrastructure/kitchen-order-repository.js';
+import { SseHub } from '../contexts/ordering/infrastructure/sse-hub.js';
 import type { ResolveCustomerSession } from '../contexts/ordering/application/resolve-customer-session.js';
 import type { QuoteOrder } from '../contexts/ordering/application/quote-order.js';
 import type { PricedForQuote } from '../contexts/ordering/interface/quote-body.js';
@@ -79,11 +81,14 @@ describe('POST /public/orders — ten concurrent requests, one idempotency key',
     };
     const quote = { execute: vi.fn(async () => pricedCart) } as unknown as QuoteOrder;
 
+    const sseHub = new SseHub();
     const place = new PlaceOrder(
       quote,
       new OrderPlacementRepository(database),
       etaQueue,
       etaMetrics,
+      new KitchenOrderRepository(database),
+      sseHub,
     );
     const resolver = {
       execute: vi.fn(async () => ({
@@ -179,6 +184,7 @@ describe('POST /public/orders — ten concurrent requests, one idempotency key',
       expect(replayCalls).toHaveLength(CONCURRENCY - 1);
     } finally {
       await app.close();
+      sseHub.stop();
     }
   });
 });

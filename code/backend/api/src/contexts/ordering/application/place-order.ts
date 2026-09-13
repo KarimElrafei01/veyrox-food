@@ -5,9 +5,12 @@ import type {
   PlacedOrder,
 } from '../infrastructure/order-placement-repository.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
+import type { KitchenOrderRepository } from '../infrastructure/kitchen-order-repository.js';
+import type { SseHub } from '../infrastructure/sse-hub.js';
 import type { QuoteOrder } from './quote-order.js';
 import type { PricedForQuote } from '../interface/quote-body.js';
 import { recordEtaRead, type EtaMetricSink } from './eta-metrics.js';
+import { publishOrderTransitioned } from './sse-events.js';
 
 export class ItemUnavailable extends Error {
   constructor(readonly unavailable: readonly { menuItemId: string; modifierOptionId?: string }[]) {
@@ -37,6 +40,8 @@ export class PlaceOrder {
     private readonly orders: OrderPlacementRepository,
     private readonly etaQueue: EtaQueueRepository,
     private readonly etaMetrics: EtaMetricSink,
+    private readonly kitchenOrders: KitchenOrderRepository,
+    private readonly sseHub: Pick<SseHub, 'publish'>,
   ) {}
 
   async execute(input: {
@@ -88,7 +93,7 @@ export class PlaceOrder {
       queue.source === 'degraded' ? 1.5 : 1.25,
     );
 
-    const { order, response, replayed } = await this.orders.place({
+    const placed = await this.orders.place({
       tenantId: input.tenantId,
       customerId: input.customerId,
       menuVersionId: input.menuVersionId,
@@ -109,6 +114,29 @@ export class PlaceOrder {
         traceId: input.traceId,
       },
     });
-    return { order, response, replayed };
+
+    // ADR-0005: a new order's null->placed transition is itself a "KDS status
+    // change" and must propagate the same as accept/advance/revert do - the
+    // New column is otherwise invisible to a connected KDS until it reloads.
+    // Skipped on the race-losing side of a concurrent duplicate placement
+    // (placed.replayed): there is no second event row to describe, and the
+    // winning request already published this exact order.
+    if (!placed.replayed) {
+      const ticket = await this.kitchenOrders.loadTicketById(
+        input.tenantId,
+        placed.order.orderId,
+        new Date(),
+      );
+      if (ticket)
+        publishOrderTransitioned(
+          this.sseHub,
+          input.tenantId,
+          placed.order.orderId,
+          placed.event,
+          ticket,
+        );
+    }
+
+    return { order: placed.order, response: placed.response, replayed: placed.replayed };
   }
 }

@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, sql, withTenant, type Database, tables } from '@veyroxai/db';
 import type { PricedCart } from '@veyroxai/domain';
+import type { KitchenEvent } from './kitchen-order-repository.js';
 
 export class OpenOrderLimit extends Error {
   constructor(readonly existing: { orderId: string; orderNumber: string; status: string }) {
@@ -84,7 +85,10 @@ export class OrderPlacementRepository {
       loyalty: { pointsToEarn: number };
       traceId: string;
     };
-  }): Promise<{ order: PlacedOrder; response: unknown; replayed: boolean }> {
+  }): Promise<
+    | { order: PlacedOrder; response: unknown; replayed: true }
+    | { order: PlacedOrder; response: unknown; replayed: false; event: KitchenEvent }
+  > {
     return withTenant(this.db, input.tenantId, async (tx) => {
       // Serialising this customer's placement prevents two devices bypassing the
       // open-order cap by racing between the SELECT and the INSERT. It also means
@@ -315,15 +319,19 @@ export class OrderPlacementRepository {
         }
       }
 
-      await tx.insert(tables.orderEvents).values({
-        tenantId: input.tenantId,
-        orderId: order.id,
-        fromStatus: null,
-        toStatus: 'placed',
-        actorType: 'customer',
-        actorId: input.customerId,
-        source: 'webview',
-      });
+      const [event] = await tx
+        .insert(tables.orderEvents)
+        .values({
+          tenantId: input.tenantId,
+          orderId: order.id,
+          fromStatus: null,
+          toStatus: 'placed',
+          actorType: 'customer',
+          actorId: input.customerId,
+          source: 'webview',
+        })
+        .returning();
+      if (!event) throw new Error('Order event insert returned no row.');
 
       const response = {
         orderId: order.id,
@@ -352,6 +360,18 @@ export class OrderPlacementRepository {
         },
         response,
         replayed: false,
+        // For the KDS board's SSE publish (ADR-0005 - a brand new order is
+        // itself a "KDS status change" and must propagate the same as any
+        // other transition). Absent on a replay: a duplicate publish of the
+        // same placement would be a harmless no-op for the reducer, but there
+        // is no second event row to describe it with, so it's not attempted.
+        event: {
+          id: event.id,
+          fromStatus: null,
+          toStatus: 'placed' as const,
+          actorType: 'customer',
+          createdAt: event.createdAt,
+        },
       };
     });
   }
