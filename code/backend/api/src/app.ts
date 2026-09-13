@@ -127,6 +127,9 @@ export interface AppDeps {
   staffStream?: {
     stream: StreamBoardEvents;
     deviceKeys: readonly [string, ...string[]];
+    /** Filled in at registration below from the same corsOrigins this app
+     *  already resolves for @fastify/cors - never set this by hand. */
+    corsOrigin?: true | readonly string[];
   };
   setActiveStations?: {
     setActiveStations: SetActiveStations;
@@ -224,7 +227,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (deps.revertOrder) await app.register(revertOrderController, deps.revertOrder);
   if (deps.tickItem) await app.register(tickItemController, deps.tickItem);
   if (deps.boardSnapshot) await app.register(boardSnapshotController, deps.boardSnapshot);
-  if (deps.staffStream) await app.register(staffStreamController, deps.staffStream);
+  if (deps.staffStream)
+    await app.register(staffStreamController, {
+      ...deps.staffStream,
+      corsOrigin: corsOrigins.length > 0 ? corsOrigins : true,
+    });
   if (deps.setActiveStations)
     await app.register(setActiveStationsController, deps.setActiveStations);
   if (deps.staffMenu) await app.register(staffMenuController, deps.staffMenu);

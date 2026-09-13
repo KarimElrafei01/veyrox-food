@@ -22,6 +22,14 @@ export async function staffStreamController(
   options: {
     stream: StreamBoardEvents;
     deviceKeys: readonly [string, ...string[]];
+    /** Same policy @fastify/cors is configured with (app.ts) - `true` reflects
+     *  any origin, or an explicit allow-list. Needed here specifically because
+     *  reply.hijack() (below) hands the raw response to us before Fastify's
+     *  own onSend hooks - including @fastify/cors's - ever run, so a
+     *  cross-origin EventSource (every real deployment: ops.veyroxai.com
+     *  calling api.veyroxai.com, ADR-0009) would otherwise be silently
+     *  CORS-blocked on this one route only. */
+    corsOrigin: true | readonly string[];
   },
 ): Promise<void> {
   app.get('/staff/stream', { schema: { querystring: query } }, async (request, reply) => {
@@ -42,11 +50,21 @@ export async function staffStreamController(
     // event. reply.hijack() hands the raw response to us - Fastify will not
     // attempt to send its own reply once we do.
     reply.hijack();
+    const requestOrigin = request.headers.origin;
+    const allowOrigin =
+      options.corsOrigin === true
+        ? (requestOrigin ?? '*')
+        : requestOrigin && options.corsOrigin.includes(requestOrigin)
+          ? requestOrigin
+          : null;
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
+      // No credentials on this request (token rides the query string, not a
+      // cookie), so echoing the origin - or `*` when reflecting any - is safe.
+      ...(allowOrigin ? { 'Access-Control-Allow-Origin': allowOrigin } : {}),
     });
     reply.raw.write(': connected\n\n');
 
