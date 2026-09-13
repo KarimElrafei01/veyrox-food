@@ -1,6 +1,5 @@
 import { useT } from '@veyroxai/ui';
-import { useBoard } from '../hooks/useBoard.js';
-import { useNow } from '../hooks/useNow.js';
+import type { UseBoardResult } from '../hooks/useBoard.js';
 import { KdsHeader } from '../components/KdsHeader.js';
 import { MetricsStrip } from '../components/MetricsStrip.js';
 import { ColumnHeader } from '../components/ColumnHeader.js';
@@ -13,22 +12,26 @@ const COLUMNS: readonly ColumnKey[] = ['new', 'received', 'preparing', 'ready'];
 
 /** The KDS's home screen (§1.1) - persistent shell shared by every other
  *  screen in this feature, which are overlays on top of this one's live
- *  board state, not separate data-fetching roots (§1.6). */
+ *  board state, not separate data-fetching roots (§1.6).
+ *
+ *  `board`/`now` are owned by the app shell (`src/app/App.tsx`), not this
+ *  component - the accept-gate overlay (screen 3.2) needs the same live
+ *  ticket data and the same clock (its waiting-time timer is explicitly the
+ *  FR-3.13 age timer shared with the New card behind it, not a second
+ *  clock), and ADR-0018 forbids one feature importing another's hooks, so
+ *  the single `useBoard`/`useNow` call has to live above both. */
 export function BoardScreen({
-  deviceToken,
-  onSessionInvalid,
+  board,
+  now,
   onOpenAcceptGate,
   onOpenDetail,
 }: {
-  deviceToken: string;
-  onSessionInvalid: () => void;
+  board: UseBoardResult;
+  now: Date;
   onOpenAcceptGate: (orderId: string) => void;
   onOpenDetail: (orderId: string) => void;
 }): React.JSX.Element {
   const { t } = useT();
-  const now = useNow();
-  const board = useBoard({ deviceToken, onSessionInvalid });
-
   const { state } = board;
   if (board.loading || !state) {
     return (

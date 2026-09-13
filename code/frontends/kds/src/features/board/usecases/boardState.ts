@@ -42,6 +42,23 @@ function columnForStatus(status: string): ColumnKey | null {
   return null;
 }
 
+/** Screens 3.2/3.4 are overlays on this same state (§1.6) - the app shell
+ *  looks a ticket up here rather than either feature importing the other's
+ *  internals (ADR-0018 forbids cross-feature imports both ways). */
+export function findTicketInState(state: BoardState, orderId: string): OrderTicket | null {
+  const columns: OrderTicket[][] = [
+    state.columns.new,
+    state.columns.received,
+    state.columns.preparing,
+    state.columns.ready,
+  ];
+  for (const column of columns) {
+    const found = column.find((ticket) => ticket.orderId === orderId);
+    if (found) return found;
+  }
+  return null;
+}
+
 function removeFromAllColumns(columns: BoardColumns, orderId: string): BoardColumns {
   return {
     new: columns.new.filter((ticket) => ticket.orderId !== orderId),

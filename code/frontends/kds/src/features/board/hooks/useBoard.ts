@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 import { ApiError } from '@veyroxai/api-client';
-import type { OrderTicket } from '@veyroxai/contracts';
 import type { StaffStream } from '@veyroxai/ops-core';
 import { getApiBaseUrl, getApiClient } from '../../../shared/api.js';
 import { createBoardRepo, type BoardRepo } from '../repo/boardRepo.js';
@@ -9,6 +8,7 @@ import { subscribeToBoardStream } from '../datasource/subscribeToBoardStream.js'
 import {
   applyStreamEvent,
   boardStateFromSnapshot,
+  findTicketInState,
   type BoardState,
 } from '../usecases/boardState.js';
 
@@ -17,20 +17,6 @@ function isSessionError(error: unknown): boolean {
     error instanceof ApiError &&
     (error.code === 'SESSION_INVALID' || error.code === 'SESSION_EXPIRED')
   );
-}
-
-function findTicket(state: BoardState, orderId: string): OrderTicket | null {
-  const columns: OrderTicket[][] = [
-    state.columns.new,
-    state.columns.received,
-    state.columns.preparing,
-    state.columns.ready,
-  ];
-  for (const column of columns) {
-    const found = column.find((ticket) => ticket.orderId === orderId);
-    if (found) return found;
-  }
-  return null;
 }
 
 export interface UseBoardResult {
@@ -106,7 +92,7 @@ export function useBoard(options: {
 
   const advance = useCallback(
     async (orderId: string, toStatus: 'preparing' | 'ready') => {
-      const before = state ? findTicket(state, orderId) : null;
+      const before = state ? findTicketInState(state, orderId) : null;
       if (!before) return;
       // Optimistic status-only patch (DESIGN.md "immediate scale shift... solid
       // contrast inversion" - tactile feedback must be instant); the fuller

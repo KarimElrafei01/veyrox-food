@@ -2,7 +2,7 @@ import { useT } from '@veyroxai/ui';
 import { Icon } from '@veyroxai/ui';
 import type { OrderTicket } from '@veyroxai/contracts';
 import styles from './ItemLine.module.css';
-import { nameOf } from './nameOf.js';
+import { nameOf } from '../../../shared/nameOf.js';
 
 type Item = OrderTicket['items'][number];
 

@@ -1,0 +1,43 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-sm);
+  padding: var(--vx-space-md);
+  background: var(--vx-surface-lowest);
+  border-radius: var(--vx-radius-lg);
+}
+.prompt {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--vx-error);
+}
+.chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--vx-space-sm);
+}
+.chip {
+  block-size: var(--vx-tap-min);
+  border-radius: var(--vx-radius-lg);
+  border: none;
+  background: var(--vx-surface-container);
+  color: var(--vx-on-surface);
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.chip:hover:not(:disabled) {
+  background: var(--vx-error-container);
+  color: var(--vx-on-error-container);
+}
+.chip:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

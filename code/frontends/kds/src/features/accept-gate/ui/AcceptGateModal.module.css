@@ -1,0 +1,193 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--vx-surface-lowest) 80%, transparent);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--vx-space-md);
+}
+.card {
+  width: 100%;
+  max-width: 42rem;
+  max-height: 90vh;
+  background: var(--vx-surface-container);
+  border-radius: var(--vx-radius-lg);
+  box-shadow: var(--vx-elevation-high);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pulseBar {
+  block-size: 0.5rem;
+  background: var(--vx-primary-container);
+  position: relative;
+}
+.pulseBar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--vx-primary);
+  animation: pulseBar 1.5s ease-in-out infinite;
+}
+@keyframes pulseBar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.metaStripe {
+  padding: var(--vx-space-xs) var(--vx-space-lg);
+  background: var(--vx-surface-highest);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--vx-on-surface-variant);
+}
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+}
+.priority {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+  font-weight: 700;
+  color: var(--vx-on-surface);
+}
+.priorityDot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--vx-radius-pill);
+  background: var(--vx-primary);
+}
+.body {
+  padding: var(--vx-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-md);
+  overflow-y: auto;
+}
+.noteBlock {
+  padding: var(--vx-space-md);
+  border-radius: var(--vx-radius-lg);
+  background: var(--vx-surface-lowest);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vx-space-sm);
+}
+.noteIcon {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--vx-radius-lg);
+  background: var(--vx-secondary-container);
+  color: var(--vx-on-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.noteLabel {
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--vx-secondary);
+}
+.noteText {
+  margin: 0.25rem 0 0;
+  font-family: var(--vx-font-body);
+  font-size: var(--vx-text-body-md);
+  font-weight: 600;
+  color: var(--vx-on-surface);
+}
+.actions {
+  padding: var(--vx-space-lg);
+  background: var(--vx-surface-high);
+  box-shadow: var(--vx-elevation-high);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-md);
+}
+.decisionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--vx-space-md);
+}
+.rejectButton {
+  block-size: var(--vx-tap-target);
+  padding-inline: var(--vx-space-lg);
+  border-radius: var(--vx-radius-lg);
+  border: none;
+  background: var(--vx-surface-highest);
+  color: var(--vx-on-surface);
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-2xs);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.rejectButton.rejectActive {
+  background: var(--vx-error-container);
+  color: var(--vx-on-error-container);
+}
+.rejectButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.acceptButton {
+  flex: 1;
+  block-size: var(--vx-tap-target);
+  border-radius: var(--vx-radius-lg);
+  border: none;
+  background: var(--vx-primary-container);
+  color: var(--vx-on-primary);
+  font-family: var(--vx-font-display);
+  font-size: var(--vx-text-headline-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vx-space-sm);
+  cursor: pointer;
+}
+.acceptButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.acceptButton:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+.error {
+  margin: 0;
+  text-align: center;
+  color: var(--vx-error);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+}
+.subnote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vx-space-2xs);
+  color: var(--vx-on-surface-variant);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-text-label-md);
+  text-align: center;
+}
