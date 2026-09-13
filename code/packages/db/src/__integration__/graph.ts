@@ -2,8 +2,10 @@ import type { Pool } from 'pg';
 import { createDatabase } from '../client.js';
 import {
   customers,
+  customerLocaleChanges,
   customerSuppressions,
   inboundEvents,
+  kitchenState,
   loyaltyLedger,
   menuCategories,
   menuItemModifierGroups,
@@ -246,6 +248,14 @@ export async function seedTenantGraph(pool: Pool, slug: string): Promise<string>
     key: 'kitchen.auto_accept',
     value: false,
   });
+  await db.insert(customerLocaleChanges).values({
+    tenantId: t,
+    customerId: customer!.id,
+    idempotencyKey: `locale-${slug}`,
+    locale: 'en',
+    sequence: 1,
+  });
+  await db.insert(kitchenState).values({ tenantId: t, updatedAt: now });
 
   return t;
 }
