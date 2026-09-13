@@ -1,4 +1,14 @@
-import { and, eq, inArray, isNull, sql, withTenant, type Database, tables } from '@veyroxai/db';
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  sql,
+  withTenant,
+  type Database,
+  tables,
+} from '@veyroxai/db';
 import type { OrderTicket } from '@veyroxai/contracts';
 import { REVERT_WINDOW_SECONDS, type EtaCartItem, type LoyaltyTier } from '@veyroxai/domain';
 import {
@@ -774,12 +784,17 @@ export class KitchenOrderRepository {
           )
           .orderBy(tables.orders.createdAt),
         tx
-          .select({ maxId: sql<string | null>`max(${tables.orderEvents.id})` })
+          .select({ id: tables.orderEvents.id })
           .from(tables.orderEvents)
-          .where(eq(tables.orderEvents.tenantId, input.tenantId)),
+          .where(eq(tables.orderEvents.tenantId, input.tenantId))
+          // Postgres has no max(uuid) aggregate (uuid is orderable via btree,
+          // but no aggregate is registered for it) - ORDER BY + LIMIT 1 finds
+          // the same row without needing one.
+          .orderBy(desc(tables.orderEvents.id))
+          .limit(1),
         this.loadTurnaroundMetrics(tx, input.tenantId),
       ]);
-      const asOfEventId = maxEventRow[0]?.maxId ?? null;
+      const asOfEventId = maxEventRow[0]?.id ?? null;
 
       if (!liveOrders.length) {
         return {
@@ -1000,11 +1015,14 @@ export class KitchenOrderRepository {
    *  against the gap cap or missed between "read" and "subscribe." */
   async currentMaxEventId(tenantId: string): Promise<string | null> {
     return withTenant(this.db, tenantId, async (tx) => {
+      // Postgres has no max(uuid) aggregate - see loadBoardSnapshot's identical note.
       const [row] = await tx
-        .select({ maxId: sql<string | null>`max(${tables.orderEvents.id})` })
+        .select({ id: tables.orderEvents.id })
         .from(tables.orderEvents)
-        .where(eq(tables.orderEvents.tenantId, tenantId));
-      return row?.maxId ?? null;
+        .where(eq(tables.orderEvents.tenantId, tenantId))
+        .orderBy(desc(tables.orderEvents.id))
+        .limit(1);
+      return row?.id ?? null;
     });
   }
 
