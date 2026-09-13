@@ -52,3 +52,15 @@ export function formatCountdown(ms: number): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
+
+/** ms → `MM:SS`, floored at zero, minutes uncapped past 99 (a KDS ticket timer
+ *  running that long is itself the alarm). Every KDS elapsed/remaining timer
+ *  uses this, never formatCountdown's HH:MM:SS - the design's monospaced
+ *  timers are two two-digit groups, per DESIGN.md's timer-display type scale. */
+export function formatMmSs(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(m)}:${pad(s)}`;
+}

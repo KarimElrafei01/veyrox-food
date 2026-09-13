@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-export type ThemeName = 'brew-baladi';
+/** 'kds-industrial' is dark-only and never switched at runtime (kds-industrial.css's
+ *  own doc comment) - code/frontends/kds still uses ThemeProvider rather than
+ *  hand-rolling a second way to set data-theme, it just never calls setTheme. */
+export type ThemeName = 'brew-baladi' | 'kds-industrial';
 
 const STORAGE_KEY = 'vx.theme';
 
