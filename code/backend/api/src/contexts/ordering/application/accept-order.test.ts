@@ -66,7 +66,7 @@ describe('AcceptOrder', () => {
       tenantId: 't1',
       orderId: 'o1',
       idempotencyKey: 'key-1',
-      staffId: 'staff-1',
+      actor: { type: 'staff', staffId: 'staff-1' },
       now,
     });
     expect(accept).toHaveBeenCalledWith(
@@ -74,7 +74,7 @@ describe('AcceptOrder', () => {
         tenantId: 't1',
         orderId: 'o1',
         idempotencyKey: 'key-1',
-        staffId: 'staff-1',
+        actor: { type: 'staff', staffId: 'staff-1' },
         etaMinutes: expect.objectContaining({
           lowerMinutes: expect.any(Number),
           upperMinutes: expect.any(Number),
@@ -90,7 +90,7 @@ describe('AcceptOrder', () => {
         tenantId: 't1',
         orderId: 'missing',
         idempotencyKey: 'key-1',
-        staffId: 's1',
+        actor: { type: 'staff', staffId: 's1' },
         now,
       }),
     ).rejects.toThrow(OrderNotFound);
@@ -103,7 +103,7 @@ describe('AcceptOrder', () => {
       tenantId: 't1',
       orderId: 'o1',
       idempotencyKey: 'key-1',
-      staffId: 'staff-1',
+      actor: { type: 'staff', staffId: 'staff-1' },
       now,
     });
     expect(replace).toHaveBeenCalledTimes(1);
@@ -119,7 +119,7 @@ describe('AcceptOrder', () => {
       tenantId: 't1',
       orderId: 'o1',
       idempotencyKey: 'key-1',
-      staffId: 'staff-1',
+      actor: { type: 'staff', staffId: 'staff-1' },
       now,
     });
     expect(replace).not.toHaveBeenCalled();
@@ -131,7 +131,7 @@ describe('AcceptOrder', () => {
       tenantId: 't1',
       orderId: 'o1',
       idempotencyKey: 'key-1',
-      staffId: 'staff-1',
+      actor: { type: 'staff', staffId: 'staff-1' },
       now,
     });
     const call = vi.mocked(accept).mock.calls[0]?.[0] as {

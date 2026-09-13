@@ -18,7 +18,7 @@ describe('RejectOrder', () => {
       orderId: 'o1',
       reasonCode: 'item_unavailable',
       idempotencyKey: 'key-1',
-      staffId: 'staff-1',
+      actor: { type: 'staff', staffId: 'staff-1' },
       now,
     });
 
@@ -27,7 +27,7 @@ describe('RejectOrder', () => {
       orderId: 'o1',
       reasonCode: 'item_unavailable',
       idempotencyKey: 'key-1',
-      staffId: 'staff-1',
+      actor: { type: 'staff', staffId: 'staff-1' },
       now,
     });
   });

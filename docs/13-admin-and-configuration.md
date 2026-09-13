@@ -76,7 +76,7 @@ This is an **allowlist, not a denylist.** The configurable surface is enumerated
 |---|---|
 | **Ordering** | WhatsApp ordering on/off · accepted payment methods (cash, visa) · max open unpaid orders · abandon window · ask-table-number · upsell prompt · cross-sell screen · minimum order value |
 | **Menu** | Full CRUD (§4) · availability · draft/publish |
-| **Kitchen** | Active stations default · ETA parallelism factor (bounded 0.2–0.8) · auto-advance timeouts · Gold priority sort on/off |
+| **Kitchen** | Active stations default · ETA parallelism factor (bounded 0.2–0.8) · auto-advance timeouts · Gold priority sort on/off · auto-accept incoming orders on/off (`kitchen.auto_accept`, ADR-0024 — skips the manual Accept tap, at the owner's own risk) |
 | **Loyalty** | Program on/off · points per EGP (bounded) · tier thresholds and multipliers (bounded) · perks per tier |
 | **Discounts** | Create/expire codes · caps on depth and duration |
 | **Digest** | On/off · **time of day** · recipients · language · which sections appear |

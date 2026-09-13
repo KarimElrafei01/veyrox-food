@@ -1,5 +1,6 @@
 import { estimateEta } from '@veyroxai/domain';
 import type { OrderTicket } from '@veyroxai/contracts';
+import type { OrderActor } from '../domain/order-state-machine.js';
 import type { EtaQueueRepository } from '../infrastructure/eta-queue-repository.js';
 import { applyEtaQueueEvent } from '../infrastructure/eta-queue-repository.js';
 import type { KitchenOrderRepository } from '../infrastructure/kitchen-order-repository.js';
@@ -22,7 +23,7 @@ export class AcceptOrder {
     tenantId: string;
     orderId: string;
     idempotencyKey: string;
-    staffId: string;
+    actor: OrderActor;
     now: Date;
   }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
     const cart = await this.repository.loadCartForEta(input.tenantId, input.orderId);
@@ -47,7 +48,7 @@ export class AcceptOrder {
       tenantId: input.tenantId,
       orderId: input.orderId,
       idempotencyKey: input.idempotencyKey,
-      staffId: input.staffId,
+      actor: input.actor,
       now: input.now,
       etaMinutes: { lowerMinutes: estimate.lowerMinutes, upperMinutes: estimate.upperMinutes },
     });

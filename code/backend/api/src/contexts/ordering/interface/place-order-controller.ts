@@ -1,7 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { idempotencyKeyHeader, placeOrderRequest } from '@veyroxai/contracts';
-import { MenuVersionGone, ModifierGroupRequired, ModifierSelectionInvalid } from '@veyroxai/domain';
+import {
+  KNOWN_SETTINGS,
+  MenuVersionGone,
+  ModifierGroupRequired,
+  ModifierSelectionInvalid,
+} from '@veyroxai/domain';
 import type { LoyaltyTier } from '@veyroxai/domain';
+import type { Database } from '@veyroxai/db';
 import {
   verifyCustomerSession,
   SessionExpired,
@@ -14,6 +20,8 @@ import {
   MinimumOrderValue,
   PriceChanged,
 } from '../application/place-order.js';
+import type { AutoAcceptIncomingOrder } from '../application/auto-accept-incoming-order.js';
+import { getBooleanTenantSetting } from '../infrastructure/tenant-settings-repository.js';
 import type { OrderPlacementMetricSink } from '../application/order-placement-metrics.js';
 import {
   type ResolveCustomerSession,
@@ -39,6 +47,7 @@ export async function placeOrderController(
     etaMetrics: EtaMetricSink;
     metrics: OrderPlacementMetricSink;
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+    autoAccept?: { service: AutoAcceptIncomingOrder; db: Database };
   },
 ): Promise<void> {
   app.post(
@@ -93,6 +102,18 @@ export async function placeOrderController(
 
         options.metrics.increment('orders_placed_total', { channel: 'whatsapp' });
         await options.emit({ orderId: placed.order.orderId, tenantId: session.tenantId });
+
+        // ADR-0024: fires after the placement above has already committed and
+        // been responded to in substance - a transient problem here must
+        // never turn an already-successful placement into a failed request.
+        // The response below is unchanged either way (ADR-0024's Consequences:
+        // it's a frozen ADR-0020 snapshot regardless of what happens next).
+        await maybeAutoAccept(options.autoAccept, request, {
+          tenantId: session.tenantId,
+          orderId: placed.order.orderId,
+          idempotencyKey: header['idempotency-key'],
+        });
+
         return reply.status(201).send(placed.response);
       } catch (error) {
         if (error instanceof SessionExpired) return reject('SESSION_EXPIRED', 401);
@@ -150,4 +171,28 @@ function parseBody(request: FastifyRequest): ReturnType<typeof placeOrderRequest
     ? (JSON.parse(request.body.toString('utf8')) as unknown)
     : request.body;
   return placeOrderRequest.parse(raw);
+}
+
+/** ADR-0024. A guard clause per condition, not nested ifs - this only ever
+ *  runs after placement has already succeeded and been responded to, so its
+ *  own failure must be observed (logged), never thrown. */
+async function maybeAutoAccept(
+  autoAccept: { service: AutoAcceptIncomingOrder; db: Database } | undefined,
+  request: FastifyRequest,
+  order: { tenantId: string; orderId: string; idempotencyKey: string },
+): Promise<void> {
+  if (!autoAccept) return;
+  const autoAcceptOn = await getBooleanTenantSetting(
+    autoAccept.db,
+    order.tenantId,
+    KNOWN_SETTINGS.kitchenAutoAccept,
+  );
+  if (!autoAcceptOn) return;
+
+  const outcome = await autoAccept.service.execute({ ...order, now: new Date() });
+  if (outcome.outcome !== 'left_pending') return;
+  request.log.warn(
+    { err: outcome.error, orderId: order.orderId },
+    'auto-accept failed unexpectedly; order left in New for manual handling',
+  );
 }

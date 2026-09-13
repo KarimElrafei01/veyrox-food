@@ -26,6 +26,7 @@ import { OrderStatusRepository } from './contexts/ordering/infrastructure/order-
 import { R2MenuImageStore } from './contexts/catalog/infrastructure/r2-menu-image-store.js';
 import { AcceptOrder } from './contexts/ordering/application/accept-order.js';
 import { RejectOrder } from './contexts/ordering/application/reject-order.js';
+import { AutoAcceptIncomingOrder } from './contexts/ordering/application/auto-accept-incoming-order.js';
 import { AdvanceOrder } from './contexts/ordering/application/advance-order.js';
 import { RevertOrder } from './contexts/ordering/application/revert-order.js';
 import { TickItem } from './contexts/ordering/application/tick-item.js';
@@ -125,6 +126,10 @@ async function main(): Promise<void> {
   const kitchenOrders = new KitchenOrderRepository(database);
   const sseHub = new SseHub();
   const boardSnapshot = new LoadBoardSnapshot(kitchenOrders, etaQueue);
+  // Shared with `placeOrder.autoAccept` below (ADR-0024) - an auto-accepted
+  // order runs the exact same Accept/Reject transaction a barista's tap would.
+  const acceptOrderUseCase = new AcceptOrder(kitchenOrders, etaQueue, etaMetrics, sseHub);
+  const rejectOrderUseCase = new RejectOrder(kitchenOrders, sseHub);
 
   const app = await buildApp({
     pingPostgres: async () => {
@@ -191,6 +196,10 @@ async function main(): Promise<void> {
       emit: async (event) => {
         log.info('OrderPlaced', event);
       },
+      autoAccept: {
+        service: new AutoAcceptIncomingOrder(acceptOrderUseCase, rejectOrderUseCase),
+        db: database,
+      },
     },
     orderStatus: {
       orders: new OrderStatusRepository(database),
@@ -199,7 +208,7 @@ async function main(): Promise<void> {
       etaMetrics,
     },
     acceptOrder: {
-      accept: new AcceptOrder(kitchenOrders, etaQueue, etaMetrics, sseHub),
+      accept: acceptOrderUseCase,
       deviceKeys,
       pinKeys,
       emit: async (event) => {
@@ -207,7 +216,7 @@ async function main(): Promise<void> {
       },
     },
     rejectOrder: {
-      reject: new RejectOrder(kitchenOrders, sseHub),
+      reject: rejectOrderUseCase,
       deviceKeys,
       pinKeys,
       emit: async (event) => {

@@ -72,3 +72,11 @@ If prepayment is wanted later, the original design stands and is unchanged in su
 - A reconciliation job every 5 minutes catches whatever the webhook loses to outages, partitions, and deploys.
 
 Nothing in v1 forecloses this. Orders carry `payment_method` and a `payments` row from day one; adding an online method is a new method value, a new provider integration, and an earlier payment moment in a state machine that already supports paying at a point other than collection.
+
+## Related: ADR-0024
+
+ADR-0024 adds a tenant-optional exception to the accept gate above (`kitchen.auto_accept`): a café
+may opt its own orders straight past Accept, at its own risk. The analysis in "Why the accept gate
+is not optional" is unchanged and the gate stays on, by default, for every café — this is not the
+"cash on pickup with no accept gate" alternative rejected above, which would have removed it for
+everyone.

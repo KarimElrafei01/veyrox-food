@@ -16,6 +16,7 @@ import {
   isNewTicket,
   isRevertEligible,
   legalNextStatuses,
+  type OrderActor,
   type OrderStatus,
 } from '../domain/order-state-machine.js';
 import { buildOrderTicket, type OrderTicketSource } from '../application/order-ticket-view.js';
@@ -85,6 +86,20 @@ function toKitchenEvent(row: {
     actorType: row.actorType,
     createdAt: row.createdAt,
   };
+}
+
+/** ADR-0024: an automatic decision is never attributed to a fabricated staff
+ *  id, and its `order_events.source` says exactly what decided it - a café's
+ *  audit trail must be able to tell "a barista decided this" apart from "the
+ *  setting decided this," forever. */
+function actorFields(actor: OrderActor): { actorType: string; actorId: string | null } {
+  return actor.type === 'staff'
+    ? { actorType: 'staff', actorId: actor.staffId }
+    : { actorType: 'system', actorId: null };
+}
+
+function eventSourceFor(actor: OrderActor): string {
+  return actor.type === 'staff' ? 'kds' : 'auto_accept';
 }
 
 /** Converts a NUMERIC(14,6) recipe-line quantity, scaled by an integer order
@@ -159,7 +174,7 @@ export class KitchenOrderRepository {
     tenantId: string;
     orderId: string;
     idempotencyKey: string;
-    staffId: string;
+    actor: OrderActor;
     now: Date;
     etaMinutes: { lowerMinutes: number; upperMinutes: number };
   }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
@@ -328,8 +343,7 @@ export class KitchenOrderRepository {
               orderItemId: item.id,
               recipeVersionId: item.recipeVersionId,
               unitCostSnapshot: costByMaterial.get(line.materialId) ?? null,
-              actorType: 'staff',
-              actorId: input.staffId,
+              ...actorFields(input.actor),
             }));
         });
         if (ledgerRows.length) await tx.insert(tables.materialLedger).values(ledgerRows);
@@ -364,9 +378,8 @@ export class KitchenOrderRepository {
             orderId: order.id,
             fromStatus: status,
             toStatus: 'received',
-            actorType: 'staff',
-            actorId: input.staffId,
-            source: 'kds',
+            ...actorFields(input.actor),
+            source: eventSourceFor(input.actor),
             idempotencyKey: input.idempotencyKey,
             createdAt: input.now,
           })
@@ -397,7 +410,7 @@ export class KitchenOrderRepository {
     orderId: string;
     reasonCode: 'too_busy' | 'item_unavailable' | 'closing';
     idempotencyKey: string;
-    staffId: string;
+    actor: OrderActor;
     now: Date;
   }): Promise<{ ticket: OrderTicket; replayed: boolean; event?: KitchenEvent }> {
     try {
@@ -448,10 +461,9 @@ export class KitchenOrderRepository {
             orderId: order.id,
             fromStatus: status,
             toStatus: 'rejected',
-            actorType: 'staff',
-            actorId: input.staffId,
+            ...actorFields(input.actor),
             reason: input.reasonCode,
-            source: 'kds',
+            source: eventSourceFor(input.actor),
             idempotencyKey: input.idempotencyKey,
             createdAt: input.now,
           })

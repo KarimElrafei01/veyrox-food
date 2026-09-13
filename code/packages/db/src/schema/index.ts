@@ -5,6 +5,7 @@ export * from './ledger.js';
 export * from './events.js';
 export * from './messaging.js';
 export * from './kitchen.js';
+export * from './settings.js';
 
 import * as tenants from './tenants.js';
 import * as catalog from './catalog.js';
@@ -13,6 +14,7 @@ import * as ledger from './ledger.js';
 import * as events from './events.js';
 import * as messaging from './messaging.js';
 import * as kitchen from './kitchen.js';
+import * as settings from './settings.js';
 
 /** Every table object, for tooling that must enumerate the schema (e.g. the
  *  cross-tenant leak suite — a new table cannot be added without being covered). */
@@ -24,4 +26,5 @@ export const schema = {
   ...events,
   ...messaging,
   ...kitchen,
+  ...settings,
 };

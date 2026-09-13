@@ -29,7 +29,7 @@ export const orderEvents = pgTable(
     actorType: text('actor_type').notNull(), // customer | staff | system | webhook
     actorId: uuid('actor_id'),
     reason: text('reason'),
-    source: text('source'), // till | kds | webview | job
+    source: text('source'), // till | kds | webview | job | auto_accept
     metadata: jsonb('metadata'),
     idempotencyKey: text('idempotency_key'),
     createdAt: ts('created_at').notNull().defaultNow(),

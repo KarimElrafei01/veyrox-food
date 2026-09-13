@@ -1,4 +1,5 @@
 import type { OrderTicket } from '@veyroxai/contracts';
+import type { OrderActor } from '../domain/order-state-machine.js';
 import type { KitchenOrderRepository } from '../infrastructure/kitchen-order-repository.js';
 import { OrderNotFound } from '../infrastructure/kitchen-order-repository.js';
 import type { SseHub } from '../infrastructure/sse-hub.js';
@@ -17,7 +18,7 @@ export class RejectOrder {
     orderId: string;
     reasonCode: 'too_busy' | 'item_unavailable' | 'closing';
     idempotencyKey: string;
-    staffId: string;
+    actor: OrderActor;
     now: Date;
   }): Promise<{ ticket: OrderTicket; replayed: boolean }> {
     const result = await this.repository.reject(input);

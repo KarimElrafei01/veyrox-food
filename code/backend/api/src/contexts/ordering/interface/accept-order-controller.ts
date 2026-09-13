@@ -41,7 +41,7 @@ export async function acceptOrderController(
           tenantId: staff.tenantId,
           orderId,
           idempotencyKey,
-          staffId: staff.staffId,
+          actor: { type: 'staff', staffId: staff.staffId },
           now: new Date(),
         });
 

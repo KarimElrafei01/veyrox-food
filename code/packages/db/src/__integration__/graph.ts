@@ -31,6 +31,7 @@ import {
   storeClosures,
   storeHours,
   tenants,
+  tenantSettings,
   tierCelebrations,
 } from '../schema/index.js';
 
@@ -239,6 +240,11 @@ export async function seedTenantGraph(pool: Pool, slug: string): Promise<string>
     purpose: 'order_confirmation',
     bodyHash: `body-${slug}`,
     status: 'sent',
+  });
+  await db.insert(tenantSettings).values({
+    tenantId: t,
+    key: 'kitchen.auto_accept',
+    value: false,
   });
 
   return t;

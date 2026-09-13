@@ -79,6 +79,7 @@ Nothing here is a feature, and all of it is load-bearing. Every day spent on thi
 - `packages/ops-core`: device enrollment, staff PIN, **SSE stream with `Last-Event-ID` replay and gap-cap resync**, staleness banner (FR-3.6, ADR-0005) — built once, consumed by `code/frontends/kds` and `code/frontends/till`.
 - KDS four-column board (**New** / Received / Preparing / Ready), tap-to-advance, 60-second undo, Gold priority sort.
 - **Kitchen-accept gate** (FR-3.11–3.13): Accept deducts materials and starts the ETA clock; Reject sends a polite message and deducts nothing; stale-New escalation.
+- **Auto-accept exception** (ADR-0024): a tenant preference (`kitchen.auto_accept`) that performs the same Accept transition automatically for both channels, auto-rejecting on `item_unavailable` instead of leaving an order unattended in New. Pulls forward a narrow slice of Sprint 7's settings tables (`setting_definitions` + `tenant_settings` only, not the generic resolver) — see that sprint's note below.
 - Auto "order ready" message on transition to `ready`.
 - Cashier records collection + payment method, closing the order and accruing loyalty in one transaction.
 - ETA v1 (`domain/eta.ts`) with queue depth from the live board; range display; `eta_error_seconds` recorded on every order.
@@ -135,7 +136,7 @@ The most important sprint in the project.
 
 **New sprint.** This is a pilot blocker, and it was previously hidden: the plan seeded the pilot menu with a script, which works once and makes the M5 "zero code changes" gate unreachable.
 
-- `setting_definitions` registry and the **three-layer resolver** in `packages/domain` (FR-10.1, FR-10.2); resolved-state delivery to all clients; fail-safe defaults.
+- `setting_definitions` registry and the **three-layer resolver** in `packages/domain` (FR-10.1, FR-10.2); resolved-state delivery to all clients; fail-safe defaults. `setting_definitions`/`tenant_settings` themselves already exist by this point (ADR-0024 migrated them early for `kitchen.auto_accept`) — this sprint is the generic `resolveFeature()` engine, Layer 1/2 tables, and the console UI to manage every setting including that one, not the tables from scratch.
 - Menu CRUD: categories, items, modifier groups and options; **draft workspace, diff view with margin impact, atomic publish** to a new `menu_version` (FR-10.12).
 - Materials CRUD with **versioned cost edits** and the impact preview (FR-10.15) — the rail that catches a mistyped per-gram decimal.
 - Recipe editor with modifier-conditional lines, live cost/margin, placeholder-cost flagging, and the **recipe library** seed (FR-10.17).

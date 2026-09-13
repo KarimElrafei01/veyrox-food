@@ -39,7 +39,7 @@ export async function rejectOrderController(
           orderId,
           reasonCode,
           idempotencyKey,
-          staffId: staff.staffId,
+          actor: { type: 'staff', staffId: staff.staffId },
           now: new Date(),
         });
 

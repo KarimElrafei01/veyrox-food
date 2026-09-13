@@ -20,6 +20,12 @@ export type OrderStatus =
  *  one Accept/Reject gate regardless of which channel produced them. */
 export const NEW_TICKET_STATUSES = ['placed', 'pending'] as const;
 
+/** Who decided an Accept/Reject transition (ADR-0024). A human tap always
+ *  carries a `staffId` for the `order_events`/`material_ledger` attribution;
+ *  `kitchen.auto_accept` is the only caller that ever passes `system` - never
+ *  fabricate a staff id to avoid this second case. */
+export type OrderActor = { type: 'staff'; staffId: string } | { type: 'system' };
+
 const TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   draft: ['pending'],
   placed: ['received', 'rejected'],

@@ -270,6 +270,46 @@ races a second barista's Accept tap on another device — under the single-stati
 specific race shouldn't occur, but the guard costs nothing and is the same guard every other
 transition already needs).
 
+### 2.3a Auto-accept (ADR-0024) — not a new endpoint
+
+`kitchen.auto_accept` (a Layer-3 tenant preference, `tenant_settings` per ADR-0015's schema —
+`setting_definitions` itself is not built this pass, see ADR-0024) makes §2.1 (Accept) run
+automatically instead of waiting for a barista's tap. There is no new HTTP surface here — the
+mechanism sits between order creation and the response the creating controller sends, not behind
+its own route:
+
+1. An order is created (today: `PlaceOrder`'s WhatsApp path only — Till's `send-to-kitchen`
+   doesn't exist yet, Sprint 4). On a successful, non-replayed creation, the creating controller
+   checks `getBooleanTenantSetting(db, tenantId, KNOWN_SETTINGS.kitchenAutoAccept)`
+   (`KNOWN_SETTINGS` — `@veyroxai/domain` — is a small in-code stand-in for the definition row a
+   real `setting_definitions` table would carry, per ADR-0024).
+2. If true, it calls `AutoAcceptIncomingOrder.execute({ tenantId, orderId, idempotencyKey, now })`
+   — the **same** `idempotencyKey` the client sent for placement. This is safe to reuse: placement's
+   dedup lives on `orders.idempotency_key`, Accept/Reject's on `order_events.idempotency_key` — two
+   different unique indexes, no collision.
+3. `AutoAcceptIncomingOrder` calls `AcceptOrder.execute(..., actor: { type: 'system' })` — the exact
+   §2.1 transaction, verbatim, including the availability re-check, the `sale_deduction` ledger
+   inserts, the fresh ETA computation, and the SSE publish. The only difference from a human Accept
+   is the actor.
+4. If that throws `ItemNoLongerAvailable` (§2.1 step 2), it calls `RejectOrder.execute(...,
+   reasonCode: 'item_unavailable', actor: { type: 'system' })` instead — §2.3's exact transaction,
+   same reason code a human would have picked, same customer-facing decline message.
+5. Any other error is caught and swallowed: the order is left in `placed`/`pending` for manual
+   handling, and the creating controller's own response is unaffected either way — a placement
+   that already succeeded must never fail because this follow-up step had a transient problem.
+
+**`actor: { type: 'system' }`** is a new second case on what was previously an always-human
+`staffId: string` parameter to both `AcceptOrder.execute` and `RejectOrder.execute` — see
+`OrderActor` in `contexts/ordering/domain/order-state-machine.ts`. It resolves to
+`actor_type = 'system'`, `actor_id = NULL` on the `order_events` row and on every `material_ledger`
+row Accept inserts, and `source = 'auto_accept'` (a new value alongside the existing
+`till | kds | webview | job`) on `order_events`. A human Accept/Reject is unchanged — the KDS
+controllers now just pass `{ type: 'staff', staffId }` explicitly instead of a bare string.
+
+**The customer's placement response is not recomputed after this runs** — see ADR-0024's
+Consequences for why that's fine (the response is already a frozen ADR-0020 snapshot by this
+point, and the live status read already handles a fast-accepted order correctly today).
+
 ### 2.4 `POST /orders/:id/advance` — board taps (Received→Preparing, Preparing→Ready)
 
 Already fully specified in `05-api-and-integration-contracts.md` §3 ("Semantics that matter"

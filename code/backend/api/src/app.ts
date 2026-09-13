@@ -25,6 +25,7 @@ import type { EtaQueueRepository } from './contexts/ordering/infrastructure/eta-
 import type { EtaMetricSink } from './contexts/ordering/application/eta-metrics.js';
 import { placeOrderController } from './contexts/ordering/interface/place-order-controller.js';
 import type { PlaceOrder } from './contexts/ordering/application/place-order.js';
+import type { AutoAcceptIncomingOrder } from './contexts/ordering/application/auto-accept-incoming-order.js';
 import { customerLocaleController } from './contexts/ordering/interface/customer-locale-controller.js';
 import type { CustomerLocaleRepository } from './contexts/ordering/infrastructure/customer-locale-repository.js';
 import type { OrderPlacementMetricSink } from './contexts/ordering/application/order-placement-metrics.js';
@@ -78,6 +79,10 @@ export interface AppDeps {
     etaMetrics: EtaMetricSink;
     metrics: OrderPlacementMetricSink;
     emit: (event: { orderId: string; tenantId: string }) => Promise<void>;
+    /** ADR-0024: runs right after a successful, non-replayed placement when
+     *  the tenant has `kitchen.auto_accept` on. Optional so tests/dev builds
+     *  that don't wire it still place orders exactly as before. */
+    autoAccept?: { service: AutoAcceptIncomingOrder; db: Database };
   };
   customerLocale?: {
     repository: CustomerLocaleRepository;

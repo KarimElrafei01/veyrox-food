@@ -84,7 +84,7 @@ Removing prepayment moves the no-show risk onto the café. Three controls bound 
 
 | ID | P | Requirement |
 |---|---|---|
-| FR-3.1 | P0 | Four-column board: **New / Received / Preparing / Ready**, tablet-optimized, legible at arm's length (min 18px body, 28px item names, high contrast). *New* holds WhatsApp `placed` orders and Till `pending` orders awaiting kitchen acceptance (FR-3.11). This preserves the PRD's three working columns and adds the gate in front of them. |
+| FR-3.1 | P0 | Four-column board: **New / Received / Preparing / Ready**, tablet-optimized, legible at arm's length (min 18px body, 28px item names, high contrast). *New* holds WhatsApp `placed` orders and Till `pending` orders awaiting kitchen acceptance (FR-3.11). This preserves the PRD's three working columns and adds the gate in front of them. A tenant with `kitchen.auto_accept` on (ADR-0024) never populates New at all — every order auto-accepts straight to Received. |
 | FR-3.2 | P0 | Tapping a ticket advances it one status. Advancing to Ready auto-sends the customer a WhatsApp "order ready" message on the official rail (inside the 24h window, therefore free). |
 | FR-3.3 | P0 | Status changes propagate to all connected KDS/Till clients and to the ETA calculation in **under 1 second** (PRD §8.3 acceptance). |
 | FR-3.4 | P0 | Received-column depth and in-progress remaining time feed FR-2.19 in real time. |
@@ -94,9 +94,9 @@ Removing prepayment moves the no-show risk onto the café. Three controls bound 
 | FR-3.8 | P1 | Tickets show elapsed time since acceptance and turn amber past the promised ETA, red past 1.5×. |
 | FR-3.9 | `[+]` P1 | A barista can mark an item unavailable directly from the KDS (86-ing it, FR-2.7), because that is where they discover it. |
 | FR-3.10 | P1 | `active_stations` (barista count) is settable on the board and feeds FR-2.19. |
-| FR-3.11 | `[+]` P0 | **Kitchen-accept gate.** WhatsApp `placed` orders and Till `pending` orders land in **New**. A barista taps Accept before materials are deducted, prep begins, or the ETA clock starts; Accept transitions either channel to `received`. This is the control that replaces prepayment (ADR-0010): without it, anyone with WhatsApp can make a café consume milk and barista time with no commitment. |
-| FR-3.12 | `[+]` P0 | A barista can **Reject** a New ticket with a reason (`too_busy`, `item_unavailable`, `closing`). Nothing was deducted, so nothing is returned; the customer gets a polite message rather than silence. Rejection is attributed and counted. |
-| FR-3.13 | `[+]` P0 | New tickets show an age timer and escalate visually past 2 minutes. An unaccepted order the customer is already waiting on is worse than a rejected one. |
+| FR-3.11 | `[+]` P0 | **Kitchen-accept gate.** WhatsApp `placed` orders and Till `pending` orders land in **New**. A barista taps Accept before materials are deducted, prep begins, or the ETA clock starts; Accept transitions either channel to `received`. This is the control that replaces prepayment (ADR-0010): without it, anyone with WhatsApp can make a café consume milk and barista time with no commitment. **Exception**: a tenant can opt into `kitchen.auto_accept` (ADR-0024), which performs this exact transition automatically and attributes it to `actor_type='system'`, at the owner's own risk, for both channels. |
+| FR-3.12 | `[+]` P0 | A barista can **Reject** a New ticket with a reason (`too_busy`, `item_unavailable`, `closing`). Nothing was deducted, so nothing is returned; the customer gets a polite message rather than silence. Rejection is attributed and counted. An auto-accept attempt (FR-3.11) that finds an item 86'd since placement auto-rejects the same way, with `item_unavailable` (ADR-0024). |
+| FR-3.13 | `[+]` P0 | New tickets show an age timer and escalate visually past 2 minutes. An unaccepted order the customer is already waiting on is worse than a rejected one. Does not apply to a tenant with `kitchen.auto_accept` on — no order waits in New long enough to escalate. |
 
 **AC-3**: With two KDS tablets and one Till connected, advancing a ticket on one reflects on all others and in a freshly-computed ETA in <1s at p95, and survives a 30-second network drop with automatic catch-up and no lost transitions.
 
@@ -107,7 +107,7 @@ Removing prepayment moves the no-show risk onto the café. Three controls bound 
 | ID | P | Requirement |
 |---|---|---|
 | FR-4.1 | P0 | Flat item grid, no modifiers required, optimized for speed; a running cart with quantity controls and one-tap removal. |
-| FR-4.2 | P0 | **Send to Kitchen** sets the order `pending` and places it in the KDS New column. It does **not** deduct materials. A kitchen Accept transitions it to `received` and writes `sale_deduction` rows stamped with `recipe_version_id`. |
+| FR-4.2 | P0 | **Send to Kitchen** sets the order `pending` and places it in the KDS New column. It does **not** deduct materials. A kitchen Accept transitions it to `received` and writes `sale_deduction` rows stamped with `recipe_version_id`. Same `kitchen.auto_accept` exception as FR-3.11: when on, this transition happens automatically instead of on a barista's tap. |
 | FR-4.3 | P0 | A `ready` order can be marked **Paid (Cash)** or **Paid (Visa)** on collection. **This is now the only payment path in the system**, for WhatsApp and counter orders alike (ADR-0010): recording payment also records collection, accrues loyalty, and closes the order. `visa` is a reconciliation label for the café's own terminal, never an integration; a cash-only café turns it off with `payments.methods_enabled`. |
 | FR-4.4 | P0 | **Void returns exactly the materials the order deducted**, by inserting the exact negation of that order's `sale_deduction` rows (`reverses_ledger_id` set). The routine never reads `recipes`. Atomic in one transaction; auditable via `order_events` and `material_ledger`. |
 | FR-4.5 | P0 | Voiding is idempotent: the partial unique index on `reverses_ledger_id` makes a double-void impossible even under concurrent requests or an application-layer idempotency failure. |
